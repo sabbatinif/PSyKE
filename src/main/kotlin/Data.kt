@@ -13,14 +13,17 @@ class Data (
     private val seed = 123L
     private var scaler: Scaler? = null
     var labels: Map<Int, String>? = null
-    private val dataset: DataFrame = Read.csv("$folder/$filename")
-    val nFeat = dataset.ncols() - (target?.size ?: 1)
+    private val dataset: DataFrame
+    val nFeat: Int
     val xtrain: Array<DoubleArray>
     val xtest: Array<DoubleArray>
     val ytrain: Array<Number>
     val ytest: Array<Number>
 
     init {
+        dataset = Read.csv("$folder/$filename")
+        nFeat = dataset.ncols() - (target?.size ?: 1)
+
         val x: MutableList<DoubleArray>
         val y: MutableList<Number>
         if (scale)
