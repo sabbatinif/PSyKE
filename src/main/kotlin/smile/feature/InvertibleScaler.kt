@@ -4,7 +4,7 @@ import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.type.StructType
 
-class InvertibleScaler(schema: StructType?, lo: DoubleArray?, hi: DoubleArray?) : Scaler(schema, lo, hi), InvertibleFeatureTransform {
+internal class InvertibleScaler(schema: StructType, lo: DoubleArray, hi: DoubleArray) : Scaler(schema, lo, hi), InvertibleFeatureTransform {
     val lowerBounds: DoubleArray
         get() = super.lo
 
@@ -30,17 +30,8 @@ class InvertibleScaler(schema: StructType?, lo: DoubleArray?, hi: DoubleArray?) 
     companion object {
         @JvmStatic
         fun fit(data: DataFrame): InvertibleScaler {
-            require(!data.isEmpty) { "Empty data frame" }
-            val schema = data.schema()
-            val lo = DoubleArray(schema.length())
-            val hi = DoubleArray(schema.length())
-            for (i in lo.indices) {
-                if (schema.field(i).isNumeric) {
-                    lo[i] = data.doubleVector(i).stream().min().asDouble
-                    hi[i] = data.doubleVector(i).stream().max().asDouble
-                }
-            }
-            return InvertibleScaler(schema, lo, hi)
+            val scaler = Scaler.fit(data)
+            return InvertibleScaler(scaler.schema, scaler.lo, scaler.hi)
         }
 
         @JvmStatic
