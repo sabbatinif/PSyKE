@@ -1,6 +1,7 @@
 import smile.base.mlp.Layer
 import smile.base.mlp.OutputFunction
 import smile.classification.*
+import smile.feature.InvertibleFeatureTransform.Companion.scaler
 import smile.io.Read
 import smile.math.TimeFunction
 import smile.validation.metric.Accuracy
@@ -8,7 +9,8 @@ import smile.validation.metric.Accuracy
 fun main() {
 
     val dataset = Read.csv("datasets/iris.data")
-    val (train, test) = dataset.randomSplit(0.3)
+    val scaler = scaler(dataset)
+    val (train, test) = dataset.randomSplit(0.2)
     val x = train.inputsArray()
     val y = train.classesArray()
 

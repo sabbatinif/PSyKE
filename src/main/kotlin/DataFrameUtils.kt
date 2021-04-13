@@ -51,3 +51,11 @@ fun DataFrame.outputsArray(outputColumn: Int = lastColumnIndex): DoubleArray =
 
 fun DataFrame.classesArray(outputColumn: Int = lastColumnIndex): IntArray =
     this.classes(outputColumn).intVector(0).toIntArray()
+
+/*
+private fun toOneHot(classes: Array<Int>): Array<DoubleArray> {
+    val oneHot = Array(classes.size) { DoubleArray(classes.distinct().size) {0.0} }
+    classes.forEachIndexed { i, it -> oneHot[i][it] = 1.0 }
+    return oneHot
+}
+*/
