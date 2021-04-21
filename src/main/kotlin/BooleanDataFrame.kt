@@ -4,72 +4,74 @@ import smile.data.type.StructField
 import smile.data.vector.BaseVector
 import smile.data.vector.DoubleVector
 
-class BooleanDataFrame(input: DataFrame) {
+class BooleanDataFrame(val dataframe: DataFrame) {
     data class Range(
-        var lower: Double,
-        var upper: Double,
         val mean: Double,
         val std: Double
-    )
+    ) {
+        var lower: Double
+        var upper: Double
+
+        init {
+            this.lower = this.mean
+            this.upper = this.mean
+        }
+    }
 
     data class BooleanFeatureSet(
         val name: String,
         val set: Map<String, Pair<Double, Double>>
     )
 
-    var dataframe: DataFrame
-    val featureSets: MutableSet<BooleanFeatureSet>
+    val dataset: DataFrame
+        get() = this.toBooleanFeatures()
 
-    init {
-        this.dataframe = input
+    lateinit var featureSets: MutableSet<BooleanFeatureSet>
+
+    private fun toBooleanFeatures(): DataFrame {
+        lateinit var outputDataframe: DataFrame
         this.featureSets = mutableSetOf()
-        this.toBooleanFeatures()
-    }
 
-    fun toBooleanFeatures() {
-        val output: DataFrame = this.dataframe.outputs()
-        val input = this.dataframe.inputs()
-
-        val newCols = mutableSetOf<DataFrame>()
-
-        input.schema().fields()
-            .filter { it.isNumeric }
-            .forEach {
-                newCols.add(DataFrame.of(
-                    *this.splitFeature(it.name)
-                ) )
+        dataframe.inputs().schema().fields().apply {
+            this.filter { it.isNumeric }
+            .map { DataFrame.of(*splitFeature(it.name)) }
+            .forEachIndexed { i, it ->
+                outputDataframe = if (i == 0) it else outputDataframe.merge(it)
             }
-
-        newCols.forEachIndexed { i, it ->
-            this.dataframe = if (i == 0) it else this.dataframe.merge(it)
+            this.filterNot { it.isNumeric }
+                .forEach {
+                    outputDataframe = outputDataframe.merge(
+                        DataFrame.of(dataframe.inputs().column(it.name))
+                    )
+                }
         }
-        input.schema().fields()
-            .filterNot { it.isNumeric }
-            .forEach {
-                this.dataframe = this.dataframe.merge(
-                    DataFrame.of(input.column(it.name))
-                )
-            }
-        this.dataframe = this.dataframe.merge(output)
+
+        return outputDataframe.merge(dataframe.outputs())
     }
 
     private fun splitFeature(name: String): Array<BaseVector<*, *, *>> {
-        fun Double.format(digits: Int) = "%.${digits}f".format(this)
-
         val ranges = this.createRanges(
-            this.dataframe.select(name, this.dataframe.column(this.dataframe.lastColumnIndex).name()),
-            name
+            dataframe.select(
+                name, dataframe.column(dataframe.lastColumnIndex).name()
+            ), name
         )
+        return this.createFeatureSets(name, ranges)
+    }
+
+    private fun createFeatureSets(name: String, ranges: List<Range>): Array<BaseVector<*, *, *>> {
+        fun Double.format(digits: Int) = "%.${digits}f".format(this)
         val vectors: ArrayList<BaseVector<*, *, *>> = arrayListOf()
 
-        BooleanFeatureSet(name, mapOf(
-            *ranges.map {
-                "$name ${it.lower.format(2)}-${it.upper.format(2)}" to
-                    Pair(it.lower, it.upper)
-            }.toTypedArray()
-        ) ).apply {
+        BooleanFeatureSet(
+            name, mapOf(
+                *ranges.map {
+                    "$name ${it.lower.format(2)}-${it.upper.format(2)}" to
+                            Pair(it.lower, it.upper)
+                }.toTypedArray()
+            )
+        ).apply {
             featureSets.add(this)
-            this.set.forEach { k, v ->
+            for ((k, v) in this.set) {
                 vectors.add(DoubleVector.of(StructField(k, DataTypes.DoubleType),
                     dataframe.column(name).toDoubleArray()
                     .map {
@@ -83,7 +85,7 @@ class BooleanDataFrame(input: DataFrame) {
     private fun createRanges(data: DataFrame, name: String): List<Range> {
         val ranges = data.categories().map {
             val desc = data.filterByOutput(it).describe()[name]
-            Range(desc!!.mean, desc.mean, desc.mean, desc.std)
+            Range(desc!!.mean, desc.std)
         }.sortedWith(compareBy{ it.mean })
 
         ranges.zipWithNext { r1, r2 ->

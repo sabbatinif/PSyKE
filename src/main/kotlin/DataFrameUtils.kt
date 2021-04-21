@@ -3,9 +3,17 @@ import smile.data.Tuple
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
+import smile.data.vector.DoubleVector
 import smile.feature.Normalizer
 import kotlin.random.Random
 import kotlin.streams.asSequence
+
+data class Description(
+    val mean: Double,
+    val std: Double,
+    val min: Double,
+    val max: Double
+)
 
 fun DataFrame.randomSplit(percent: Double, seed: Int = 0): Pair<DataFrame, DataFrame> {
     val r1 = Random(seed)
@@ -52,7 +60,48 @@ fun DataFrame.outputsArray(outputColumn: Int = lastColumnIndex): DoubleArray =
 fun DataFrame.classesArray(outputColumn: Int = lastColumnIndex): IntArray =
     this.classes(outputColumn).intVector(0).toIntArray()
 
+fun DataFrame.describe(): Map<String, Description> {
+    fun std(col: DoubleArray): Double {
+        val mean = col.average()
+        var std = 0.0
+        col.forEach { std += Math.pow(it - mean, 2.0) }
+        return Math.sqrt(std / col.size)
+    }
+
+    return mapOf(*this.inputs().schema().fields()
+        .filter { it.isNumeric }
+        .map {
+            val col = this.column(it.name).toDoubleArray()
+            it.name to Description(
+                col.average(),
+                std(col),
+                col.min() ?: 0.0,
+                col.max() ?: 1.0
+            )
+        }.toTypedArray() )
+}
+
+fun DataFrame.filterByOutput(output: Any): DataFrame {
+    return DataFrame.of(this.stream().filter {
+        it.get(this.lastColumnIndex) == output
+    })
+}
+
+fun DataFrame.writeColumn(feature: String, value: Double): DataFrame {
+    return DataFrame.of(*this.map {
+        if (it.name() == feature)
+            DoubleVector.of(this.schema().field(feature),
+                DoubleArray(this.nrows()) { value }
+            )
+        else
+            it
+    }.toTypedArray() )
+}
 /*
+fun DataFrame.columnToTuple(index: Int): Tuple {
+    val col = this.column(index)
+    return Tuple.of(arrayOf(col), StructType(StructField(col.name(), col.type())))
+}
 private fun toOneHot(classes: Array<Int>): Array<DoubleArray> {
     val oneHot = Array(classes.size) { DoubleArray(classes.distinct().size) {0.0} }
     classes.forEachIndexed { i, it -> oneHot[i][it] = 1.0 }

@@ -1,44 +1,56 @@
 package smile.feature
 
 import smile.data.DataFrame
+import smile.data.Tuple
 import smile.data.type.StructType
+import smile.math.MathEx
 
-internal class InvertibleScaler(schema: StructType, lo: DoubleArray, hi: DoubleArray) :
-    Scaler(schema, lo, hi), InvertibleFeatureTransform {
+internal class InvertibleStandardiser(schema: StructType, mu: DoubleArray, std: DoubleArray) :
+    Standardizer(schema, mu, std), InvertibleFeatureTransform {
 
     override val schema : StructType?
         get() = super.schema
 
-    val lowerBounds: DoubleArray
-        get() = super.lo
+    val mean: DoubleArray
+        get() = super.mu
 
-    val upperBounds: DoubleArray
-        get() = super.hi
+    val stDev: DoubleArray
+        get() = super.std
 
     override fun invert (x: Double, i: Int): Double {
-        return this.upperBounds[i] * x + this.lowerBounds[i]
+        return this.stDev[i] * x + this.mean[i]
     }
 
     companion object {
         @JvmStatic
-        fun fit(data: DataFrame): InvertibleScaler {
+        fun fit(data: DataFrame): InvertibleStandardiser {
             require(!data.isEmpty) { "Empty data frame" }
 
             val schema = data.schema()
-            val lo = DoubleArray(schema.length())
-            val hi = DoubleArray(schema.length())
+            val mu = DoubleArray(schema.length())
+            val std = DoubleArray(schema.length())
 
-            for (i in lo.indices) {
+            val n = data.nrows()
+            for (i in mu.indices) {
                 if (schema.field(i).isNumeric) {
-                    lo[i] = data.doubleVector(i).stream().min().asDouble
-                    hi[i] = data.doubleVector(i).stream().max().asDouble
+                    val sum = data.stream()
+                        .mapToDouble { t: Tuple -> t.getDouble(i) }
+                        .sum()
+                    val squaredSum = data.stream()
+                        .mapToDouble { t: Tuple -> t.getDouble(i) }
+                        .map { x: Double -> x * x }.sum()
+                    mu[i] = sum / n
+                    std[i] = Math.sqrt(squaredSum / n - mu[i] * mu[i])
+                    if (MathEx.isZero(std[i])) {
+                        std[i] = 1.0
+                    }
                 }
             }
 
-            return InvertibleScaler(schema, lo, hi)
+            return InvertibleStandardiser(schema, mu, std)
         }
 
         @JvmStatic
-        fun fit(data: Array<DoubleArray>): InvertibleScaler = fit(DataFrame.of(data))
+        fun fit(data: Array<DoubleArray>): InvertibleStandardiser = fit(DataFrame.of(data))
     }
 }

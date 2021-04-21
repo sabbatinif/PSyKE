@@ -1,19 +1,42 @@
-import smile.base.mlp.Layer
-import smile.base.mlp.OutputFunction
 import smile.classification.*
-import smile.feature.InvertibleFeatureTransform.Companion.scaler
 import smile.io.Read
-import smile.math.TimeFunction
 import smile.validation.metric.Accuracy
 
 fun main() {
 
-    val dataset = Read.csv("datasets/iris.data")
-    val scaler = scaler(dataset)
+    val boolDataset = BooleanDataFrame(Read.csv("datasets/iris.data"))
+    val dataset = boolDataset.dataset
     val (train, test) = dataset.randomSplit(0.2)
     val x = train.inputsArray()
     val y = train.classesArray()
+    val knn = knn(x, y, 3)
+    print("Accuracy: ")
+    println(Accuracy.of(test.classesArray(), knn.predict(test.inputsArray())))
 
+    val extractor = REAL(knn, dataset, boolDataset.featureSets)
+    val theory = extractor.extract(x)
+    test.classesArray().forEach { print("$it ") }.also { println() }
+    knn.predict(test.inputsArray()).forEach { print("$it ") }.also { println() }
+    extractor.predict(test.inputsArray()).forEach { print("$it ") }.also { println() }
+    theory.clauses.forEach { println(it.toString()) }
+}
+
+    /*
+    val standardiser = standardiser(dataset)
+    val scaler = scaler(dataset)
+
+    val sc = scaler.invert(scaler.transform(dataset))
+    val st = standardiser.invert(standardiser.transform(dataset))
+
+    for (i in 0 until dataset.ncols())
+    {
+        println(dataset.column(i))
+        println(sc!!.column(i))
+        println(st!!.column(i))
+    }
+    */
+
+    /*
     val model: MLP = mlp(
         x, y,
         arrayOf(Layer.rectifier(25), Layer.mle(3, OutputFunction.SOFTMAX)),
@@ -38,7 +61,7 @@ fun main() {
     }
 
     test.classesArray().forEach { print("$it ") }
-
+*/
 //    val arti = Data("arti.csv")
 //    val model2 = rbfnet(
 //        arti.xtrain,
@@ -53,5 +76,3 @@ fun main() {
 //        arrayOf(Layer.tanh(35), Layer.tanh(15), Layer.mse(1, OutputFunction.LINEAR)),
 //        200,
 //        TimeFunction.linear(0.1, 10000.0, 0.05))
-
-}

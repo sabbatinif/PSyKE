@@ -1,4 +1,5 @@
 import it.unibo.tuprolog.theory.Theory
+import smile.classification.Classifier
 import smile.data.DataFrame
 import java.util.function.ToDoubleFunction
 
@@ -7,5 +8,5 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
 
     val dataset: DataFrame
 
-    fun extract(): Theory
+    fun extract(x: Array<T>): Theory
 }
