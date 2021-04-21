@@ -1,6 +1,7 @@
 import smile.data.DataFrame
 import smile.data.type.DataTypes
 import smile.data.type.StructField
+import smile.data.type.StructType
 import smile.data.vector.BaseVector
 import smile.data.vector.DoubleVector
 
@@ -29,36 +30,44 @@ class BooleanDataFrame(val dataframe: DataFrame) {
     lateinit var featureSets: MutableSet<BooleanFeatureSet>
 
     private fun toBooleanFeatures(): DataFrame {
-        lateinit var outputDataframe: DataFrame
+        val outputColumns: MutableList<BaseVector<*, *, *>> = mutableListOf()
         this.featureSets = mutableSetOf()
 
-        dataframe.inputs().schema().fields().apply {
-            this.filter { it.isNumeric }
-            .map { DataFrame.of(*splitFeature(it.name)) }
-            .forEachIndexed { i, it ->
-                outputDataframe = if (i == 0) it else outputDataframe.merge(it)
-            }
-            this.filterNot { it.isNumeric }
-                .forEach {
-                    outputDataframe = outputDataframe.merge(
-                        DataFrame.of(dataframe.inputs().column(it.name))
-                    )
+        for (feature in dataframe.inputs()) {
+            outputColumns.addAll(
+                when (feature.type()) {
+                    DataTypes.StringType -> splitStringFeature(feature.name())
+                    DataTypes.DoubleType -> splitDoubleFeature(feature.name())
+                    else -> listOf(feature)
                 }
+            )
         }
-
-        return outputDataframe.merge(dataframe.outputs())
+        return DataFrame.of(*outputColumns.toTypedArray()).merge(dataframe.outputs())
     }
 
-    private fun splitFeature(name: String): Array<BaseVector<*, *, *>> {
+    private fun splitStringFeature(name: String): ArrayList<BaseVector<*, *, *>> {
+        val vectors: ArrayList<BaseVector<*, *, *>> = arrayListOf()
+        for (value in dataframe.column(name).toStringArray().distinct()) {
+            vectors.add(DoubleVector.of(
+                StructField("$name $value", DataTypes.DoubleType),
+                dataframe.column(name).toStringArray().map {
+                    if (it == value) 1.0 else 0.0
+                }.toDoubleArray()
+            ))
+        }
+        return vectors
+    }
+
+    private fun splitDoubleFeature(name: String): ArrayList<BaseVector<*, *, *>> {
         val ranges = this.createRanges(
             dataframe.select(
                 name, dataframe.column(dataframe.lastColumnIndex).name()
             ), name
         )
-        return this.createFeatureSets(name, ranges)
+        return this.doubleToBoolean(name, ranges)
     }
 
-    private fun createFeatureSets(name: String, ranges: List<Range>): Array<BaseVector<*, *, *>> {
+    private fun doubleToBoolean(name: String, ranges: List<Range>): ArrayList<BaseVector<*, *, *>> {
         fun Double.format(digits: Int) = "%.${digits}f".format(this)
         val vectors: ArrayList<BaseVector<*, *, *>> = arrayListOf()
 
@@ -79,7 +88,7 @@ class BooleanDataFrame(val dataframe: DataFrame) {
                     }.toDoubleArray()))
             }
         }
-        return vectors.toTypedArray()
+        return vectors
     }
 
     private fun createRanges(data: DataFrame, name: String): List<Range> {
