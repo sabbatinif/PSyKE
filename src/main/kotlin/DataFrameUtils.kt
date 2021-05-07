@@ -3,6 +3,7 @@ import smile.data.Tuple
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
+import smile.data.vector.BaseVector
 import smile.data.vector.DoubleVector
 import smile.feature.Normalizer
 import kotlin.random.Random
@@ -96,6 +97,87 @@ fun DataFrame.writeColumn(feature: String, value: Double): DataFrame {
         else
             it
     }.toTypedArray() )
+}
+
+fun DataFrame.createRanges(name: String): List<Range> {
+    val ranges = this.categories().map {
+        val desc = this.filterByOutput(it).describe()[name]
+        Range(desc!!.mean, desc.std)
+    }.sortedWith(compareBy{ it.mean })
+
+    ranges.zipWithNext { r1, r2 ->
+        while (r1.upper < r2.lower) {
+            r1.upper += r1.std
+            r2.lower -= r2.std
+        }
+        val mean = (r1.upper - r1.std + r2.lower + r2.std) / 2
+        r1.upper = mean
+        r2.lower = mean
+    }
+    this.describe()[name].apply {
+        ranges.first().lower = this!!.min - 0.001
+        ranges.last().upper = this.max + 0.001
+    }
+    return ranges
+}
+
+fun DataFrame.splitFeatures(): Set<BooleanFeatureSet> {
+    //fun Double.format(digits: Int) = "%.${digits}f".format(this)
+    val featureSets: MutableSet<BooleanFeatureSet> = mutableSetOf()
+    for (feature in this.inputs()) {
+        when (feature.type()) {
+            DataTypes.DoubleType ->
+                featureSets.add(BooleanFeatureSet(
+                    feature.name(),
+                    createRanges(feature.name()).mapIndexed { i, it ->
+                        "${feature.name()}_$i" to Interval(it.lower, it.upper)
+                    }.toMap()
+                ))
+            DataTypes.StringType ->
+                featureSets.add(BooleanFeatureSet(
+                    feature.name(),
+                    feature.toStringArray().distinct().mapIndexed { i, it ->
+                        "${feature.name()}_$i" to Value(it)
+                    }.toMap()
+                ))
+            DataTypes.IntegerType ->
+                featureSets.add(BooleanFeatureSet(
+                    feature.name(),
+                    feature.toIntArray().distinct().mapIndexed { i, it ->
+                        "${feature.name()}_$i" to Value(it)
+                    }.toMap()
+                ))
+        }
+    }
+    return featureSets.toSet()
+}
+
+fun DataFrame.toBoolean(featureSets: Set<BooleanFeatureSet>): DataFrame {
+    val outputColumns: MutableList<BaseVector<*, *, *>> = mutableListOf()
+    for (column in this.inputs()) {
+        val match = featureSets.filter { it.name == column.name() }
+        if (match.isEmpty())
+            outputColumns.add(column)
+        else {
+            for ((name, value) in match.first().set) {
+                outputColumns.add(DoubleVector.of(
+                    StructField(name, DataTypes.DoubleType),
+                    when (value) {
+                        is Interval ->
+                            column.toDoubleArray().map {
+                                if ((value.lower <= it) && (it < value.upper)) 1.0 else 0.0
+                            }.toDoubleArray()
+                        is Value ->
+                            column.toStringArray().map {
+                                if (value.value == it) 1.0 else 0.0
+                            }.toDoubleArray()
+                        else -> column.toDoubleArray()
+                    }
+                ))
+            }
+        }
+    }
+    return DataFrame.of(*outputColumns.toTypedArray()).merge(this.outputs())
 }
 /*
 fun DataFrame.columnToTuple(index: Int): Tuple {

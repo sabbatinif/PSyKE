@@ -3,17 +3,19 @@ import smile.io.Read
 import smile.validation.metric.Accuracy
 
 fun main() {
+    val name = "iris"
 
-    val boolDataset = BooleanDataFrame(Read.csv("datasets/iris.data"))
-    val dataset = boolDataset.dataset
-    val (train, test) = dataset.randomSplit(0.2)
+    val dataset = Read.csv("datasets/$name.data")
+    val featureSets = dataset.splitFeatures()
+    val boolDataset = dataset.toBoolean(featureSets)
+    val (train, test) = boolDataset.randomSplit(0.2)
     val x = train.inputsArray()
     val y = train.classesArray()
-    val knn = knn(x, y, 3)
+    val knn = knn(x, y, 9)
     print("Accuracy: ")
     println(Accuracy.of(test.classesArray(), knn.predict(test.inputsArray())))
 
-    val extractor = REAL(knn, dataset, boolDataset.featureSets)
+    val extractor = REAL(knn, boolDataset, featureSets)
     val theory = extractor.extract(x)
     test.classesArray().forEach { print("$it ") }.also { println() }
     knn.predict(test.inputsArray()).forEach { print("$it ") }.also { println() }
