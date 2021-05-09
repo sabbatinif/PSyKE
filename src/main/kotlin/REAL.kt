@@ -2,10 +2,12 @@ import smile.classification.Classifier
 import smile.data.DataFrame
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.theory.MutableTheory
+import smile.data.Tuple
+import kotlin.streams.toList
 
 class REAL(override val predictor: Classifier<DoubleArray>,
            override val dataset: DataFrame,
-           val featureSet: Set<BooleanFeatureSet>
+           override val featureSet: Set<BooleanFeatureSet>
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
     class Rule(
@@ -31,17 +33,19 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         }
     }
 
-    val ruleSet: Map<Int, MutableList<Rule>>
+    private lateinit var ruleSet: Map<Int, MutableList<Rule>>
 
-    init {
+    fun init() {
         this.ruleSet = mapOf(
             *dataset.categories().mapIndexed {
-                i, _ -> i to mutableListOf<Rule>()
+                    i, _ -> i to mutableListOf<Rule>()
             }.toTypedArray()
         )
     }
 
     override fun extract(x: Array<DoubleArray>): MutableTheory {
+        this.init()
+
         for (sample in x) {
             val c = this.predictor.predict(sample)
             if (!this.covers(sample, c))
@@ -62,9 +66,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
                         }
                     }
                 }
-                this.ruleSet[c]!!.add(
-                    Rule(mutablePair.first(), mutablePair.last())
-                )
+                this.ruleSet[c]!!.add(Rule(mutablePair.first(), mutablePair.last()))
             }
         }
         this.optimise()
@@ -72,53 +74,29 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         return this.createTheory()
     }
 
-    private fun createTheory(): MutableTheory {
-        fun createTerm(v: Var, constraint: Any, positive: Boolean = true): Term
-        {
-            val functor = (if (!positive) "not_" else "") +
-                    (if (constraint is Interval) "in" else "equal")
-            return when (constraint) {
-                is Interval -> Struct.of(functor, v, Real.of(constraint.lower), Real.of(constraint.upper))
-                is Value -> Struct.of(functor, v, Atom.of(constraint.value.toString()))
-                else -> Struct.of(functor)
-            }
-        }
-
-        val variables = mapOf(*this.featureSet.map {
-            it.name to Var.of(it.name)
-        }.toTypedArray())
-
+    override fun createTheory(): MutableTheory {
+        val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
         for ((key, ruleList) in this.ruleSet) {
-            val head = Struct.of(
-                "concept",
-                variables.values.plus(Atom.of(this.dataset.categories().elementAt(key).toString()))
-            )
+            val head = createHead("concept", variables.values,
+                this.dataset.categories().elementAt(key).toString())
             for (rule in ruleList) {
                 val body: MutableList<Term> = mutableListOf()
 
-                for ((pred, cond) in
-                     listOf(Pair(rule.truePred, true), Pair(rule.falsePred, false))) {
-                        for (variable in pred) {
-                            this.featureSet
-                                .filter { it.set.containsKey(variable) }.first()
-                                .apply {
-                                    body.add(
-                                        createTerm(
-                                            variables[this.name] ?: Var.of(this.name),
-                                            this.set[variable] ?: Any(),
-                                            cond
-                                        )
-                                    )
-                                }
+                listOf(rule.truePred, rule.falsePred).zip(listOf(true, false)) { pred, cond ->
+                    for (variable in pred) {
+                        this.featureSet.filter { it.set.containsKey(variable) }.first().apply {
+                            body.add(
+                                createTerm(
+                                    variables[this.name] ?: Var.of(this.name),
+                                    this.set[variable] ?: Any(),
+                                    cond
+                                )
+                            )
                         }
                     }
-                theory.assertZ(
-                    Clause.of(
-                        head,
-                        *body.toTypedArray()
-                    )
-                )
+                }
+                theory.assertZ(Clause.of(head, *body.toTypedArray()))
             }
         }
         return theory
@@ -149,8 +127,12 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         return Rule(t, f).reduce(this.featureSet)
     }
 
-    fun predict(x: DoubleArray): Int {
-        val rule = this.ruleFromExample(x)
+    fun predict(x: Tuple): Int {
+        val data = mutableListOf<Double>()
+        for (i in 0 until x.length() - 1) {
+            data.add(x[i].toString().toDouble())
+        }
+        val rule = this.ruleFromExample(data.toDoubleArray())
 
         for ((key, rules) in this.ruleSet) {
             rules.forEach {
@@ -161,8 +143,8 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         return -1
     }
 
-    fun predict(x: Array<DoubleArray>): IntArray {
-        return x.map { this.predict(it) }.toIntArray()
+    override fun predict(x: DataFrame): IntArray {
+        return x.stream().map { this.predict(it) }.toList().toIntArray()
     }
 
     private fun optimise() {

@@ -1,6 +1,7 @@
 import smile.classification.*
 import smile.io.Read
 import smile.validation.metric.Accuracy
+import smile.validation.metric.ConfusionMatrix
 
 fun main() {
     val name = "iris"
@@ -12,15 +13,21 @@ fun main() {
     val x = train.inputsArray()
     val y = train.classesArray()
     val knn = knn(x, y, 9)
-    print("Accuracy: ")
-    println(Accuracy.of(test.classesArray(), knn.predict(test.inputsArray())))
+    println("Classifier accuracy: " +
+            Accuracy.of(test.classesArray(), knn.predict(test.inputsArray())))
+    val real = REAL(knn, train, featureSets)
+    val realTheory = real.extract(x)
+    println("REAL accuracy: " +
+            Accuracy.of(knn.predict(test.inputsArray()), real.predict(test)))
+    val duepan = Duepan(knn, train, featureSets)
+    val duepanTheory = duepan.extract(x)
+    println("Duepan accuracy: " +
+            Accuracy.of(knn.predict(test.inputsArray()), duepan.predict(test)))
 
-    val extractor = REAL(knn, boolDataset, featureSets)
-    val theory = extractor.extract(x)
-    test.classesArray().forEach { print("$it ") }.also { println() }
-    knn.predict(test.inputsArray()).forEach { print("$it ") }.also { println() }
-    extractor.predict(test.inputsArray()).forEach { print("$it ") }.also { println() }
-    theory.clauses.forEach { println(it.toString()) }
+    realTheory.clauses.forEach { println(it.toString()) }
+    println("****")
+    duepanTheory.clauses.forEach { println(it.toString()) }
+
 }
 
     /*

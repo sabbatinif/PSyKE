@@ -1,3 +1,4 @@
+import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame
@@ -8,5 +9,11 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
 
     val dataset: DataFrame
 
+    val featureSet: Set<BooleanFeatureSet>
+
     fun extract(x: Array<T>): Theory
+
+    fun predict(x: DataFrame): IntArray
+
+    fun createTheory(): MutableTheory
 }

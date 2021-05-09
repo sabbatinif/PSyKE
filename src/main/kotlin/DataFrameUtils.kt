@@ -8,6 +8,7 @@ import smile.data.vector.DoubleVector
 import smile.feature.Normalizer
 import kotlin.random.Random
 import kotlin.streams.asSequence
+import kotlin.streams.toList
 
 data class Description(
     val mean: Double,
@@ -36,7 +37,10 @@ fun DataFrame.inputs(outputColumn: Int = lastColumnIndex): DataFrame =
     this.drop(outputColumn)
 
 fun DataFrame.categories(i: Int = lastColumnIndex): Set<Any> =
-    this.stream().map { it[i] }.distinct().asSequence().toSet()
+    this.outputClasses(i).distinct().asSequence().toSet()
+
+fun DataFrame.outputClasses(i: Int = lastColumnIndex): List<Any> =
+    this.stream().map { it[i] }.toList()
 
 fun DataFrame.classes(outputColumn: Int = lastColumnIndex): DataFrame {
     val classes = categories(outputColumn)
@@ -56,7 +60,7 @@ fun DataFrame.inputsArray(outputColumn: Int = lastColumnIndex): Array<DoubleArra
     this.inputs(outputColumn).toArray()
 
 fun DataFrame.outputsArray(outputColumn: Int = lastColumnIndex): DoubleArray =
-    this.apply(outputColumn).toArray()
+    this.classes(outputColumn).column("Class").toDoubleArray()
 
 fun DataFrame.classesArray(outputColumn: Int = lastColumnIndex): IntArray =
     this.classes(outputColumn).intVector(0).toIntArray()

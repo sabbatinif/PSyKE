@@ -15,8 +15,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-simple:1.7.30'
     implementation 'it.unibo.tuprolog:theory-jvm:0.17.1'
     implementation group: 'org.bytedeco', name: 'openblas-platform', version: '0.3.13-1.5.5'
-
-
+    testImplementation 'junit:junit:4.12'
 }
 
 compileKotlin {
