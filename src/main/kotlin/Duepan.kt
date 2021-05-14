@@ -85,13 +85,11 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
                     if (node.nClasses() > it.nClasses())
                         splitPriority -= 100
                 }
-                //if (trueNode.dominant() == falseNode.dominant())
-                 //   splitPriority += 200
+                if (trueNode.dominant() == falseNode.dominant())
+                    splitPriority += 200
 
                 splits.add(Split(splitPriority, Pair(trueNode, falseNode)))
-                //println("" + splitPriority + " " + column + " (" + trueNode.fidelity() + "," +
-                //        falseNode.fidelity() + ")"
-                //)
+
             } catch (e: IndexOutOfBoundsException) { continue }
         }
         if (splits.isEmpty())

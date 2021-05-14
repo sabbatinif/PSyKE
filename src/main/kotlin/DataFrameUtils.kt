@@ -1,13 +1,11 @@
+import it.unibo.tuprolog.core.Integer
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
-import smile.data.vector.BaseVector
-import smile.data.vector.DoubleVector
-import smile.feature.Normalizer
+import smile.data.vector.*
 import kotlin.random.Random
-import kotlin.streams.asSequence
 import kotlin.streams.toList
 
 data class Description(
@@ -17,17 +15,12 @@ data class Description(
     val max: Double
 )
 
-fun DataFrame.randomSplit(percent: Double, seed: Int = 0): Pair<DataFrame, DataFrame> {
+fun DataFrame.randomSplit(percent: Double, seed: Long = 10L): Pair<DataFrame, DataFrame> {
     val r1 = Random(seed)
     val r2 = Random(seed)
-    val test = DataFrame.of(this.stream().filter { r1.nextDouble() < percent })
-    val train = DataFrame.of(this.stream().filter { r2.nextDouble() >= percent })
+    val train  = DataFrame.of(this.stream().toList().filter { r1.nextDouble() >= percent })
+    val test  = DataFrame.of(this.stream().toList().filter { r2.nextDouble() < percent })
     return train to test
-}
-
-fun DataFrame.normalize(): DataFrame {
-    val n = Normalizer(Normalizer.Norm.L2)
-    return n.transform(this)
 }
 
 val DataFrame.lastColumnIndex: Int
@@ -92,12 +85,20 @@ fun DataFrame.filterByOutput(output: Any): DataFrame {
     })
 }
 
-fun DataFrame.writeColumn(feature: String, value: Double): DataFrame {
+fun DataFrame.writeColumn(feature: String, value: Any): DataFrame {
     return DataFrame.of(*this.map {
         if (it.name() == feature)
-            DoubleVector.of(this.schema().field(feature),
-                DoubleArray(this.nrows()) { value }
-            )
+            when (value) {
+                is Double -> DoubleVector.of(this.schema().field(feature),
+                    DoubleArray(this.nrows()) { value }
+                )
+                is Int -> IntVector.of(this.schema().field(feature),
+                    IntArray(this.nrows()) { value }
+                )
+                else -> StringVector.of(this.schema().field(feature),
+                    *Array(this.nrows()) { value.toString() }
+                )
+            }
         else
             it
     }.toTypedArray() )
@@ -183,6 +184,15 @@ fun DataFrame.toBoolean(featureSets: Set<BooleanFeatureSet>): DataFrame {
     }
     return DataFrame.of(*outputColumns.toTypedArray()).merge(this.outputs())
 }
+
+fun DataFrame.toStringList(): List<String> {
+    return this.stream().toList().map { it.toString() }
+}
+
+fun DataFrame.toStringSet(): Set<String> {
+    return this.toStringList().toSet()
+}
+
 /*
 fun DataFrame.columnToTuple(index: Int): Tuple {
     val col = this.column(index)
