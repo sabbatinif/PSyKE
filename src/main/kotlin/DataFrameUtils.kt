@@ -32,6 +32,9 @@ fun DataFrame.inputs(outputColumn: Int = lastColumnIndex): DataFrame =
 fun DataFrame.categories(i: Int = lastColumnIndex): Set<Any> =
     this.outputClasses(i).distinct().asSequence().toSet()
 
+fun DataFrame.nCategories(i: Int = lastColumnIndex): Int =
+    this.categories(i).size
+
 fun DataFrame.outputClasses(i: Int = lastColumnIndex): List<Any> =
     this.stream().map { it[i] }.toList()
 

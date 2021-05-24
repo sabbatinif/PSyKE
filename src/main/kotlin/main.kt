@@ -4,7 +4,7 @@ import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
 
 fun main() {
-    val name = "iris"
+    val name = "car"
 
     val dataset = Read.csv("datasets/$name.data")
     val featureSets = dataset.splitFeatures()
@@ -24,9 +24,9 @@ fun main() {
     println("Duepan accuracy: " +
             Accuracy.of(knn.predict(test.inputsArray()), duepan.predict(test)))
 
-    realTheory.clauses.forEach { println(it.toString()) }
+    //realTheory.clauses.forEach { println(it.toString()) }
     println("****")
-    duepanTheory.clauses.forEach { println(it.toString()) }
+    //duepanTheory.clauses.forEach { println(it.toString()) }
 
 }
 

@@ -2,7 +2,7 @@ import smile.data.DataFrame
 
 class Node(val samples: DataFrame,
            val nExamples: Int,
-           var constraints: Set<Pair<String, Double>>,
+           var constraints: Set<Pair<String, Double>> = emptySet(),
            var children: MutableList<Node> = mutableListOf()
 ) {
     fun priority(): Double {
@@ -24,14 +24,14 @@ class Node(val samples: DataFrame,
     }
 
     fun dominant(): Any {
-        return this.samples.categories()
+        return this.samples.outputClasses()
             .groupBy { it }
             .mapValues { it.value.size }
             .maxBy { it.value }?.key ?: ""
     }
 
     fun nClasses(): Int {
-        return this.samples.categories().distinct().count()
+        return this.samples.nCategories()
     }
 
     override fun toString(): String {

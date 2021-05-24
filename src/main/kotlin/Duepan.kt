@@ -26,7 +26,7 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
     private lateinit var root: Node
 
     override fun extract(x: Array<DoubleArray>): Theory {
-        this.root = Node(this.dataset, this.dataset.nrows(), emptySet())
+        this.root = Node(this.dataset, this.dataset.nrows())
 
         val queue: SortedSet<Node> =
             sortedSetOf(kotlin.Comparator { n1, n2 ->

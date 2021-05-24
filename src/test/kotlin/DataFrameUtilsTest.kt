@@ -9,9 +9,13 @@ import kotlin.math.round
 import kotlin.streams.toList
 
 @RunWith(Parameterized::class)
-class DataFrameUtilsTest(val dataset: DataFrame, val nclasses: Int,
-                         val examplesPerClass: List<Int>,
-                         val first: Pair<String, Description>?) {
+class DataFrameUtilsTest(private val dataset: DataFrame,
+                         private val examplesPerClass: List<Int>,
+                         private val first: Pair<String, Description>?,
+                         private val classes: Set<Any>
+) {
+    private val nclasses = this.classes.size
+
     @Test
     fun testRandomSplit() {
         val (train, test) = dataset.randomSplit(0.2)
@@ -38,7 +42,12 @@ class DataFrameUtilsTest(val dataset: DataFrame, val nclasses: Int,
 
     @Test
     fun testCategories() {
-        assertEquals(nclasses, dataset.categories().size)
+        assertEquals(classes, dataset.categories())
+    }
+
+    @Test
+    fun testNCategories() {
+        assertEquals(nclasses, dataset.nCategories())
     }
 
     @Test
@@ -173,11 +182,15 @@ class DataFrameUtilsTest(val dataset: DataFrame, val nclasses: Int,
         @Parameterized.Parameters
         fun parameters(): Collection<*> {
             return listOf(
-                arrayOf(Read.csv("datasets/iris.data"), 3,
+                arrayOf(Read.csv("datasets/iris.data"),
                     listOf(50, 50, 50),
-                    "V1" to Description(5.84, 0.83, 4.3, 7.9)),
-                arrayOf(Read.csv("datasets/car.data"), 4,
-                    listOf(1210, 384, 65, 69), null)
+                    "V1" to Description(5.84, 0.83, 4.3, 7.9),
+                    setOf("Iris-setosa", "Iris-versicolor", "Iris-virginica")
+                ),
+                arrayOf(Read.csv("datasets/car.data"),
+                    listOf(1210, 384, 65, 69), null,
+                    setOf("vgood", "good", "acc", "unacc")
+                )
             )
         }
     }
