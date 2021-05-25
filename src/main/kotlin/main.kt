@@ -15,18 +15,18 @@ fun main() {
     val knn = knn(x, y, 9)
     println("Classifier accuracy: " +
             Accuracy.of(test.classesArray(), knn.predict(test.inputsArray())))
-    val real = REAL(knn, train, featureSets)
-    val realTheory = real.extract(x)
-    println("REAL accuracy: " +
+    val real = REAL(knn, featureSets)
+    val realTheory = real.extract(train)
+    println("REAL fidelity: " +
             Accuracy.of(knn.predict(test.inputsArray()), real.predict(test)))
-    val duepan = Duepan(knn, train, featureSets)
-    val duepanTheory = duepan.extract(x)
-    println("Duepan accuracy: " +
+    val duepan = Duepan(knn, featureSets)
+    val duepanTheory = duepan.extract(train)
+    println("Duepan fidelity: " +
             Accuracy.of(knn.predict(test.inputsArray()), duepan.predict(test)))
 
-    //realTheory.clauses.forEach { println(it.toString()) }
+    realTheory.clauses.forEach { println(it.toString()) }
     println("****")
-    //duepanTheory.clauses.forEach { println(it.toString()) }
+    duepanTheory.clauses.forEach { println(it.toString()) }
 
 }
 

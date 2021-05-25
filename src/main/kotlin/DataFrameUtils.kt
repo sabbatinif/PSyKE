@@ -1,10 +1,11 @@
-import it.unibo.tuprolog.core.Integer
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
 import smile.data.vector.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.streams.toList
 
@@ -65,8 +66,8 @@ fun DataFrame.describe(): Map<String, Description> {
     fun std(col: DoubleArray): Double {
         val mean = col.average()
         var std = 0.0
-        col.forEach { std += Math.pow(it - mean, 2.0) }
-        return Math.sqrt(std / col.size)
+        col.forEach { std += (it - mean).pow(2.0) }
+        return sqrt(std / col.size)
     }
 
     return mapOf(*this.inputs().schema().fields()

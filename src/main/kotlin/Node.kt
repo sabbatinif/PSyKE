@@ -18,7 +18,7 @@ class Node(val samples: DataFrame,
     }
 
     fun correct(): Int {
-        return this.samples.outputClasses().count() {
+        return this.samples.outputClasses().count {
             it == this.dominant()
         }
     }

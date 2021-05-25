@@ -3,50 +3,29 @@ import smile.data.DataFrame
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.theory.MutableTheory
 import smile.data.Tuple
+import javax.xml.crypto.Data
 import kotlin.streams.toList
 
 class REAL(override val predictor: Classifier<DoubleArray>,
-           override val dataset: DataFrame,
            override val featureSet: Set<BooleanFeatureSet>
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
-    class Rule(
-        val truePred: List<String>,
-        val falsePred: List<String>
-    ) {
-        fun subRule(rule: Rule): Boolean {
-            return (this.truePred.containsAll(rule.truePred) &&
-                    this.falsePred.containsAll((rule.falsePred)))
-        }
-
-        fun reduce(featureSets: Set<BooleanFeatureSet>): Rule {
-            val f = this.falsePred.toMutableList()
-
-            for (variable in this.truePred) {
-                f.removeAll(
-                    featureSets.filter { featSet ->
-                        variable in featSet.set.keys
-                    }.flatMap { it.set.keys }
-                )
-            }
-            return Rule(this.truePred, f)
-        }
-    }
-
+    private lateinit var dataset: DataFrame
     private lateinit var ruleSet: Map<Int, MutableList<Rule>>
 
-    fun init() {
+    private fun init(x: DataFrame) {
+        this.dataset = x
         this.ruleSet = mapOf(
-            *dataset.categories().mapIndexed {
+            *x.categories().mapIndexed {
                     i, _ -> i to mutableListOf<Rule>()
             }.toTypedArray()
         )
     }
 
-    override fun extract(x: Array<DoubleArray>): MutableTheory {
-        this.init()
+    override fun extract(x: DataFrame): MutableTheory {
+        this.init(x)
 
-        for (sample in x) {
+        for (sample in x.inputsArray()) {
             val c = this.predictor.predict(sample)
             if (!this.covers(sample, c))
             {
@@ -56,7 +35,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
                     rule.falsePred.toMutableList()
                 )
 
-                var samples = DataFrame.of(arrayOf(sample), *this.dataset.names())
+                var samples = DataFrame.of(arrayOf(sample), *x.names())
                 listOf(rule.truePred, rule.falsePred).zip(mutablePair) { it, mit ->
                     it.forEach {
                         val ret = this.subset(samples, it)
@@ -66,7 +45,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
                         }
                     }
                 }
-                this.ruleSet[c]!!.add(Rule(mutablePair.first(), mutablePair.last()))
+                this.ruleSet.getValue(c).add(Rule(mutablePair.first(), mutablePair.last()))
             }
         }
         this.optimise()
@@ -85,7 +64,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
 
                 listOf(rule.truePred, rule.falsePred).zip(listOf(true, false)) { pred, cond ->
                     for (variable in pred) {
-                        this.featureSet.filter { it.set.containsKey(variable) }.first().apply {
+                        this.featureSet.first { it.set.containsKey(variable) }.apply {
                             body.add(
                                 createTerm(
                                     variables[this.name] ?: Var.of(this.name),
@@ -110,7 +89,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
 
     private fun covers(x: DoubleArray, y: Int): Boolean {
         this.ruleFromExample(x).apply {
-            for (rule in ruleSet[y]!!)
+            for (rule in ruleSet.getValue(y))
                 if (this.subRule(rule))
                     return true
         }
@@ -127,7 +106,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         return Rule(t, f).reduce(this.featureSet)
     }
 
-    fun predict(x: Tuple): Int {
+    private fun predict(x: Tuple): Int {
         val data = mutableListOf<Double>()
         for (i in 0 until x.length() - 1) {
             data.add(x[i].toString().toDouble())
@@ -158,7 +137,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
             }
         }
         toRemove.forEach { (key, rule) ->
-            this.ruleSet[key]!!.remove(rule)
+            this.ruleSet.getValue(key).remove(rule)
         }
     }
 }
