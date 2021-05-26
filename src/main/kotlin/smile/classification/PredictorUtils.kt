@@ -4,6 +4,7 @@ import it.unibo.skpf.re.Extractor
 import smile.data.DataFrame
 import smile.data.classesArray
 import smile.data.inputsArray
+import smile.data.nCategories
 import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
 
@@ -23,7 +24,7 @@ fun confusionMatrix(data: DataFrame, predictor: Classifier<DoubleArray>,
                     extractor: Extractor<DoubleArray, Classifier<DoubleArray>>): ConfusionMatrix {
     return ConfusionMatrix.of(
         predictor.predict(data.inputsArray()),
-        extractor.predict(data)
+        extractor.predict(data).map { if (it == -1) data.nCategories() else it}.toIntArray()
     )
 }
 

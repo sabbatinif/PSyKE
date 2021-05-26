@@ -1,6 +1,7 @@
 package smile.data
 
 import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.OriginalValue
 import it.unibo.skpf.re.OriginalValue.Interval
 import it.unibo.skpf.re.OriginalValue.Value
 import smile.data.type.DataTypes
@@ -76,8 +77,8 @@ fun DataFrame.describe(): Map<String, Description> {
             it.name to Description(
                 col.average(),
                 std(col),
-                col.minOrNull() ?: 0.0,
-                col.maxOrNull() ?: 1.0
+                col.min() ?: 0.0,
+                col.max() ?: 1.0
             )
         }.toTypedArray()
     )
@@ -99,9 +100,10 @@ fun DataFrame.writeColumn(feature: String, value: Any): DataFrame {
                 is Int -> IntVector.of(this.schema().field(feature),
                     IntArray(this.nrows()) { value }
                 )
-                else -> StringVector.of(this.schema().field(feature),
-                    *Array(this.nrows()) { value.toString() }
+                is String -> StringVector.of(this.schema().field(feature),
+                    *Array<String>(this.nrows()) { value }
                 )
+                else -> throw IllegalStateException()
             }
         } else {
             it
@@ -174,27 +176,30 @@ fun DataFrame.toBoolean(featureSets: Set<BooleanFeatureSet>): DataFrame {
         val match = featureSets.filter { it.name == column.name() }
         if (match.isEmpty())
             outputColumns.add(column)
-        else {
-            for ((name, value) in match.first().set) {
-                outputColumns.add(
-                    DoubleVector.of(
-                        StructField(name, DataTypes.DoubleType),
-                        when (value) {
-                            is Interval ->
-                                column.toDoubleArray().map {
-                                    if ((value.lower <= it) && (it < value.upper)) 1.0 else 0.0
-                                }.toDoubleArray()
-                            is Value ->
-                                column.toStringArray().map {
-                                    if (value.value == it) 1.0 else 0.0
-                                }.toDoubleArray()
-                        }
-                    )
-                )
-            }
-        }
+        else
+            for ((name, value) in match.first().set)
+                outputColumns.add(createColumn(name, value, column))
     }
     return DataFrame.of(*outputColumns.toTypedArray()).merge(this.outputs())
+}
+
+private fun createColumn(name: String, value: OriginalValue, column: BaseVector<*, *, *>): DoubleVector {
+    fun condition(original: OriginalValue, value: Any): Boolean {
+        return if ((original is Interval) && (value is Double))
+            (original.lower <= value) && (value < original.upper)
+        else if ((original is Value) && (value is String))
+            (original.value == value)
+        else
+            throw IllegalStateException()
+    }
+
+    return DoubleVector.of(
+        StructField(name, DataTypes.DoubleType),
+        when (value) {
+            is Interval -> column.toDoubleArray().toTypedArray()
+            is Value -> column.toStringArray().toList().toTypedArray()
+        }.map { if (condition(value, it)) 1.0 else 0.0 }.toDoubleArray()
+    )
 }
 
 fun DataFrame.toStringList(): List<String> {

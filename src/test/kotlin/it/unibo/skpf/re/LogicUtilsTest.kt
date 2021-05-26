@@ -14,7 +14,7 @@ import smile.data.splitFeatures
 import smile.io.Read
 import java.util.stream.Stream
 
-class TheoryUtilsTest {
+class LogicUtilsTest {
     @ParameterizedTest
     @ArgumentsSource(Companion::class)
     fun testCreateTerm(

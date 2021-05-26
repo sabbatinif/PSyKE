@@ -29,7 +29,7 @@ internal class Duepan(
 
         val queue: SortedSet<Node> =
             sortedSetOf(kotlin.Comparator { n1, n2 ->
-                (n1.priority() - n2.priority()).sign.toInt()
+                (n1.priority - n2.priority).sign.toInt()
             })
         queue.add(this.root)
         return queue
@@ -56,7 +56,7 @@ internal class Duepan(
     }
 
     private fun bestSplit(node: Node): Pair<Node, Node>? {
-        if (node.nClasses() == 1)
+        if (node.nClasses == 1)
             return null
 
         val splits: SortedSet<Split> =
@@ -104,7 +104,7 @@ internal class Duepan(
             if (!exit)
                 return this.predict(x, child)
         }
-        return this.dataset.categories().indexOf(node.dominant())
+        return this.dataset.categories().indexOf(node.dominant)
     }
 
     override fun predict(x: DataFrame): IntArray {
@@ -117,7 +117,7 @@ internal class Duepan(
         while (nodes.isNotEmpty()) {
             val node = nodes.removeAt(0)
             val toRemove = mutableListOf<Node>()
-            node.children.filter { it.children.isEmpty() && node.dominant() == it.dominant() }
+            node.children.filter { it.children.isEmpty() && node.dominant == it.dominant }
                 .forEach {
                     toRemove.add(it)
                     n++
@@ -135,7 +135,7 @@ internal class Duepan(
             val node = nodes.removeAt(0)
             val toRemove = mutableListOf<Node>()
             node.children.forEach {
-                if ((node.dominant() == it.dominant()) &&
+                if ((node.dominant == it.dominant) &&
                     (it.children.size == 1)
                 ) {
                     toRemove.add(it)
@@ -153,17 +153,11 @@ internal class Duepan(
 
     private fun createTheory(): MutableTheory {
         val variables = createVariableList(this.featureSet)
-
-        fun ruleFromNode(
-            node: Node = this.root,
-            theory: MutableTheory = MutableTheory.empty()
-        ): MutableTheory {
-            node.children.forEach {
-                ruleFromNode(it, theory)
-            }
-            val head = createHead("concept", variables.values, node.dominant().toString())
+        val theory = MutableTheory.empty()
+        this.root.asSequence.forEach {
+            val head = createHead("concept", variables.values, it.dominant.toString())
             val body: MutableList<Term> = mutableListOf()
-            for ((constraint, value) in node.constraints) {
+            for ((constraint, value) in it.constraints) {
                 this.featureSet.first { it.set.containsKey(constraint) }.apply {
                     body.add(
                         createTerm(variables[this.name], this.set[constraint], value == 1.0)
@@ -171,8 +165,7 @@ internal class Duepan(
                 }
             }
             theory.assertZ(Clause.of(head, *body.toTypedArray()))
-            return theory
         }
-        return ruleFromNode()
+        return theory
     }
 }
