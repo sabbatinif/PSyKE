@@ -29,7 +29,7 @@ compileTestKotlin {
 }
 
 application {
-    mainClass = "MainKt"
+    mainClass = "it.unibo.skpf.re.MainKt"
 }
 
 test {

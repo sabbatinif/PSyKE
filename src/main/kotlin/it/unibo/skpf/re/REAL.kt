@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.theory.MutableTheory

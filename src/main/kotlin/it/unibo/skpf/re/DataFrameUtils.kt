@@ -1,5 +1,7 @@
-import OriginalValue.Interval
-import OriginalValue.Value
+package it.unibo.skpf.re
+
+import it.unibo.skpf.re.OriginalValue.Interval
+import it.unibo.skpf.re.OriginalValue.Value
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.type.DataTypes
@@ -204,12 +206,3 @@ fun DataFrame.toStringSet(): Set<String> {
     return this.toStringList().toSet()
 }
 
-//fun DataFrame.columnToTuple(index: Int): Tuple {
-//    val col = this.column(index)
-//    return Tuple.of(arrayOf(col), StructType(StructField(col.name(), col.type())))
-//}
-//private fun toOneHot(classes: Array<Int>): Array<DoubleArray> {
-//    val oneHot = Array(classes.size) { DoubleArray(classes.distinct().size) {0.0} }
-//    classes.forEachIndexed { i, it -> oneHot[i][it] = 1.0 }
-//    return oneHot
-//}

@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 import smile.data.DataFrame
 
 internal class Node(

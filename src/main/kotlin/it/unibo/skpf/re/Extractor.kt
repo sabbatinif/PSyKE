@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame

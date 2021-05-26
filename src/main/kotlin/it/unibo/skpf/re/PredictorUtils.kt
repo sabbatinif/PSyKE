@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 import smile.classification.Classifier
 import smile.data.DataFrame
 import smile.validation.metric.Accuracy

@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 class Rule(
     val truePred: List<String>,
     val falsePred: List<String>

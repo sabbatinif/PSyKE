@@ -1,3 +1,7 @@
+package it.unibo.skpf.re
+
+import it.unibo.skpf.re.Node
+import it.unibo.skpf.re.Split
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import smile.io.Read

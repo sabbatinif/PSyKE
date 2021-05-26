@@ -1,5 +1,7 @@
-import OriginalValue.Interval
-import OriginalValue.Value
+package it.unibo.skpf.re
+
+import it.unibo.skpf.re.OriginalValue.Interval
+import it.unibo.skpf.re.OriginalValue.Value
 import it.unibo.tuprolog.core.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

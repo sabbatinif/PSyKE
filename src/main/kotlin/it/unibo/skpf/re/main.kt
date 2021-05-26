@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 import smile.classification.knn
 import smile.io.Read
 import smile.validation.metric.Accuracy
@@ -13,19 +15,19 @@ fun main() {
     val y = train.classesArray()
     val knn = knn(x, y, 9)
     println(
-        "Classifier accuracy: " +
+        "Classifier it.unibo.skpf.accuracy: " +
                 Accuracy.of(test.classesArray(), knn.predict(test.inputsArray()))
     )
     val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
     val realTheory = real.extract(train)
     println(
-        "REAL fidelity: " +
+        "it.unibo.skpf.REAL it.unibo.skpf.fidelity: " +
                 Accuracy.of(knn.predict(test.inputsArray()), real.predict(test))
     )
     val duepan = Extractor.duepan(knn, featureSets)
     val duepanTheory = duepan.extract(train)
     println(
-        "Duepan fidelity: " +
+        "it.unibo.skpf.Duepan it.unibo.skpf.fidelity: " +
                 Accuracy.of(knn.predict(test.inputsArray()), duepan.predict(test))
     )
 

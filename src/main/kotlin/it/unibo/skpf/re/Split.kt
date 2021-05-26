@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 internal class Split(private val parent: Node, val children: Pair<Node, Node>) {
 
     val priority: Double
