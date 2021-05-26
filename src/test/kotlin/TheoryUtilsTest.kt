@@ -61,7 +61,7 @@ class TheoryUtilsTest {
                 Arguments.of(Value(2.65), false, "not_equal",
                     arrayOf(Atom.of("2.65"))),
                 Arguments.of(Interval(14.3, 25.2), false, "not_in",
-                    arrayOf(Real.of(14.3),Real.of(25.2)))
+                    arrayOf(Real.of(14.3), Real.of(25.2)))
             )
         }
     }

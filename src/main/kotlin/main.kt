@@ -12,16 +12,16 @@ fun main() {
     val x = train.inputsArray()
     val y = train.classesArray()
     val knn = knn(x, y, 9)
-    println("Classifier accuracy: " +
-            Accuracy.of(test.classesArray(), knn.predict(test.inputsArray())))
+    println("Classifier accuracy: " + accuracy(test, knn))
+    println(confusionMatrix(test, knn))
     val real = REAL(knn, featureSets)
     val realTheory = real.extract(train)
-    println("REAL fidelity: " +
-            Accuracy.of(knn.predict(test.inputsArray()), real.predict(test)))
+    println("REAL fidelity: " + fidelity(test, knn, real))
+    println(confusionMatrix(test, knn, real))
     val duepan = Duepan(knn, featureSets)
     val duepanTheory = duepan.extract(train)
-    println("Duepan fidelity: " +
-            Accuracy.of(knn.predict(test.inputsArray()), duepan.predict(test)))
+    println("Duepan fidelity: " + fidelity(test, knn, duepan))
+    println(confusionMatrix(test, knn, duepan))
 
     realTheory.clauses.forEach { println(it.toString()) }
     println("****")
