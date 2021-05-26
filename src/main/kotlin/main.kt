@@ -1,6 +1,6 @@
+import it.unibo.skpf.re.*
 import smile.classification.*
 import smile.io.Read
-import smile.validation.metric.Accuracy
 
 fun main() {
     val name = "iris"

@@ -11,7 +11,7 @@ interface InvertibleFeatureTransform : FeatureTransform {
 
     val schema: StructType?
 
-    fun invert (x: Double, i: Int): Double
+    fun invert(x: Double, i: Int): Double
 
     fun invert(x: DoubleArray?): DoubleArray? {
         val y = DoubleArray(x!!.size)

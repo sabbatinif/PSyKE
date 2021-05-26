@@ -1,3 +1,4 @@
+package it.unibo.skpf.re
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -60,11 +61,13 @@ class NodeTest {
 
     @Test
     fun testToString() {
-        val node = Node(dataset, nExamples,
+        val node = Node(
+            dataset, nExamples,
             setOf(
                 "V1" to 0.0,
                 "V2" to 1.0
-            ))
+            )
+        )
         assertEquals(" = Iris-setosa", nodeAll.toString())
         assertEquals(" = Iris-setosa", node40Setosa.toString())
         assertEquals(" = Iris-virginica", node10Virginica.toString())

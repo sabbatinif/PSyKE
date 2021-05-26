@@ -6,7 +6,7 @@ import smile.data.type.StructType
 internal class InvertibleScaler(schema: StructType, lo: DoubleArray, hi: DoubleArray) :
     Scaler(schema, lo, hi), InvertibleFeatureTransform {
 
-    override val schema : StructType?
+    override val schema: StructType?
         get() = super.schema
 
     val lowerBounds: DoubleArray
@@ -15,7 +15,7 @@ internal class InvertibleScaler(schema: StructType, lo: DoubleArray, hi: DoubleA
     val upperBounds: DoubleArray
         get() = super.hi
 
-    override fun invert (x: Double, i: Int): Double {
+    override fun invert(x: Double, i: Int): Double {
         return this.upperBounds[i] * x + this.lowerBounds[i]
     }
 

@@ -1,6 +1,11 @@
-import it.unibo.tuprolog.core.*
-import OriginalValue.Interval
-import OriginalValue.Value
+package it.unibo.skpf.re
+
+import it.unibo.skpf.re.OriginalValue.Interval
+import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.tuprolog.core.Atom
+import it.unibo.tuprolog.core.Real
+import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.Var
 
 fun createTerm(v: Var?, constraint: OriginalValue?, positive: Boolean = true): Struct {
     val functor = (if (!positive) "not_" else "") +

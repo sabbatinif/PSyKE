@@ -1,5 +1,7 @@
-import OriginalValue.Interval
-import OriginalValue.Value
+package it.unibo.skpf.re
+
+import it.unibo.skpf.re.OriginalValue.Interval
+import it.unibo.skpf.re.OriginalValue.Value
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.type.DataTypes
@@ -17,8 +19,8 @@ import kotlin.streams.toList
 fun DataFrame.randomSplit(percent: Double, seed: Long = 10L): Pair<DataFrame, DataFrame> {
     val r1 = Random(seed)
     val r2 = Random(seed)
-    val train  = DataFrame.of(this.stream().toList().filter { r1.nextDouble() >= percent })
-    val test  = DataFrame.of(this.stream().toList().filter { r2.nextDouble() < percent })
+    val train = DataFrame.of(this.stream().toList().filter { r1.nextDouble() >= percent })
+    val test = DataFrame.of(this.stream().toList().filter { r2.nextDouble() < percent })
     return train to test
 }
 
@@ -75,10 +77,11 @@ fun DataFrame.describe(): Map<String, Description> {
             it.name to Description(
                 col.average(),
                 std(col),
-                col.min() ?: 0.0,
-                col.max() ?: 1.0
+                col.minOrNull() ?: 0.0,
+                col.maxOrNull() ?: 1.0
             )
-        }.toTypedArray() )
+        }.toTypedArray()
+    )
 }
 
 fun DataFrame.filterByOutput(output: Any): DataFrame {
@@ -89,7 +92,7 @@ fun DataFrame.filterByOutput(output: Any): DataFrame {
 
 fun DataFrame.writeColumn(feature: String, value: Any): DataFrame {
     return DataFrame.of(*this.map {
-        if (it.name() == feature)
+        if (it.name() == feature) {
             when (value) {
                 is Double -> DoubleVector.of(this.schema().field(feature),
                     DoubleArray(this.nrows()) { value }
@@ -101,16 +104,17 @@ fun DataFrame.writeColumn(feature: String, value: Any): DataFrame {
                     *Array(this.nrows()) { value.toString() }
                 )
             }
-        else
+        } else {
             it
-    }.toTypedArray() )
+        }
+    }.toTypedArray())
 }
 
 fun DataFrame.createRanges(name: String): List<Range> {
     val ranges = this.categories().map {
         val desc = this.filterByOutput(it).describe()[name]
         Range(desc!!.mean, desc.stdDev)
-    }.sortedWith(compareBy{ it.mean })
+    }.sortedWith(compareBy { it.mean })
 
     ranges.zipWithNext { r1, r2 ->
         while (r1.upper < r2.lower) {
@@ -134,26 +138,32 @@ fun DataFrame.splitFeatures(): Set<BooleanFeatureSet> {
     for (feature in this.inputs()) {
         when (feature.type()) {
             DataTypes.DoubleType ->
-                featureSets.add(BooleanFeatureSet(
-                    feature.name(),
-                    createRanges(feature.name()).mapIndexed { i, it ->
-                        "${feature.name()}_$i" to Interval(it.lower, it.upper)
-                    }.toMap()
-                ))
+                featureSets.add(
+                    BooleanFeatureSet(
+                        feature.name(),
+                        createRanges(feature.name()).mapIndexed { i, it ->
+                            "${feature.name()}_$i" to Interval(it.lower, it.upper)
+                        }.toMap()
+                    )
+                )
             DataTypes.StringType ->
-                featureSets.add(BooleanFeatureSet(
-                    feature.name(),
-                    feature.toStringArray().distinct().mapIndexed { i, it ->
-                        "${feature.name()}_$i" to Value(it)
-                    }.toMap()
-                ))
+                featureSets.add(
+                    BooleanFeatureSet(
+                        feature.name(),
+                        feature.toStringArray().distinct().mapIndexed { i, it ->
+                            "${feature.name()}_$i" to Value(it)
+                        }.toMap()
+                    )
+                )
             DataTypes.IntegerType ->
-                featureSets.add(BooleanFeatureSet(
-                    feature.name(),
-                    feature.toIntArray().distinct().mapIndexed { i, it ->
-                        "${feature.name()}_$i" to Value(it)
-                    }.toMap()
-                ))
+                featureSets.add(
+                    BooleanFeatureSet(
+                        feature.name(),
+                        feature.toIntArray().distinct().mapIndexed { i, it ->
+                            "${feature.name()}_$i" to Value(it)
+                        }.toMap()
+                    )
+                )
         }
     }
     return featureSets.toSet()
@@ -167,20 +177,21 @@ fun DataFrame.toBoolean(featureSets: Set<BooleanFeatureSet>): DataFrame {
             outputColumns.add(column)
         else {
             for ((name, value) in match.first().set) {
-                outputColumns.add(DoubleVector.of(
-                    StructField(name, DataTypes.DoubleType),
-                    when (value) {
-                        is Interval ->
-                            column.toDoubleArray().map {
-                                if ((value.lower <= it) && (it < value.upper)) 1.0 else 0.0
-                            }.toDoubleArray()
-                        is Value ->
-                            column.toStringArray().map {
-                                if (value.value == it) 1.0 else 0.0
-                            }.toDoubleArray()
-                        else -> column.toDoubleArray()
-                    }
-                ))
+                outputColumns.add(
+                    DoubleVector.of(
+                        StructField(name, DataTypes.DoubleType),
+                        when (value) {
+                            is Interval ->
+                                column.toDoubleArray().map {
+                                    if ((value.lower <= it) && (it < value.upper)) 1.0 else 0.0
+                                }.toDoubleArray()
+                            is Value ->
+                                column.toStringArray().map {
+                                    if (value.value == it) 1.0 else 0.0
+                                }.toDoubleArray()
+                        }
+                    )
+                )
             }
         }
     }
@@ -195,13 +206,3 @@ fun DataFrame.toStringSet(): Set<String> {
     return this.toStringList().toSet()
 }
 
-
-//fun DataFrame.columnToTuple(index: Int): Tuple {
-//    val col = this.column(index)
-//    return Tuple.of(arrayOf(col), StructType(StructField(col.name(), col.type())))
-//}
-//private fun toOneHot(classes: Array<Int>): Array<DoubleArray> {
-//    val oneHot = Array(classes.size) { DoubleArray(classes.distinct().size) {0.0} }
-//    classes.forEachIndexed { i, it -> oneHot[i][it] = 1.0 }
-//    return oneHot
-//}

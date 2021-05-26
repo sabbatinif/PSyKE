@@ -1,3 +1,7 @@
+package it.unibo.skpf.re
+
+import it.unibo.skpf.re.Node
+import it.unibo.skpf.re.Split
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import smile.io.Read
@@ -13,11 +17,13 @@ class SplitTest {
 
     @Test
     fun testPriority() {
-        assertEquals(-40.0 / 60.0 - 50.0 / 90.0 - 100.0,
+        assertEquals(
+            -40.0 / 60.0 - 50.0 / 90.0 - 100.0,
             Split(nodeAll, Pair(node40Setosa, node40SetosaCompl)).priority,
             0.00001
         )
-        assertEquals((25.0 / 35.0) * -2 - 200.0 + 200.0,
+        assertEquals(
+            (25.0 / 35.0) * -2 - 200.0 + 200.0,
             Split(nodeAll, Pair(node25Virginica, node25VirginicaCompl)).priority,
             0.00001
         )
