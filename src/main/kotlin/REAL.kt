@@ -1,13 +1,14 @@
+import it.unibo.tuprolog.core.Clause
+import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.theory.MutableTheory
 import smile.classification.Classifier
 import smile.data.DataFrame
-import it.unibo.tuprolog.core.*
-import it.unibo.tuprolog.theory.MutableTheory
 import smile.data.Tuple
-import javax.xml.crypto.Data
 import kotlin.streams.toList
 
-class REAL(override val predictor: Classifier<DoubleArray>,
-           override val featureSet: Set<BooleanFeatureSet>
+internal class REAL(
+    override val predictor: Classifier<DoubleArray>,
+    override val featureSet: Set<BooleanFeatureSet>
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
     private lateinit var dataset: DataFrame
@@ -16,8 +17,8 @@ class REAL(override val predictor: Classifier<DoubleArray>,
     private fun init(x: DataFrame) {
         this.dataset = x
         this.ruleSet = mapOf(
-            *x.categories().mapIndexed {
-                    i, _ -> i to mutableListOf<Rule>()
+            *x.categories().mapIndexed { i, _ ->
+                i to mutableListOf<Rule>()
             }.toTypedArray()
         )
     }
@@ -27,8 +28,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
 
         for (sample in x.inputsArray()) {
             val c = this.predictor.predict(sample)
-            if (!this.covers(sample, c))
-            {
+            if (!this.covers(sample, c)) {
                 val rule = ruleFromExample(sample)
                 val mutablePair = listOf(
                     rule.truePred.toMutableList(),
@@ -56,8 +56,10 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
         for ((key, ruleList) in this.ruleSet) {
-            val head = createHead("concept", variables.values,
-                this.dataset.categories().elementAt(key).toString())
+            val head = createHead(
+                "concept", variables.values,
+                this.dataset.categories().elementAt(key).toString()
+            )
             for (rule in ruleList) {
                 val body: MutableList<Term> = mutableListOf()
 
@@ -95,8 +97,8 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         val t = mutableListOf<String>()
         val f = mutableListOf<String>()
 
-        this.dataset.schema().fields().zip(x.toTypedArray()) {
-            field, value -> (if (value == 1.0) t else f).add(field.name)
+        this.dataset.schema().fields().zip(x.toTypedArray()) { field, value ->
+            (if (value == 1.0) t else f).add(field.name)
         }
         return Rule(t, f).reduce(this.featureSet)
     }
@@ -125,7 +127,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         val toRemove: MutableList<Pair<Int, Rule>> = mutableListOf()
         this.ruleSet.forEach { (key, rules) ->
             rules.forEach { r1 ->
-                rules.minus(r1).forEach {r2 ->
+                rules.minus(r1).forEach { r2 ->
                     if (r2.subRule(r1))
                         toRemove.add(Pair(key, r2))
                 }

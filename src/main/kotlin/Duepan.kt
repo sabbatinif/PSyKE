@@ -1,20 +1,18 @@
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Term
-import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
+import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame
-import it.unibo.tuprolog.theory.Theory
 import smile.data.Tuple
-import java.lang.IndexOutOfBoundsException
 import java.util.*
 import kotlin.math.sign
 import kotlin.streams.toList
 
-class Duepan(override val predictor: Classifier<DoubleArray>,
-             override val featureSet: Set<BooleanFeatureSet>,
-             val maxSize: Int = 9999,
-             val minExamples: Int = 0
+internal class Duepan(
+    override val predictor: Classifier<DoubleArray>,
+    override val featureSet: Set<BooleanFeatureSet>,
+    val minExamples: Int = 0
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
     private lateinit var dataset: DataFrame
@@ -41,7 +39,7 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
 
             if (node.samples.nrows() < this.minExamples)
                 continue
-                //println("Pochi esempi")
+            //println("Pochi esempi")
 
             val best = this.bestSplit(node) ?: continue
             queue.addAll(best.toList())
@@ -66,15 +64,17 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
         for (column in (this.dataset.inputs().names().filterNot { constraints.contains(it) }))
             try {
                 splits.add(this.createSplit(node, column))
-           } catch (e: IndexOutOfBoundsException) { continue }
+            } catch (e: IndexOutOfBoundsException) {
+                continue
+            }
         return if (splits.isEmpty()) null else splits.first().children
     }
 
     private fun createSplit(node: Node, column: String): Split {
-        val trueExamples = DataFrame.of(node.samples.stream().filter{
+        val trueExamples = DataFrame.of(node.samples.stream().filter {
             it[column] == 1.0
         })
-        val falseExamples = DataFrame.of(node.samples.stream().filter{
+        val falseExamples = DataFrame.of(node.samples.stream().filter {
             it[column] == 0.0
         })
 
@@ -131,11 +131,11 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
             val toRemove = mutableListOf<Node>()
             node.children.forEach {
                 if ((node.dominant() == it.dominant()) &&
-                    (it.children.size == 1)) {
+                    (it.children.size == 1)
+                ) {
                     toRemove.add(it)
                     nodes.add(node)
-                }
-                else
+                } else
                     nodes.add(it)
             }
             while (toRemove.isNotEmpty()) {
@@ -149,10 +149,11 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
     private fun createTheory(): MutableTheory {
         val variables = createVariableList(this.featureSet)
 
-        fun ruleFromNode(node: Node = this.root,
-                         theory: MutableTheory = MutableTheory.empty()
+        fun ruleFromNode(
+            node: Node = this.root,
+            theory: MutableTheory = MutableTheory.empty()
         ): MutableTheory {
-            node.children.forEach{
+            node.children.forEach {
                 ruleFromNode(it, theory)
             }
             val head = createHead("concept", variables.values, node.dominant().toString())
@@ -160,7 +161,7 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
             for ((constraint, value) in node.constraints) {
                 this.featureSet.first { it.set.containsKey(constraint) }.apply {
                     body.add(
-                        createTerm(variables[this.name], this.set[constraint],value == 1.0)
+                        createTerm(variables[this.name], this.set[constraint], value == 1.0)
                     )
                 }
             }

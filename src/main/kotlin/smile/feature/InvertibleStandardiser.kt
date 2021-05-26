@@ -8,7 +8,7 @@ import smile.math.MathEx
 internal class InvertibleStandardiser(schema: StructType, mu: DoubleArray, std: DoubleArray) :
     Standardizer(schema, mu, std), InvertibleFeatureTransform {
 
-    override val schema : StructType?
+    override val schema: StructType?
         get() = super.schema
 
     val mean: DoubleArray
@@ -17,7 +17,7 @@ internal class InvertibleStandardiser(schema: StructType, mu: DoubleArray, std: 
     val stDev: DoubleArray
         get() = super.std
 
-    override fun invert (x: Double, i: Int): Double {
+    override fun invert(x: Double, i: Int): Double {
         return this.stDev[i] * x + this.mean[i]
     }
 

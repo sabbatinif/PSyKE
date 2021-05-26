@@ -1,9 +1,10 @@
 import smile.data.DataFrame
 
-class Node(val samples: DataFrame,
-           val nExamples: Int,
-           var constraints: Set<Pair<String, Double>> = emptySet(),
-           var children: MutableList<Node> = mutableListOf()
+internal class Node(
+    val samples: DataFrame,
+    val nExamples: Int,
+    var constraints: Set<Pair<String, Double>> = emptySet(),
+    var children: MutableList<Node> = mutableListOf()
 ) {
     fun priority(): Double {
         return -(this.reach() * (1 - this.fidelity()))
