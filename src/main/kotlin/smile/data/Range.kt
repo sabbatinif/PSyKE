@@ -1,4 +1,4 @@
-package it.unibo.skpf.re
+package smile.data
 
 data class Range(
     val mean: Double,

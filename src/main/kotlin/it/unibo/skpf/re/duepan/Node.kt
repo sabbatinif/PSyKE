@@ -1,5 +1,7 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.duepan
 
+import smile.data.nCategories
+import smile.data.outputClasses
 import smile.data.DataFrame
 
 internal class Node(

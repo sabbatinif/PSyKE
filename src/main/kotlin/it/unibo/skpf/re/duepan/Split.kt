@@ -1,4 +1,4 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.duepan
 
 internal class Split(private val parent: Node, val children: Pair<Node, Node>) {
 

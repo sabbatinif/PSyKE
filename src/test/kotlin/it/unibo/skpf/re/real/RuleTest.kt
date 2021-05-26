@@ -1,7 +1,7 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.real
 
-import it.unibo.skpf.re.Rule
-import it.unibo.skpf.re.splitFeatures
+import it.unibo.skpf.re.real.Rule
+import smile.data.splitFeatures
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import smile.io.Read

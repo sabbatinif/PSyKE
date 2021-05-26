@@ -1,9 +1,8 @@
-package it.unibo.skpf.re
+package smile.data
 
+import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.OriginalValue.Interval
 import it.unibo.skpf.re.OriginalValue.Value
-import smile.data.DataFrame
-import smile.data.Tuple
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType

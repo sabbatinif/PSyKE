@@ -1,4 +1,4 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.duepan
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

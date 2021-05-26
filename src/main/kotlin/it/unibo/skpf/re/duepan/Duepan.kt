@@ -1,5 +1,6 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.duepan
 
+import it.unibo.skpf.re.*
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.theory.MutableTheory
@@ -7,6 +8,8 @@ import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame
 import smile.data.Tuple
+import smile.data.categories
+import smile.data.inputs
 import java.util.*
 import kotlin.math.sign
 import kotlin.streams.toList

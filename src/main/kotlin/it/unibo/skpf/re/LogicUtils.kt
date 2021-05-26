@@ -7,7 +7,7 @@ import it.unibo.tuprolog.core.Real
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
 
-fun createTerm(v: Var?, constraint: OriginalValue?, positive: Boolean = true): Struct {
+internal fun createTerm(v: Var?, constraint: OriginalValue?, positive: Boolean = true): Struct {
     val functor = (if (!positive) "not_" else "") +
             (if (constraint is Interval) "in" else "equal")
     if (v == null)
@@ -19,12 +19,12 @@ fun createTerm(v: Var?, constraint: OriginalValue?, positive: Boolean = true): S
     }
 }
 
-fun createVariableList(featureSet: Set<BooleanFeatureSet>): Map<String, Var> {
+internal fun createVariableList(featureSet: Set<BooleanFeatureSet>): Map<String, Var> {
     return mapOf(*featureSet.map {
         it.name to Var.of(it.name)
     }.toTypedArray())
 }
 
-fun createHead(functor: String, variables: Collection<Var>, outClass: String): Struct {
+internal fun createHead(functor: String, variables: Collection<Var>, outClass: String): Struct {
     return Struct.of(functor, variables.plus(Atom.of(outClass)))
 }

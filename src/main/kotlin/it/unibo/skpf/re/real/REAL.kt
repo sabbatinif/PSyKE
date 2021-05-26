@@ -1,11 +1,11 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.real
 
+import it.unibo.skpf.re.*
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.theory.MutableTheory
 import smile.classification.Classifier
-import smile.data.DataFrame
-import smile.data.Tuple
+import smile.data.*
 import kotlin.streams.toList
 
 internal class REAL(

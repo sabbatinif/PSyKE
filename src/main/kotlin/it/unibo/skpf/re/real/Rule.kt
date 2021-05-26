@@ -1,6 +1,8 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.real
 
-class Rule(
+import it.unibo.skpf.re.BooleanFeatureSet
+
+internal class Rule(
     val truePred: List<String>,
     val falsePred: List<String>
 ) {

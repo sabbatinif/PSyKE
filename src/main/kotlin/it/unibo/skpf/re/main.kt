@@ -1,6 +1,7 @@
 package it.unibo.skpf.re
 
 import smile.classification.knn
+import smile.data.*
 import smile.io.Read
 import smile.validation.metric.Accuracy
 

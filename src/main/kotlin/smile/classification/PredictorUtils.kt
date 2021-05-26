@@ -1,7 +1,9 @@
-package it.unibo.skpf.re
+package smile.classification
 
-import smile.classification.Classifier
+import it.unibo.skpf.re.Extractor
 import smile.data.DataFrame
+import smile.data.classesArray
+import smile.data.inputsArray
 import smile.validation.metric.Accuracy
 
 fun accuracy(data: DataFrame, predictor: Classifier<DoubleArray>): Double {

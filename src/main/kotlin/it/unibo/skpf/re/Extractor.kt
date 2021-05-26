@@ -1,5 +1,7 @@
 package it.unibo.skpf.re
 
+import it.unibo.skpf.re.duepan.Duepan
+import it.unibo.skpf.re.real.REAL
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame
