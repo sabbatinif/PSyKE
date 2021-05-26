@@ -5,18 +5,14 @@ import smile.data.Tuple
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
-import smile.data.vector.*
+import smile.data.vector.BaseVector
+import smile.data.vector.DoubleVector
+import smile.data.vector.IntVector
+import smile.data.vector.StringVector
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.streams.toList
-
-data class Description(
-    val mean: Double,
-    val std: Double,
-    val min: Double,
-    val max: Double
-)
 
 fun DataFrame.randomSplit(percent: Double, seed: Long = 10L): Pair<DataFrame, DataFrame> {
     val r1 = Random(seed)
@@ -113,7 +109,7 @@ fun DataFrame.writeColumn(feature: String, value: Any): DataFrame {
 fun DataFrame.createRanges(name: String): List<Range> {
     val ranges = this.categories().map {
         val desc = this.filterByOutput(it).describe()[name]
-        Range(desc!!.mean, desc.std)
+        Range(desc!!.mean, desc.stdDev)
     }.sortedWith(compareBy{ it.mean })
 
     ranges.zipWithNext { r1, r2 ->
