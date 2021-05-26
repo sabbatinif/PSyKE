@@ -1,9 +1,11 @@
 import it.unibo.tuprolog.core.*
 
-fun createTerm(v: Var, constraint: Any, positive: Boolean = true): Struct
+fun createTerm(v: Var?, constraint: OriginalValue?, positive: Boolean = true): Struct
 {
     val functor = (if (!positive) "not_" else "") +
             (if (constraint is Interval) "in" else "equal")
+    if (v == null)
+        return Struct.of(functor)
     return when (constraint) {
         is Interval -> Struct.of(functor, v, Real.of(constraint.lower), Real.of(constraint.upper))
         is Value -> Struct.of(functor, v, Atom.of(constraint.value.toString()))

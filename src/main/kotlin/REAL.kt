@@ -49,7 +49,6 @@ class REAL(override val predictor: Classifier<DoubleArray>,
             }
         }
         this.optimise()
-
         return this.createTheory()
     }
 
@@ -62,15 +61,11 @@ class REAL(override val predictor: Classifier<DoubleArray>,
             for (rule in ruleList) {
                 val body: MutableList<Term> = mutableListOf()
 
-                listOf(rule.truePred, rule.falsePred).zip(listOf(true, false)) { pred, cond ->
-                    for (variable in pred) {
+                listOf(rule.truePred, rule.falsePred).zip(listOf(true, false)) { predicate, truthValue ->
+                    for (variable in predicate) {
                         this.featureSet.first { it.set.containsKey(variable) }.apply {
                             body.add(
-                                createTerm(
-                                    variables[this.name] ?: Var.of(this.name),
-                                    this.set[variable] ?: Any(),
-                                    cond
-                                )
+                                createTerm(variables[this.name], this.set[variable], truthValue)
                             )
                         }
                     }

@@ -146,13 +146,6 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
         }
     }
 
-    fun printNodes(node: Node) {
-        println(node.toString())
-        node.children.forEach {
-            printNodes(it)
-        }
-    }
-
     override fun createTheory(): MutableTheory {
         val variables = createVariableList(this.featureSet)
 
@@ -167,11 +160,7 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
             for ((constraint, value) in node.constraints) {
                 this.featureSet.first { it.set.containsKey(constraint) }.apply {
                     body.add(
-                        createTerm(
-                            variables[this.name] ?: Var.of(this.name),
-                            this.set[constraint] ?: Any(),
-                            value == 1.0
-                        )
+                        createTerm(variables[this.name], this.set[constraint],value == 1.0)
                     )
                 }
             }

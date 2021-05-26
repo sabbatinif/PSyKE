@@ -4,7 +4,7 @@ import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
 
 fun main() {
-    val name = "car"
+    val name = "iris"
 
     val dataset = Read.csv("datasets/$name.data")
     val featureSets = dataset.splitFeatures()
