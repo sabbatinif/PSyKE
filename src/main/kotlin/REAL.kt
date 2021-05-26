@@ -52,7 +52,7 @@ class REAL(override val predictor: Classifier<DoubleArray>,
         return this.createTheory()
     }
 
-    override fun createTheory(): MutableTheory {
+    private fun createTheory(): MutableTheory {
         val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
         for ((key, ruleList) in this.ruleSet) {

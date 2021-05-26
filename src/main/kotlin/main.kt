@@ -1,7 +1,6 @@
 import smile.classification.*
 import smile.io.Read
 import smile.validation.metric.Accuracy
-import smile.validation.metric.ConfusionMatrix
 
 fun main() {
     val name = "iris"

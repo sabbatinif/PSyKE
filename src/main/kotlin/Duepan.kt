@@ -146,7 +146,7 @@ class Duepan(override val predictor: Classifier<DoubleArray>,
         }
     }
 
-    override fun createTheory(): MutableTheory {
+    private fun createTheory(): MutableTheory {
         val variables = createVariableList(this.featureSet)
 
         fun ruleFromNode(node: Node = this.root,

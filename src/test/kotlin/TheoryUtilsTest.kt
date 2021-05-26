@@ -7,6 +7,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.runners.Parameterized
 import smile.io.Read
 import java.util.stream.Stream
+import OriginalValue.Interval
+import OriginalValue.Value
 
 class TheoryUtilsTest {
     @ParameterizedTest

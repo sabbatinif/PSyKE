@@ -1,7 +1,8 @@
 import it.unibo.tuprolog.core.*
+import OriginalValue.Interval
+import OriginalValue.Value
 
-fun createTerm(v: Var?, constraint: OriginalValue?, positive: Boolean = true): Struct
-{
+fun createTerm(v: Var?, constraint: OriginalValue?, positive: Boolean = true): Struct {
     val functor = (if (!positive) "not_" else "") +
             (if (constraint is Interval) "in" else "equal")
     if (v == null)
