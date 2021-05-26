@@ -8,10 +8,13 @@ import smile.io.Read
 import java.util.stream.Stream
 import OriginalValue.Interval
 import OriginalValue.Value
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.params.provider.ArgumentsProvider
+import org.junit.jupiter.params.provider.ArgumentsSource
 
 class TheoryUtilsTest {
     @ParameterizedTest
-    @MethodSource("provideTestArguments")
+    @ArgumentsSource(Companion::class)
     fun testCreateTerm(constraint: OriginalValue, positive: Boolean,
                        functor: String, terms: Array<Term>) {
         val expected = Struct.of(functor, Var.of("V"), *terms)
@@ -48,9 +51,8 @@ class TheoryUtilsTest {
             createHead("functor", vars.toList(), outputClass))
     }
 
-    companion object {
-        @JvmStatic
-        fun provideTestArguments(): Stream<Arguments> {
+    companion object : ArgumentsProvider {
+        override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
             return Stream.of(
                 Arguments.of(Value("test"), true, "equal",
                     arrayOf(Atom.of("test"))),
