@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 data class Range(
     val mean: Double,
     val std: Double

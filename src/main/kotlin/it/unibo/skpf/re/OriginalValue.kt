@@ -1,3 +1,5 @@
+package it.unibo.skpf.re
+
 sealed class OriginalValue {
     data class Interval(
         val lower: Double,
