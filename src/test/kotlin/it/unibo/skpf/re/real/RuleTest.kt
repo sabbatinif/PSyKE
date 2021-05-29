@@ -1,6 +1,5 @@
 package it.unibo.skpf.re.real
 
-import it.unibo.skpf.re.real.Rule
 import smile.data.splitFeatures
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -42,9 +41,9 @@ class RuleTest {
             listOf("V1_1", "V2_2", "V3_0"),
             listOf("V4_1", "V4_2")
         )
-        assertEquals(reducedRule.truePred, rule.reduce(featureSets).truePred)
-        assertEquals(reducedRule.falsePred, rule.reduce(featureSets).falsePred)
-        assertEquals(reducedRule.truePred, reducedRule.reduce(featureSets).truePred)
-        assertEquals(reducedRule.falsePred, reducedRule.reduce(featureSets).falsePred)
+        assertEquals(reducedRule.truePredicates, rule.reduce(featureSets).truePredicates)
+        assertEquals(reducedRule.falsePredicates, rule.reduce(featureSets).falsePredicates)
+        assertEquals(reducedRule.truePredicates, reducedRule.reduce(featureSets).truePredicates)
+        assertEquals(reducedRule.falsePredicates, reducedRule.reduce(featureSets).falsePredicates)
     }
 }

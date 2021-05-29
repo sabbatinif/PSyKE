@@ -135,8 +135,14 @@ class DataFrameUtilsTest {
         }
         val written = dataset.writeColumn(firstFeature.name, value)
         assertEquals(dataset.schema(), written.schema())
-        assertEquals(dataset.nrows(), written.stream().filter { it[firstFeature.name] == value }.count().toInt())
-        assertEquals(dataset.drop(firstFeature.name).toStringList(), written.drop(firstFeature.name).toStringList())
+        assertEquals(
+            dataset.nrows(),
+            written.stream().filter { it[firstFeature.name] == value }.count().toInt()
+        )
+        assertEquals(
+            dataset.drop(firstFeature.name).toStringList(),
+            written.drop(firstFeature.name).toStringList()
+        )
     }
 
     @Test

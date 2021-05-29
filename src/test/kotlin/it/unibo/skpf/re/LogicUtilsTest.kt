@@ -27,10 +27,7 @@ class LogicUtilsTest {
         assertEquals(expected.functor, actual.functor)
         expected.args.zip(actual.args) { exp, act ->
             assertEquals(exp::class.qualifiedName, act::class.qualifiedName)
-            when {
-                exp is Var && act is Var -> assertEquals(exp.name, act.name)
-                exp is Atom && act is Atom -> assertEquals(exp, act)
-            }
+            assert(exp.structurallyEquals(act))
         }
     }
 
@@ -44,7 +41,9 @@ class LogicUtilsTest {
         )
         val actual = createVariableList(Read.csv("datasets/iris.data").splitFeatures())
         assertEquals(expected.keys, actual.keys)
-        assertEquals(expected.values.map { it.name }, actual.values.map { it.name })
+        expected.values.zip(actual.values) { exp, act ->
+            assert(exp.structurallyEquals(act))
+        }
     }
 
     @Test

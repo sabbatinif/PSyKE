@@ -3,6 +3,7 @@ package it.unibo.skpf.re.real
 import it.unibo.skpf.re.*
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import smile.classification.Classifier
 import smile.data.*
@@ -16,68 +17,73 @@ internal class REAL(
     private lateinit var dataset: DataFrame
     private lateinit var ruleSet: Map<Int, MutableList<Rule>>
 
-    private fun init(x: DataFrame) {
-        this.dataset = x
-        this.ruleSet = mapOf(
-            *x.categories().mapIndexed { i, _ ->
+    private fun init(dataset: DataFrame): Map<Int, MutableList<Rule>> {
+        return mapOf(
+            *dataset.categories().mapIndexed { i, _ ->
                 i to mutableListOf<Rule>()
             }.toTypedArray()
         )
     }
 
-    override fun extract(x: DataFrame): MutableTheory {
-        this.init(x)
-
-        for (sample in x.inputsArray()) {
+    override fun extract(dataset: DataFrame): MutableTheory {
+        var ruleSet = this.init(dataset)
+        for (sample in dataset.inputsArray()) {
             val c = this.predictor.predict(sample)
-            if (!this.covers(sample, c)) {
-                val rule = ruleFromExample(sample)
-                val mutablePair = listOf(
-                    rule.truePred.toMutableList(),
-                    rule.falsePred.toMutableList()
-                )
-
-                var samples = DataFrame.of(arrayOf(sample), *x.names())
-                listOf(rule.truePred, rule.falsePred).zip(mutablePair) { it, mit ->
-                    it.forEach {
-                        val ret = this.subset(samples, it)
-                        if (ret.second) {
-                            mit.remove(it)
-                            samples = ret.first
-                        }
-                    }
-                }
-                this.ruleSet.getValue(c).add(Rule(mutablePair.first(), mutablePair.last()))
-            }
+            if (!this.covers(dataset, sample, ruleSet.getValue(c)))
+                ruleSet.getValue(c).add(createNewRule(dataset, sample))
         }
-        this.optimise()
-        return this.createTheory()
+        ruleSet = this.optimise(ruleSet)
+        this.ruleSet = ruleSet
+        this.dataset = dataset
+        return this.createTheory(dataset, ruleSet)
     }
 
-    private fun createTheory(): MutableTheory {
-        val variables = createVariableList(this.featureSet)
-        val theory = MutableTheory.empty()
-        for ((key, ruleList) in this.ruleSet) {
-            val head = createHead(
-                "concept", variables.values,
-                this.dataset.categories().elementAt(key).toString()
-            )
-            for (rule in ruleList) {
-                val body: MutableList<Term> = mutableListOf()
+    private fun createNewRule(dataset: DataFrame, sample: DoubleArray): Rule {
+        val rule = ruleFromExample(dataset, sample)
+        return removeAntecedents(rule, dataset, sample)
+    }
 
-                listOf(rule.truePred, rule.falsePred).zip(listOf(true, false)) { predicate, truthValue ->
-                    for (variable in predicate) {
-                        this.featureSet.first { it.set.containsKey(variable) }.apply {
-                            body.add(
-                                createTerm(variables[this.name], this.set[variable], truthValue)
-                            )
-                        }
-                    }
+    private fun removeAntecedents(rule: Rule, dataset: DataFrame, sample: DoubleArray): Rule {
+        val mutableRule = rule.asMutable()
+        var samples = DataFrame.of(arrayOf(sample), *dataset.names())
+        listOf(rule.truePredicates, rule.falsePredicates).zip(mutableRule) { predicates, mutablePredicates ->
+            predicates.forEach {
+                val ret = this.subset(samples, it)
+                if (ret.second) {
+                    mutablePredicates.remove(it)
+                    samples = ret.first
                 }
-                theory.assertZ(Clause.of(head, *body.toTypedArray()))
             }
         }
+        return Rule(mutableRule.first(), mutableRule.last())
+    }
+
+    private fun createTheory(dataset: DataFrame, ruleSet: Map<Int, MutableList<Rule>>): MutableTheory {
+        val variables = createVariableList(this.featureSet)
+        val theory = MutableTheory.empty()
+        for ((key, ruleList) in ruleSet)
+            for (rule in ruleList)
+                theory.assertZ(createClause(variables, key, rule))
         return theory
+    }
+
+    private fun createClause(variables: Map<String, Var>, key: Int, rule: Rule): Clause {
+        val head = createHead(
+            "concept", variables.values,
+            dataset.categories().elementAt(key).toString()
+        )
+        return Clause.of(head, *createBody(variables, rule))
+    }
+
+    private fun createBody(variables: Map<String, Var>, rule: Rule): Array<Term> {
+        val body: MutableList<Term> = mutableListOf()
+        listOf(rule.truePredicates, rule.falsePredicates).zip(listOf(true, false)) { predicate, truthValue ->
+            for (variable in predicate)
+                this.featureSet.first { it.set.containsKey(variable) }.apply {
+                    body.add(createTerm(variables[this.name], this.set[variable], truthValue))
+                }
+        }
+        return body.toTypedArray()
     }
 
     private fun subset(x: DataFrame, feature: String): Pair<DataFrame, Boolean> {
@@ -86,57 +92,61 @@ internal class REAL(
         return Pair(all, this.predictor.predict(all.toArray()).distinct().size == 1)
     }
 
-    private fun covers(x: DoubleArray, y: Int): Boolean {
-        this.ruleFromExample(x).apply {
-            for (rule in ruleSet.getValue(y))
+    private fun covers(dataset: DataFrame, x: DoubleArray, rules: List<Rule>): Boolean {
+        this.ruleFromExample(dataset, x).apply {
+            for (rule in rules)
                 if (this.subRule(rule))
                     return true
         }
         return false
     }
 
-    private fun ruleFromExample(x: DoubleArray): Rule {
+    private fun ruleFromExample(dataset: DataFrame, x: DoubleArray): Rule {
         val t = mutableListOf<String>()
         val f = mutableListOf<String>()
 
-        this.dataset.schema().fields().zip(x.toTypedArray()) { field, value ->
+        dataset.schema().fields().zip(x.toTypedArray()) { field, value ->
             (if (value == 1.0) t else f).add(field.name)
         }
         return Rule(t, f).reduce(this.featureSet)
     }
 
     private fun predict(x: Tuple): Int {
-        val data = mutableListOf<Double>()
-        for (i in 0 until x.length() - 1) {
-            data.add(x[i].toString().toDouble())
-        }
-        val rule = this.ruleFromExample(data.toDoubleArray())
+        val rule = this.ruleFromExample(
+            this.dataset,
+            sequence {
+                for (i in 0 until x.length() - 1)
+                    yield(x.getDouble(i))
+            }.toList().toDoubleArray())
 
-        for ((key, rules) in this.ruleSet) {
-            rules.forEach {
-                if (rule.subRule(it))
-                    return key
+        return this.flat(this.ruleSet)
+            .firstOrNull { rule.subRule(it.second) }?.first ?: -1
+    }
+
+    private fun flat(ruleSet: Map<Int, MutableList<Rule>>): List<Pair<Int, Rule>> =
+        ruleSet.flatMap { (key, rules) -> rules.map { key to it } }
+
+    override fun predict(x: DataFrame): IntArray =
+        x.stream().map { this.predict(it) }.toList().toIntArray()
+
+    private fun optimise(ruleSet: Map<Int, MutableList<Rule>>): Map<Int, MutableList<Rule>> {
+        sequence {
+            ruleSet.forEach { (key, rules) ->
+                yieldAll(uselessRules(key, rules))
             }
+        }.forEach { (key, rule) ->
+            ruleSet.getValue(key).remove(rule)
         }
-        return -1
+        return ruleSet
     }
 
-    override fun predict(x: DataFrame): IntArray {
-        return x.stream().map { this.predict(it) }.toList().toIntArray()
-    }
-
-    private fun optimise() {
-        val toRemove: MutableList<Pair<Int, Rule>> = mutableListOf()
-        this.ruleSet.forEach { (key, rules) ->
-            rules.forEach { r1 ->
-                rules.minus(r1).forEach { r2 ->
-                    if (r2.subRule(r1))
-                        toRemove.add(Pair(key, r2))
+    private fun uselessRules(key: Int, rules: List<Rule>): Sequence<Pair<Int, Rule>> =
+        sequence {
+            rules.forEach { rule ->
+                rules.minus(rule).forEach {
+                    if (it.subRule(rule))
+                        yield(Pair(key, it))
                 }
             }
         }
-        toRemove.forEach { (key, rule) ->
-            this.ruleSet.getValue(key).remove(rule)
-        }
-    }
 }
