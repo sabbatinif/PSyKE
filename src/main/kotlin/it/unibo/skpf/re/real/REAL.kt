@@ -38,21 +38,27 @@ internal class REAL(
 
     private fun createNewRule(dataset: DataFrame, sample: DoubleArray): Rule {
         val rule = ruleFromExample(dataset.schema(), sample)
-        return removeAntecedents(rule, dataset, sample)
+        return generalise(rule, dataset, sample)
     }
 
-    private fun removeAntecedents(rule: Rule, dataset: DataFrame, sample: DoubleArray): Rule {
+    private fun removeAntecedents(samples: DataFrame,
+                                  predicate: String,
+                                  mutablePredicates: MutableList<String>): DataFrame {
+        val ret = this.subset(samples, predicate)
+        if (ret.second) {
+            mutablePredicates.remove(predicate)
+            return ret.first
+        }
+        return samples
+    }
+
+    private fun generalise(rule: Rule, dataset: DataFrame, sample: DoubleArray): Rule {
         val mutableRule = rule.asMutable()
         var samples = DataFrame.of(arrayOf(sample), *dataset.names())
         rule.asList().zip(mutableRule) { predicates, mutablePredicates ->
-            for (predicate in predicates) {
-                val ret = this.subset(samples, predicate)
-                if (ret.second) {
-                    mutablePredicates.remove(predicate)
-                    samples = ret.first
-                }
+            for (predicate in predicates)
+                samples = removeAntecedents(samples, predicate, mutablePredicates)
             }
-        }
         return Rule(mutableRule.first(), mutableRule.last())
     }
 
