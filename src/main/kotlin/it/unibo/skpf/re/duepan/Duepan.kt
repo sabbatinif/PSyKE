@@ -2,7 +2,7 @@ package it.unibo.skpf.re.duepan
 
 import it.unibo.skpf.re.*
 import it.unibo.tuprolog.core.Clause
-import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
@@ -89,78 +89,77 @@ internal class Duepan(
     }
 
     private fun predict(x: Tuple, node: Node, categories: Set<Any>): Int {
-        for (child in node.children) {
-            var exit = false
+        nextChild@for (child in node.children) {
             for ((constraint, value) in child.constraints)
-                if (x[constraint] != value) {
-                    exit = true
-                    break
-                }
-            if (!exit)
-                return this.predict(x, child, categories)
+                if (x[constraint] != value)
+                    continue@nextChild
+            return this.predict(x, child, categories)
         }
         return categories.indexOf(node.dominant)
     }
 
     override fun predict(dataset: DataFrame): IntArray {
-        return dataset.stream().map { this.predict(it, this.root, dataset.categories()) }.toList().toIntArray()
+        return dataset.stream().map {
+            this.predict(it, this.root, dataset.categories())
+        }.toList().toIntArray()
+    }
+
+    private fun removeNodes(nodes: MutableList<Node>): Int {
+        val node = nodes.removeAt(0)
+        val toRemove = mutableListOf<Node>()
+        node.children.filter { it.children.isEmpty() && node.dominant == it.dominant }
+            .forEach { toRemove.add(it) }
+        node.children.removeAll(toRemove)
+        node.children.filter { it.children.isNotEmpty() }.forEach { nodes.add(it) }
+        return toRemove.size
     }
 
     private fun optimize() {
         val nodes = mutableListOf(this.root)
         var n = 0
-        while (nodes.isNotEmpty()) {
-            val node = nodes.removeAt(0)
-            val toRemove = mutableListOf<Node>()
-            node.children.filter { it.children.isEmpty() && node.dominant == it.dominant }
-                .forEach {
-                    toRemove.add(it)
-                    n++
-                }
-            node.children.removeAll(toRemove)
-            node.children.filter { it.children.isNotEmpty() }.forEach { nodes.add(it) }
-        }
+        while (nodes.isNotEmpty())
+            n += removeNodes(nodes)
         if (n > 0)
             this.optimize()
+    }
+
+    private fun nodesToRemove(node: Node, nodes: MutableList<Node>): MutableList<Node> {
+        val toRemove = mutableListOf<Node>()
+        for (child in node.children)
+            if ((node.dominant == child.dominant) && (child.children.size == 1)) {
+                toRemove.add(child)
+                nodes.add(node)
+            } else
+                nodes.add(child)
+        return toRemove
     }
 
     private fun compact() {
         val nodes = mutableListOf(this.root)
         while (nodes.isNotEmpty()) {
             val node = nodes.removeAt(0)
-            val toRemove = mutableListOf<Node>()
-            node.children.forEach {
-                if ((node.dominant == it.dominant) &&
-                    (it.children.size == 1)
-                ) {
-                    toRemove.add(it)
-                    nodes.add(node)
-                } else
-                    nodes.add(it)
-            }
-            while (toRemove.isNotEmpty()) {
-                val n = toRemove.removeAt(0)
-                node.children.remove(n)
-                node.children.addAll(n.children)
+            nodesToRemove(node, nodes).forEach {
+                node.children.remove(it)
+                node.children.addAll(it.children)
             }
         }
     }
 
+    private fun createBody(variables: Map<String, Var>, node: Node) = sequence {
+        for ((constraint, value) in node.constraints)
+            this@Duepan.featureSet.first { it.set.containsKey(constraint) }.apply {
+                yield(createTerm(variables[this.name], this.set[constraint], value == 1.0))
+            }
+    }.toList().toTypedArray()
+
     private fun createTheory(): MutableTheory {
         val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
-        this.root.asSequence.forEach {
-            val head = createHead("concept", variables.values, it.dominant.toString())
-            val body: MutableList<Term> = mutableListOf()
-            for ((constraint, value) in it.constraints) {
-                this.featureSet.first { it.set.containsKey(constraint) }.apply {
-                    body.add(
-                        createTerm(variables[this.name], this.set[constraint], value == 1.0)
-                    )
-                }
-            }
-            theory.assertZ(Clause.of(head, *body.toTypedArray()))
-        }
+        for (node in this.root.asSequence)
+            theory.assertZ(Clause.of(
+                createHead("concept", variables.values, node.dominant.toString()),
+                *createBody(variables, node)
+            ))
         return theory
     }
 }

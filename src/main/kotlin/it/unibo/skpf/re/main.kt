@@ -9,7 +9,7 @@ import smile.io.Read
 import smile.validation.metric.Accuracy
 
 fun main() {
-    val name = "iris"
+    val name = "car"
 
     val dataset = Read.csv("datasets/$name.data")
     val featureSets = dataset.splitFeatures()
