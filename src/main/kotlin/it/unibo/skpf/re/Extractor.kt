@@ -12,9 +12,9 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
 
     val featureSet: Set<BooleanFeatureSet>
 
-    fun extract(x: DataFrame): Theory
+    fun extract(dataset: DataFrame): Theory
 
-    fun predict(x: DataFrame): IntArray
+    fun predict(dataset: DataFrame): IntArray
 
     companion object {
         @JvmStatic

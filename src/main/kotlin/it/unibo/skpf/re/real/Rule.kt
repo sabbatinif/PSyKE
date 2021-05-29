@@ -22,8 +22,10 @@ internal class Rule(
         return Rule(this.truePredicates, f)
     }
 
-    fun asMutable() = listOf(
-        this.truePredicates.toMutableList(),
-        this.falsePredicates.toMutableList()
+    fun asMutable() = this.asList().map { it.toMutableList() }
+
+    fun asList() = listOf(
+        this.truePredicates,
+        this.falsePredicates
     )
 }
