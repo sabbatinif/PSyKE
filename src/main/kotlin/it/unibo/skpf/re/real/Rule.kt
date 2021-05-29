@@ -17,7 +17,7 @@ internal class Rule(
             f.removeAll(
                 featureSets.filter { featSet ->
                     variable in featSet.set.keys
-                }.flatMap { it.set.keys }
+                }.map { it.set.keys }.flatten()
             )
         return Rule(this.truePredicates, f)
     }

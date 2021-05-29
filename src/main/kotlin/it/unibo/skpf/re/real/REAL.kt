@@ -122,8 +122,10 @@ internal class REAL(
                 yield(x.getDouble(i))
         }.toList().toDoubleArray()
 
-    private fun flat(ruleSet: Map<Int, MutableList<Rule>>): List<Pair<Int, Rule>> =
-        ruleSet.flatMap { (key, rules) -> rules.map { key to it } }
+    private fun flat(ruleSet: Map<Int, MutableList<Rule>>) =
+        ruleSet.map { (key, rules) ->
+            rules.map { key to it }
+        }.flatten()
 
     override fun predict(dataset: DataFrame): IntArray =
         dataset.stream().map { this.predict(it) }.toList().toIntArray()

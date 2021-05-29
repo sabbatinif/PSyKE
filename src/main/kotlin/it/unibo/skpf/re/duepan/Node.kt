@@ -26,7 +26,7 @@ internal class Node(
         get() = this.samples.outputClasses()
             .groupBy { it }
             .mapValues { it.value.size }
-            .maxBy { it.value }?.key ?: ""
+            .maxByOrNull { it.value }?.key ?: ""
 
     val nClasses: Int
         get() = this.samples.nCategories()

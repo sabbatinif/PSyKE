@@ -77,8 +77,8 @@ fun DataFrame.describe(): Map<String, Description> =
             it.name to Description(
                 col.average(),
                 std(col),
-                col.min() ?: 0.0,
-                col.max() ?: 1.0
+                col.minByOrNull { it } ?: 0.0,
+                col.maxByOrNull { it } ?: 1.0
             )
         }.toTypedArray()
     )

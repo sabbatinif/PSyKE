@@ -35,8 +35,8 @@ internal class Duepan(
         return queue
     }
 
-    override fun extract(x: DataFrame): Theory {
-        val queue = this.init(x)
+    override fun extract(dataset: DataFrame): Theory {
+        val queue = this.init(dataset)
 
         while (queue.isNotEmpty()) {
             val node = queue.first()
@@ -107,8 +107,8 @@ internal class Duepan(
         return this.dataset.categories().indexOf(node.dominant)
     }
 
-    override fun predict(x: DataFrame): IntArray {
-        return x.stream().map { this.predict(it, this.root) }.toList().toIntArray()
+    override fun predict(dataset: DataFrame): IntArray {
+        return dataset.stream().map { this.predict(it, this.root) }.toList().toIntArray()
     }
 
     private fun optimize() {
