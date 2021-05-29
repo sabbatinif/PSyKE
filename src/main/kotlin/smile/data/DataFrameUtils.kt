@@ -62,15 +62,15 @@ fun DataFrame.outputsArray(outputColumn: Int = lastColumnIndex): DoubleArray =
 fun DataFrame.classesArray(outputColumn: Int = lastColumnIndex): IntArray =
     this.classes(outputColumn).intVector(0).toIntArray()
 
-fun DataFrame.describe(): Map<String, Description> {
-    fun std(col: DoubleArray): Double {
-        val mean = col.average()
-        var std = 0.0
-        col.forEach { std += (it - mean).pow(2.0) }
-        return sqrt(std / col.size)
-    }
+fun std(col: DoubleArray): Double {
+    val mean = col.average()
+    var std = 0.0
+    col.forEach { std += (it - mean).pow(2.0) }
+    return sqrt(std / col.size)
+}
 
-    return mapOf(*this.inputs().schema().fields()
+fun DataFrame.describe(): Map<String, Description> =
+    mapOf(*this.inputs().schema().fields()
         .filter { it.isNumeric }
         .map {
             val col = this.column(it.name).toDoubleArray()
@@ -82,16 +82,14 @@ fun DataFrame.describe(): Map<String, Description> {
             )
         }.toTypedArray()
     )
-}
 
-fun DataFrame.filterByOutput(output: Any): DataFrame {
-    return DataFrame.of(this.stream().filter {
+fun DataFrame.filterByOutput(output: Any) =
+    DataFrame.of(this.stream().filter {
         it.get(this.lastColumnIndex) == output
     })
-}
 
-fun DataFrame.writeColumn(feature: String, value: Any): DataFrame {
-    return DataFrame.of(*this.map {
+fun DataFrame.writeColumn(feature: String, value: Any) =
+    DataFrame.of(*this.map {
         if (it.name() == feature) {
             when (value) {
                 is Double -> DoubleVector.of(this.schema().field(feature),
@@ -109,14 +107,14 @@ fun DataFrame.writeColumn(feature: String, value: Any): DataFrame {
             it
         }
     }.toTypedArray())
-}
 
-fun DataFrame.createRanges(name: String): List<Range> {
-    val ranges = this.categories().map {
-        val desc = this.filterByOutput(it).describe()[name]
+private fun initRanges(dataset: DataFrame, name: String) =
+    dataset.categories().map {
+        val desc = dataset.filterByOutput(it).describe()[name]
         Range(desc!!.mean, desc.stdDev)
     }.sortedWith(compareBy { it.mean })
 
+private fun expandRanges(ranges: List<Range>) {
     ranges.zipWithNext { r1, r2 ->
         while (r1.upper < r2.lower) {
             r1.upper += r1.std
@@ -126,6 +124,11 @@ fun DataFrame.createRanges(name: String): List<Range> {
         r1.upper = mean
         r2.lower = mean
     }
+}
+
+fun DataFrame.createRanges(name: String): List<Range> {
+    val ranges = initRanges(this, name)
+    expandRanges(ranges)
     this.describe()[name].apply {
         ranges.first().lower = this!!.min - 0.001
         ranges.last().upper = this.max + 0.001
@@ -183,30 +186,26 @@ fun DataFrame.toBoolean(featureSets: Set<BooleanFeatureSet>): DataFrame {
     return DataFrame.of(*outputColumns.toTypedArray()).merge(this.outputs())
 }
 
-private fun createColumn(name: String, value: OriginalValue, column: BaseVector<*, *, *>): DoubleVector {
-    fun condition(original: OriginalValue, value: Any): Boolean {
-        return if ((original is Interval) && (value is Double))
-            (original.lower <= value) && (value < original.upper)
-        else if ((original is Value) && (value is String))
-            (original.value == value)
-        else
-            throw IllegalStateException()
-    }
+private fun condition(original: OriginalValue, value: Any) =
+    if ((original is Interval) && (value is Double))
+        (original.lower <= value) && (value < original.upper)
+    else if ((original is Value) && (value is String))
+        (original.value == value)
+    else
+        throw IllegalStateException()
 
-    return DoubleVector.of(
+private fun createColumn(name: String, value: OriginalValue, column: BaseVector<*, *, *>) =
+    DoubleVector.of(
         StructField(name, DataTypes.DoubleType),
         when (value) {
             is Interval -> column.toDoubleArray().toTypedArray()
             is Value -> column.toStringArray().toList().toTypedArray()
         }.map { if (condition(value, it)) 1.0 else 0.0 }.toDoubleArray()
     )
-}
 
-fun DataFrame.toStringList(): List<String> {
-    return this.stream().toList().map { it.toString() }
-}
+fun DataFrame.toStringList(): List<String> =
+    this.stream().toList().map { it.toString() }
 
-fun DataFrame.toStringSet(): Set<String> {
-    return this.toStringList().toSet()
-}
+fun DataFrame.toStringSet(): Set<String> =
+    this.toStringList().toSet()
 

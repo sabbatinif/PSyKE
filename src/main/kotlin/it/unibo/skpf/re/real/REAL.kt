@@ -27,11 +27,11 @@ internal class REAL(
 
     override fun extract(dataset: DataFrame): MutableTheory {
         var ruleSet = this.init(dataset)
-        for (sample in dataset.inputsArray()) {
-            val c = this.predictor.predict(sample)
-            if (!this.covers(dataset, sample, ruleSet.getValue(c)))
-                ruleSet.getValue(c).add(createNewRule(dataset, sample))
-        }
+        for (sample in dataset.inputsArray())
+            ruleSet.getValue(this.predictor.predict(sample)).apply {
+                if (!covers(dataset, sample, this))
+                    this.add(createNewRule(dataset, sample))
+            }
         ruleSet = this.optimise(ruleSet)
         this.ruleSet = ruleSet
         this.dataset = dataset
@@ -104,7 +104,6 @@ internal class REAL(
     private fun ruleFromExample(dataset: DataFrame, x: DoubleArray): Rule {
         val t = mutableListOf<String>()
         val f = mutableListOf<String>()
-
         dataset.schema().fields().zip(x.toTypedArray()) { field, value ->
             (if (value == 1.0) t else f).add(field.name)
         }
@@ -130,21 +129,20 @@ internal class REAL(
         dataset.stream().map { this.predict(it) }.toList().toIntArray()
 
     private fun optimise(ruleSet: Map<Int, MutableList<Rule>>): Map<Int, MutableList<Rule>> {
-        sequence {
-            ruleSet.forEach { (key, rules) ->
-                yieldAll(uselessRules(key, rules))
-            }
-        }.forEach { (key, rule) ->
+        val uselessRules = mutableListOf<Pair<Int, Rule>>()
+        for ((key, rules) in ruleSet)
+            uselessRules.addAll(uselessRules(key, rules))
+        for ((key, rule) in uselessRules)
             ruleSet.getValue(key).remove(rule)
-        }
         return ruleSet
     }
 
-    private fun uselessRules(key: Int, rules: List<Rule>): Sequence<Pair<Int, Rule>> =
-        sequence {
-            for (rule in rules)
-                for (otherRule in rules.minus(rule))
-                    if (otherRule.subRule(rule))
-                        yield(Pair(key, otherRule))
-        }
+    private fun uselessRules(key: Int, rules: List<Rule>): List<Pair<Int, Rule>> {
+        val uselessRules = mutableListOf<Pair<Int, Rule>>()
+        for (rule in rules)
+            for (otherRule in rules.minus(rule))
+                if (otherRule.subRule(rule))
+                    uselessRules.add(Pair(key, otherRule))
+        return uselessRules
+    }
 }
