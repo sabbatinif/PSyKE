@@ -42,7 +42,6 @@ internal class Duepan(
             node.children.addAll(best.toList())
         }
         this.optimize()
-        this.compact()
         return this.createTheory()
     }
 
@@ -88,7 +87,7 @@ internal class Duepan(
         return Split(node, trueNode to falseNode)
     }
 
-    private fun predict(x: Tuple, node: Node, categories: Set<Any>): Int {
+    private tailrec fun predict(x: Tuple, node: Node, categories: Set<Any>): Int {
         nextChild@for (child in node.children) {
             for ((constraint, value) in child.constraints)
                 if (x[constraint] != value)
@@ -114,12 +113,14 @@ internal class Duepan(
         return toRemove.size
     }
 
-    private fun optimize() {
+    private tailrec fun optimize() {
         val nodes = mutableListOf(this.root)
         var n = 0
         while (nodes.isNotEmpty())
             n += removeNodes(nodes)
-        if (n > 0)
+        if (n == 0)
+            this.compact()
+        else
             this.optimize()
     }
 
