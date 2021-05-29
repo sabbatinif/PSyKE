@@ -26,15 +26,14 @@ internal class REAL(
     }
 
     override fun extract(dataset: DataFrame): MutableTheory {
-        var ruleSet = this.init(dataset)
+        val ruleSet = this.init(dataset)
         for (sample in dataset.inputsArray())
             ruleSet.getValue(this.predictor.predict(sample)).apply {
                 if (!covers(dataset, sample, this))
                     this.add(createNewRule(dataset, sample))
             }
-        ruleSet = this.optimise(ruleSet)
-        this.ruleSet = ruleSet
-        return this.createTheory(dataset, ruleSet)
+        this.ruleSet = this.optimise(ruleSet)
+        return this.createTheory(dataset, this.ruleSet)
     }
 
     private fun createNewRule(dataset: DataFrame, sample: DoubleArray): Rule {

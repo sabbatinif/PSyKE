@@ -20,13 +20,10 @@ internal class Duepan(
     val minExamples: Int = 0
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
-    private lateinit var dataset: DataFrame
     private lateinit var root: Node
 
-    private fun init(x: DataFrame): SortedSet<Node> {
-        this.dataset = x
-        this.root = Node(this.dataset, this.dataset.nrows())
-
+    private fun init(dataset: DataFrame): SortedSet<Node> {
+        this.root = Node(dataset, dataset.nrows())
         val queue: SortedSet<Node> =
             sortedSetOf(kotlin.Comparator { n1, n2 ->
                 (n1.priority - n2.priority).sign.toInt()
@@ -37,16 +34,10 @@ internal class Duepan(
 
     override fun extract(dataset: DataFrame): Theory {
         val queue = this.init(dataset)
-
         while (queue.isNotEmpty()) {
             val node = queue.first()
             queue.remove(node)
-
-            if (node.samples.nrows() < this.minExamples)
-                continue
-            //println("Pochi esempi")
-
-            val best = this.bestSplit(node) ?: continue
+            val best = this.bestSplit(node, dataset.inputs().names()) ?: continue
             queue.addAll(best.toList())
             node.children.addAll(best.toList())
         }
@@ -55,60 +46,64 @@ internal class Duepan(
         return this.createTheory()
     }
 
-    private fun bestSplit(node: Node): Pair<Node, Node>? {
-        if (node.nClasses == 1)
-            return null
+    private fun initSplits(node: Node) = Pair(
+        sortedSetOf<Split>(kotlin.Comparator { s1, s2 ->
+            (s1.priority - s2.priority).sign.toInt()
+        }),
+        node.constraints.map { it.first }.toSet()
+    )
 
-        val splits: SortedSet<Split> =
-            sortedSetOf(kotlin.Comparator { s1, s2 ->
-                (s1.priority - s2.priority).sign.toInt()
-            })
-
-        val constraints = node.constraints.map { it.first }.toSet()
-
-        for (column in (this.dataset.inputs().names().filterNot { constraints.contains(it) }))
+    private fun createSplits(node: Node, names: Array<String>): SortedSet<Split> {
+        val (splits, constraints)  = initSplits(node)
+        for (column in (names.filterNot { constraints.contains(it) }))
             try {
                 splits.add(this.createSplit(node, column))
             } catch (e: IndexOutOfBoundsException) {
                 continue
             }
+        return splits
+    }
+
+    private fun bestSplit(node: Node, names: Array<String>): Pair<Node, Node>? {
+        if (node.samples.nrows() < this.minExamples)
+            return null //println("Pochi esempi")
+        if (node.nClasses == 1)
+            return null
+        val splits = createSplits(node, names)
         return if (splits.isEmpty()) null else splits.first().children
     }
 
-    private fun createSplit(node: Node, column: String): Split {
-        val trueExamples = DataFrame.of(node.samples.stream().filter {
-            it[column] == 1.0
-        })
-        val falseExamples = DataFrame.of(node.samples.stream().filter {
-            it[column] == 0.0
+    private fun createSamples(node: Node, column: String, value: Double) =
+        DataFrame.of(node.samples.stream().filter {
+            it[column] == value
         })
 
+    private fun createSplit(node: Node, column: String): Split {
+        val trueExamples = createSamples(node, column, 1.0)
+        val falseExamples = createSamples(node, column, 0.0)
         val trueConstraints = node.constraints.plus(Pair(column, 1.0))
         val falseConstraints = node.constraints.plus(Pair(column, 0.0))
-
         val trueNode = Node(trueExamples, node.nExamples, trueConstraints)
         val falseNode = Node(falseExamples, node.nExamples, falseConstraints)
-
         return Split(node, trueNode to falseNode)
     }
 
-    private fun predict(x: Tuple, node: Node): Int {
+    private fun predict(x: Tuple, node: Node, categories: Set<Any>): Int {
         for (child in node.children) {
             var exit = false
-            for ((constraint, value) in child.constraints) {
+            for ((constraint, value) in child.constraints)
                 if (x[constraint] != value) {
                     exit = true
                     break
                 }
-            }
             if (!exit)
-                return this.predict(x, child)
+                return this.predict(x, child, categories)
         }
-        return this.dataset.categories().indexOf(node.dominant)
+        return categories.indexOf(node.dominant)
     }
 
     override fun predict(dataset: DataFrame): IntArray {
-        return dataset.stream().map { this.predict(it, this.root) }.toList().toIntArray()
+        return dataset.stream().map { this.predict(it, this.root, dataset.categories()) }.toList().toIntArray()
     }
 
     private fun optimize() {
