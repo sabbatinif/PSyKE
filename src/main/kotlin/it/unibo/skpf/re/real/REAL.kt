@@ -7,6 +7,7 @@ import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import smile.classification.Classifier
 import smile.data.*
+import smile.data.type.StructType
 import kotlin.streams.toList
 
 internal class REAL(
@@ -14,7 +15,6 @@ internal class REAL(
     override val featureSet: Set<BooleanFeatureSet>
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
-    private lateinit var dataset: DataFrame
     private lateinit var ruleSet: Map<Int, MutableList<Rule>>
 
     private fun init(dataset: DataFrame): Map<Int, MutableList<Rule>> {
@@ -34,12 +34,11 @@ internal class REAL(
             }
         ruleSet = this.optimise(ruleSet)
         this.ruleSet = ruleSet
-        this.dataset = dataset
         return this.createTheory(dataset, ruleSet)
     }
 
     private fun createNewRule(dataset: DataFrame, sample: DoubleArray): Rule {
-        val rule = ruleFromExample(dataset, sample)
+        val rule = ruleFromExample(dataset.schema(), sample)
         return removeAntecedents(rule, dataset, sample)
     }
 
@@ -93,7 +92,7 @@ internal class REAL(
     }
 
     private fun covers(dataset: DataFrame, x: DoubleArray, rules: List<Rule>): Boolean {
-        this.ruleFromExample(dataset, x).apply {
+        this.ruleFromExample(dataset.schema(), x).apply {
             for (rule in rules)
                 if (this.subRule(rule))
                     return true
@@ -101,19 +100,19 @@ internal class REAL(
         return false
     }
 
-    private fun ruleFromExample(dataset: DataFrame, x: DoubleArray): Rule {
+    private fun ruleFromExample(schema: StructType, x: DoubleArray): Rule {
         val t = mutableListOf<String>()
         val f = mutableListOf<String>()
-        dataset.schema().fields().zip(x.toTypedArray()) { field, value ->
+        schema.fields().zip(x.toTypedArray()) { field, value ->
             (if (value == 1.0) t else f).add(field.name)
         }
         return Rule(t, f).reduce(this.featureSet)
     }
 
-    private fun predict(x: Tuple): Int =
+    private fun predict(x: Tuple, schema: StructType): Int =
         flat(this.ruleSet)
             .firstOrNull {
-                ruleFromExample(this.dataset, tupleToArray(x))
+                ruleFromExample(schema, tupleToArray(x))
                     .subRule(it.second) }?.first ?: -1
 
     private fun tupleToArray(x: Tuple) =
@@ -128,7 +127,7 @@ internal class REAL(
         }.flatten()
 
     override fun predict(dataset: DataFrame): IntArray =
-        dataset.stream().map { this.predict(it) }.toList().toIntArray()
+        dataset.stream().map { this.predict(it, dataset.schema()) }.toList().toIntArray()
 
     private fun optimise(ruleSet: Map<Int, MutableList<Rule>>): Map<Int, MutableList<Rule>> {
         val uselessRules = mutableListOf<Pair<Int, Rule>>()
