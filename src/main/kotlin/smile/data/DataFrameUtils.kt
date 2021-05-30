@@ -31,7 +31,7 @@ fun DataFrame.inputs(outputColumn: Int = lastColumnIndex): DataFrame =
     this.drop(outputColumn)
 
 fun DataFrame.categories(i: Int = lastColumnIndex): Set<Any> =
-    this.outputClasses(i).distinct().asSequence().toSet()
+    this.outputClasses(i).distinct().toSet()
 
 fun DataFrame.nCategories(i: Int = lastColumnIndex): Int =
     this.categories(i).size
@@ -69,44 +69,45 @@ fun std(col: DoubleArray): Double {
     return sqrt(std / col.size)
 }
 
+fun createDescriptionPair(name: String, column: DoubleArray): Pair<String, Description> {
+    return name to Description(
+        column.average(),
+        std(column),
+        column.minByOrNull { it } ?: 0.0,
+        column.maxByOrNull { it } ?: 1.0
+    )
+}
+
 fun DataFrame.describe(): Map<String, Description> =
     mapOf(*this.inputs().schema().fields()
         .filter { it.isNumeric }
-        .map {
-            val col = this.column(it.name).toDoubleArray()
-            it.name to Description(
-                col.average(),
-                std(col),
-                col.minByOrNull { it } ?: 0.0,
-                col.maxByOrNull { it } ?: 1.0
-            )
+        .map { field ->
+            createDescriptionPair(field.name, this.column(field.name).toDoubleArray())
         }.toTypedArray()
     )
 
-fun DataFrame.filterByOutput(output: Any) =
+fun DataFrame.filterByOutput(output: Any): DataFrame =
     DataFrame.of(this.stream().filter {
         it.get(this.lastColumnIndex) == output
     })
 
-fun DataFrame.writeColumn(feature: String, value: Any) =
-    DataFrame.of(*this.map {
-        if (it.name() == feature) {
-            when (value) {
-                is Double -> DoubleVector.of(this.schema().field(feature),
-                    DoubleArray(this.nrows()) { value }
-                )
-                is Int -> IntVector.of(this.schema().field(feature),
-                    IntArray(this.nrows()) { value }
-                )
-                is String -> StringVector.of(this.schema().field(feature),
-                    *Array<String>(this.nrows()) { value }
-                )
-                else -> throw IllegalStateException()
-            }
-        } else {
-            it
-        }
-    }.toTypedArray())
+private fun createFakeColumn(value: Any, n: Int, field: StructField) =
+    when (value) {
+        is Double -> DoubleVector.of(field, DoubleArray(n) { value })
+        is Int -> IntVector.of(field, IntArray(n) { value })
+        is String -> StringVector.of(field, *Array(n) { value })
+        else -> throw IllegalStateException()
+    }
+
+fun DataFrame.writeColumn(feature: String, value: Any): DataFrame =
+    DataFrame.of(
+        *this.map {
+            if (it.name() == feature)
+                createFakeColumn(value, this.nrows(), this.schema().field(feature))
+            else
+                it
+        }.toTypedArray()
+    )
 
 private fun initRanges(dataset: DataFrame, name: String) =
     dataset.categories().map {
@@ -136,40 +137,26 @@ fun DataFrame.createRanges(name: String): List<Range> {
     return ranges
 }
 
+private fun createSet(feature: BaseVector<*, *, *>, dataset: DataFrame) =
+    when (feature.type()) {
+        DataTypes.DoubleType ->
+            dataset.createRanges(feature.name())
+        DataTypes.StringType ->
+            feature.toStringArray().distinct()
+        DataTypes.IntegerType ->
+            feature.toIntArray().distinct()
+        else -> throw IllegalStateException()
+    }.mapIndexed { i, it ->
+        "${feature.name()}_$i" to if (it is Range) Interval(it.lower, it.upper) else Value(it)
+    }.toMap()
+
 fun DataFrame.splitFeatures(): Set<BooleanFeatureSet> {
     //fun Double.format(digits: Int) = "%.${digits}f".format(this)
     val featureSets: MutableSet<BooleanFeatureSet> = mutableSetOf()
-    for (feature in this.inputs()) {
-        when (feature.type()) {
-            DataTypes.DoubleType ->
-                featureSets.add(
-                    BooleanFeatureSet(
-                        feature.name(),
-                        createRanges(feature.name()).mapIndexed { i, it ->
-                            "${feature.name()}_$i" to Interval(it.lower, it.upper)
-                        }.toMap()
-                    )
-                )
-            DataTypes.StringType ->
-                featureSets.add(
-                    BooleanFeatureSet(
-                        feature.name(),
-                        feature.toStringArray().distinct().mapIndexed { i, it ->
-                            "${feature.name()}_$i" to Value(it)
-                        }.toMap()
-                    )
-                )
-            DataTypes.IntegerType ->
-                featureSets.add(
-                    BooleanFeatureSet(
-                        feature.name(),
-                        feature.toIntArray().distinct().mapIndexed { i, it ->
-                            "${feature.name()}_$i" to Value(it)
-                        }.toMap()
-                    )
-                )
-        }
-    }
+    for (feature in this.inputs())
+        featureSets.add(
+            BooleanFeatureSet(feature.name(), createSet(feature, this))
+        )
     return featureSets.toSet()
 }
 
