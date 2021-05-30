@@ -5,9 +5,10 @@ import it.unibo.skpf.re.real.REAL
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame
+import java.io.Serializable
 import java.util.function.ToDoubleFunction
 
-interface Extractor<T, F : ToDoubleFunction<T>> {
+interface Extractor<T, F : ToDoubleFunction<T>>: Serializable {
     val predictor: F
 
     val featureSet: Set<BooleanFeatureSet>

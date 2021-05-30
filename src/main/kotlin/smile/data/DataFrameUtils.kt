@@ -11,6 +11,8 @@ import smile.data.vector.BaseVector
 import smile.data.vector.DoubleVector
 import smile.data.vector.IntVector
 import smile.data.vector.StringVector
+import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -121,7 +123,7 @@ private fun expandRanges(ranges: List<Range>) {
             r1.upper += r1.std
             r2.lower -= r2.std
         }
-        val mean = (r1.upper - r1.std + r2.lower + r2.std) / 2
+        val mean = ((r1.upper - r1.std + r2.lower + r2.std) / 2).format(2)
         r1.upper = mean
         r2.lower = mean
     }
@@ -131,11 +133,14 @@ fun DataFrame.createRanges(name: String): List<Range> {
     val ranges = initRanges(this, name)
     expandRanges(ranges)
     this.describe()[name].apply {
-        ranges.first().lower = this!!.min - 0.001
-        ranges.last().upper = this.max + 0.001
+        ranges.first().lower = (this!!.min - 0.01).format(2)
+        ranges.last().upper = (this.max + 0.01).format(2)
     }
     return ranges
 }
+
+fun Double.format(digits: Int) =
+    BigDecimal(this).setScale(digits, RoundingMode.HALF_EVEN).toDouble()
 
 private fun createSet(feature: BaseVector<*, *, *>, dataset: DataFrame) =
     when (feature.type()) {
@@ -147,11 +152,12 @@ private fun createSet(feature: BaseVector<*, *, *>, dataset: DataFrame) =
             feature.toIntArray().distinct()
         else -> throw IllegalStateException()
     }.mapIndexed { i, it ->
-        "${feature.name()}_$i" to if (it is Range) Interval(it.lower, it.upper) else Value(it)
+        "${feature.name()}_$i" to
+                if (it is Range) Interval(it.lower, it.upper)
+                else Value(it)
     }.toMap()
 
 fun DataFrame.splitFeatures(): Set<BooleanFeatureSet> {
-    //fun Double.format(digits: Int) = "%.${digits}f".format(this)
     val featureSets: MutableSet<BooleanFeatureSet> = mutableSetOf()
     for (feature in this.inputs())
         featureSets.add(

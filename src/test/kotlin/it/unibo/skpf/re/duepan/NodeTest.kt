@@ -60,13 +60,30 @@ class NodeTest {
     }
 
     @Test
+    fun testAsSequence() {
+        val node = Node(dataset, nExamples)
+        val child1 = Node(dataset.slice(0, 50), nExamples)
+        val child2 = Node(dataset.slice(50, 150), nExamples)
+        node.children = mutableListOf(child1, child2)
+        val grandchild11 = Node(dataset.slice(0, 25), nExamples)
+        val grandchild21 = Node(dataset.slice(50, 80), nExamples)
+        val grandchild22 = Node(dataset.slice(80, 120), nExamples)
+        child1.children = mutableListOf(grandchild11)
+        child2.children = mutableListOf(grandchild21, grandchild22)
+        assertEquals(
+            node.asSequence.toList(),
+            child1.asSequence.toList() + child2.asSequence.toList() + node
+        )
+        assertEquals(
+            listOf(grandchild11, child1, grandchild21, grandchild22, child2, node),
+            node.asSequence.toList()
+        )
+    }
+
+    @Test
     fun testToString() {
         val node = Node(
-            dataset, nExamples,
-            setOf(
-                "V1" to 0.0,
-                "V2" to 1.0
-            )
+            dataset, nExamples, setOf("V1" to 0.0, "V2" to 1.0)
         )
         assertEquals(" = Iris-setosa", nodeAll.toString())
         assertEquals(" = Iris-setosa", node40Setosa.toString())

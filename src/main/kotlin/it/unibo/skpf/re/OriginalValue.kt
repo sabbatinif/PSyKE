@@ -1,6 +1,8 @@
 package it.unibo.skpf.re
 
-sealed class OriginalValue {
+import java.io.Serializable
+
+sealed class OriginalValue: Serializable {
     data class Interval(
         val lower: Double,
         val upper: Double

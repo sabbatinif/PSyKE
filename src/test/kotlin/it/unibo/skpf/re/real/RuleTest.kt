@@ -46,4 +46,34 @@ class RuleTest {
         assertEquals(reducedRule.truePredicates, reducedRule.reduce(featureSets).truePredicates)
         assertEquals(reducedRule.falsePredicates, reducedRule.reduce(featureSets).falsePredicates)
     }
+
+    @Test
+    fun testAsMutable() {
+        val rule = Rule(
+            listOf("V1_1", "V2_2", "V3_0"),
+            listOf("V4_1", "V4_2")
+        )
+        assertEquals(
+            listOf(
+                mutableListOf("V1_1", "V2_2", "V3_0"),
+                mutableListOf("V4_1", "V4_2")
+            ),
+            rule.asMutable()
+        )
+    }
+
+    @Test
+    fun testAsList() {
+        val rule = Rule(
+            listOf("V1_1", "V2_2", "V3_0"),
+            listOf("V4_1", "V4_2")
+        )
+        assertEquals(
+            listOf(
+                listOf("V1_1", "V2_2", "V3_0"),
+                listOf("V4_1", "V4_2")
+            ),
+            rule.asList()
+        )
+    }
 }

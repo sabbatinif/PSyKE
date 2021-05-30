@@ -1,9 +1,6 @@
 package it.unibo.skpf.re
 
-import smile.classification.accuracy
-import smile.classification.confusionMatrix
-import smile.classification.fidelity
-import smile.classification.knn
+import smile.classification.*
 import smile.data.*
 import smile.io.Read
 
@@ -17,13 +14,17 @@ fun main() {
     val x = train.inputsArray()
     val y = train.classesArray()
     val knn = knn(x, y, 9)
+    //saveToFile("irisKNN9.txt", knn)
+    //val knn = loadFromFile("ann.txt") as KNN<DoubleArray>
     println("Classifier accuracy: " + accuracy(test, knn))
     println(confusionMatrix(test, knn))
     val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
+    //saveToFile("realIrisKNN9.txt", real)
     val realTheory = real.extract(train)
     println("REAL fidelity: " + fidelity(test, knn, real))
     println(confusionMatrix(test, knn, real))
     val duepan = Extractor.duepan(knn, featureSets)
+    //saveToFile("duepanIrisKNN9.txt", duepan)
     val duepanTheory = duepan.extract(train)
     println("Duepan fidelity: " + fidelity(test, knn, duepan))
     println(confusionMatrix(test, knn, duepan))
