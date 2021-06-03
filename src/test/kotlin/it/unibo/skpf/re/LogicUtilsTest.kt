@@ -4,6 +4,7 @@ import it.unibo.skpf.re.OriginalValue.Interval
 import it.unibo.skpf.re.OriginalValue.Value
 import it.unibo.tuprolog.core.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
@@ -23,12 +24,7 @@ class LogicUtilsTest {
     ) {
         val expected = Struct.of(functor, Var.of("V"), *terms)
         val actual = createTerm(Var.of("V"), constraint, positive)
-        assertEquals(expected.arity, actual.arity)
-        assertEquals(expected.functor, actual.functor)
-        expected.args.zip(actual.args) { exp, act ->
-            assertEquals(exp::class.qualifiedName, act::class.qualifiedName)
-            assert(exp.structurallyEquals(act))
-        }
+        assertTrue(expected.structurallyEquals(actual))
     }
 
     @Test

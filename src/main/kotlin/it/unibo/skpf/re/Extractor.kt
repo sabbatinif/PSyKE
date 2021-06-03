@@ -5,7 +5,6 @@ import it.unibo.skpf.re.real.REAL
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame
-import java.io.Serializable
 import java.util.function.ToDoubleFunction
 
 /**
@@ -13,7 +12,7 @@ import java.util.function.ToDoubleFunction
  * @param T is a parameter for defining the underlying black box type
  * @param F is the type of the underlying black box
  */
-interface Extractor<T, F : ToDoubleFunction<T>>: Serializable {
+interface Extractor<T, F : ToDoubleFunction<T>> {
 
     /**
      * The underlying black box predictor

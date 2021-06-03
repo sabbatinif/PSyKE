@@ -17,13 +17,13 @@ fun main() {
         val y = train.classesArray()
         val knn = knn(x, y, 9)
 //        saveToFile("irisKNN9.txt", knn)
-//        val knn = loadFromFile("ann.txt") as KNN<DoubleArray>
+//        saveToFile("irisTest50.txt", test)
+//        saveToFile("irisTrain50.txt", train)
+//        saveToFile("irisBoolFeatSet.txt", featureSets)
         testClassifier(test, knn)
         val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
         testClassificationExtractor("REAL", train, test, real, knn, printRules = true)
-//        saveToFile("realIrisKNN9.txt", real)
         val duepan = Extractor.duepan(knn, featureSets)
-//        saveToFile("duepanIrisKNN9.txt", duepan)
         testClassificationExtractor("Duepan", train, test, duepan, knn, printRules = true)
         println()
     }
