@@ -1,17 +1,19 @@
-package smile.classification
+package it.unibo.skpf.re
 
-import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.ExtractorPerformance
+import smile.classification.Classifier
 import smile.data.*
 import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
 
+fun Array<*>.toInt() =
+    this.map { it.toString().toInt() }.toIntArray()
+
 fun accuracy(data: DataFrame, predictor: Classifier<DoubleArray>): Double {
-    return Accuracy.of(data.classesArray(), predictor.predict(data.inputsArray())).format(2)
+    return Accuracy.of(data.classesArray(), predictor.predict(data.inputsArray())).round(2)
 }
 
 fun accuracy(data: DataFrame, predictor: Extractor<DoubleArray, *>): Double {
-    return Accuracy.of(data.classesArray(), predictor.predict(data)).format(2)
+    return Accuracy.of(data.classesArray(), predictor.predict(data).toInt()).round(2)
 }
 
 fun fidelity(
@@ -19,14 +21,14 @@ fun fidelity(
     predictor: Classifier<DoubleArray>,
     extractor: Extractor<DoubleArray, Classifier<DoubleArray>>
 ): Double {
-    return Accuracy.of(predictor.predict(data.inputsArray()), extractor.predict(data)).format(2)
+    return Accuracy.of(predictor.predict(data.inputsArray()), extractor.predict(data).toInt()).round(2)
 }
 
 fun confusionMatrix(data: DataFrame, predictor: Classifier<DoubleArray>,
                     extractor: Extractor<DoubleArray, Classifier<DoubleArray>>): ConfusionMatrix {
     return ConfusionMatrix.of(
         predictor.predict(data.inputsArray()),
-        extractor.predict(data).map { if (it == -1) data.nCategories() else it}.toIntArray()
+        extractor.predict(data).toInt().map { if (it == -1) data.nCategories() else it}.toIntArray()
     )
 }
 

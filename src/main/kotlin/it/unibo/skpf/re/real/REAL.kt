@@ -5,19 +5,23 @@ import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
+import it.unibo.tuprolog.utils.Cache
 import smile.classification.Classifier
 import smile.data.*
 import smile.data.type.StructType
 import kotlin.streams.toList
+
+private typealias MapIntToRuleList = Map<Int, MutableList<Rule>>
 
 internal class REAL(
     override val predictor: Classifier<DoubleArray>,
     override val featureSet: Set<BooleanFeatureSet>
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
-    private lateinit var ruleSet: Map<Int, MutableList<Rule>>
+    private lateinit var ruleSet: MapIntToRuleList
+    private val ruleSetCache: Cache<DataFrame, MapIntToRuleList> = Cache.simpleLru()
 
-    private fun init(dataset: DataFrame): Map<Int, MutableList<Rule>> {
+    private fun init(dataset: DataFrame): MapIntToRuleList {
         return mapOf(
             *dataset.categories().mapIndexed { i, _ ->
                 i to mutableListOf<Rule>()
@@ -26,14 +30,18 @@ internal class REAL(
     }
 
     override fun extract(dataset: DataFrame): MutableTheory {
+        this.ruleSet = ruleSetCache.getOrSet(dataset) { this.createRuleSet(dataset) }
+        return this.createTheory(dataset)
+    }
+
+    private fun createRuleSet(dataset: DataFrame): MapIntToRuleList {
         val ruleSet = this.init(dataset)
         for (sample in dataset.inputsArray())
             ruleSet.getValue(this.predictor.predict(sample)).apply {
                 if (!covers(dataset, sample, this))
                     this.add(createNewRule(dataset, sample))
             }
-        this.ruleSet = this.optimise(ruleSet)
-        return this.createTheory(dataset, this.ruleSet)
+        return this.optimise(ruleSet)
     }
 
     private fun createNewRule(dataset: DataFrame, sample: DoubleArray): Rule {
@@ -62,12 +70,11 @@ internal class REAL(
         return Rule(mutableRule.first(), mutableRule.last())
     }
 
-    private fun createTheory(dataset: DataFrame, ruleSet: Map<Int, MutableList<Rule>>): MutableTheory {
+    private fun createTheory(dataset: DataFrame): MutableTheory {
         val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
-        for ((key, ruleList) in ruleSet)
-            for (rule in ruleList)
-                theory.assertZ(createClause(dataset, variables, key, rule))
+        for ((key, rule) in flat(ruleSet))
+            theory.assertZ(createClause(dataset, variables, key, rule))
         return theory
     }
 
@@ -126,15 +133,15 @@ internal class REAL(
                 yield(x.getDouble(i))
         }.toList().toDoubleArray()
 
-    private fun flat(ruleSet: Map<Int, MutableList<Rule>>) =
+    private fun flat(ruleSet: MapIntToRuleList) =
         ruleSet.map { (key, rules) ->
             rules.map { key to it }
         }.flatten()
 
-    override fun predict(dataset: DataFrame): IntArray =
-        dataset.stream().map { this.predict(it, dataset.schema()) }.toList().toIntArray()
+    override fun predict(dataset: DataFrame) =
+        dataset.stream().map { this.predict(it, dataset.schema()) }.toList().toTypedArray()
 
-    private fun optimise(ruleSet: Map<Int, MutableList<Rule>>): Map<Int, MutableList<Rule>> {
+    private fun optimise(ruleSet: MapIntToRuleList): MapIntToRuleList {
         val uselessRules = mutableListOf<Pair<Int, Rule>>()
         for ((key, rules) in ruleSet)
             uselessRules.addAll(uselessRules(key, rules))

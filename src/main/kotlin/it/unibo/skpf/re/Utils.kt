@@ -4,6 +4,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import kotlin.math.pow
 
 fun saveToFile(filename: String, item: Any) {
     val file = FileOutputStream("src\\test\\resources\\$filename")
@@ -20,4 +21,9 @@ fun loadFromFile(filename: String): Any {
     inStream.close()
     file.close()
     return item
+}
+
+fun Double.round(digits: Int = 2): Double {
+    val k = 10.0.pow(digits)
+    return kotlin.math.round(this * k) / k
 }

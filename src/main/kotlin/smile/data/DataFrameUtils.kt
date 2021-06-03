@@ -4,6 +4,7 @@ import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.OriginalValue
 import it.unibo.skpf.re.OriginalValue.Interval
 import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.skpf.re.round
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
@@ -123,7 +124,7 @@ private fun expandRanges(ranges: List<Range>) {
             r1.upper += r1.std
             r2.lower -= r2.std
         }
-        val mean = ((r1.upper - r1.std + r2.lower + r2.std) / 2).format(2)
+        val mean = ((r1.upper - r1.std + r2.lower + r2.std) / 2).round(2)
         r1.upper = mean
         r2.lower = mean
     }
@@ -133,14 +134,11 @@ fun DataFrame.createRanges(name: String): List<Range> {
     val ranges = initRanges(this, name)
     expandRanges(ranges)
     this.describe()[name].apply {
-        ranges.first().lower = (this!!.min - 0.01).format(2)
-        ranges.last().upper = (this.max + 0.01).format(2)
+        ranges.first().lower = (this!!.min - 0.01).round(2)
+        ranges.last().upper = (this.max + 0.01).round(2)
     }
     return ranges
 }
-
-fun Double.format(digits: Int) =
-    BigDecimal(this).setScale(digits, RoundingMode.HALF_EVEN).toDouble()
 
 private fun createSet(feature: BaseVector<*, *, *>, dataset: DataFrame) =
     when (feature.type()) {

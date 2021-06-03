@@ -20,11 +20,11 @@ fun main() {
 //        val knn = loadFromFile("ann.txt") as KNN<DoubleArray>
         testClassifier(test, knn)
         val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
-        testClassificationExtractor("REAL", train, test, real, knn)
+        testClassificationExtractor("REAL", train, test, real, knn, printRules = true)
 //        saveToFile("realIrisKNN9.txt", real)
         val duepan = Extractor.duepan(knn, featureSets)
 //        saveToFile("duepanIrisKNN9.txt", duepan)
-        testClassificationExtractor("Duepan", train, test, duepan, knn)
+        testClassificationExtractor("Duepan", train, test, duepan, knn, printRules = true)
         println()
     }
 }

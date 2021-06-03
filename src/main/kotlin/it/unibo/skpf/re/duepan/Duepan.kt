@@ -12,7 +12,6 @@ import smile.data.categories
 import smile.data.inputs
 import java.util.*
 import kotlin.math.sign
-import kotlin.streams.toList
 
 internal class Duepan(
     override val predictor: Classifier<DoubleArray>,
@@ -46,7 +45,7 @@ internal class Duepan(
     }
 
     private fun initSplits(node: Node) = Pair(
-        sortedSetOf<Split>(kotlin.Comparator { s1, s2 ->
+        sortedSetOf<Split>({ s1, s2 ->
             (s1.priority - s2.priority).sign.toInt()
         }),
         node.constraints.map { it.first }.toSet()
@@ -97,11 +96,10 @@ internal class Duepan(
         return categories.indexOf(node.dominant)
     }
 
-    override fun predict(dataset: DataFrame): IntArray {
-        return dataset.stream().map {
+    override fun predict(dataset: DataFrame): Array<*> =
+        dataset.stream().map {
             this.predict(it, this.root, dataset.categories())
-        }.toList().toIntArray()
-    }
+        }.toArray()
 
     private fun removeNodes(nodes: MutableList<Node>): Int {
         val node = nodes.removeAt(0)

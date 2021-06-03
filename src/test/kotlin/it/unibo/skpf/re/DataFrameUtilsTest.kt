@@ -96,8 +96,6 @@ class DataFrameUtilsTest {
 
     @Test
     fun testDescribe() {
-        fun Double.round() = round(this * 100) / 100
-
         val description = dataset.describe()
         assertEquals(dataset.inputs().schema().fields().count {
             it.isNumeric
