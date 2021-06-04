@@ -2,6 +2,7 @@ package it.unibo.skpf.re.real
 
 import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.Extractor
+import it.unibo.skpf.re.createHead
 import it.unibo.skpf.re.loadFromFile
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.theory.MutableTheory
@@ -16,17 +17,14 @@ import kotlin.streams.toList
 
 internal class REALTest {
 
-    val knn = loadFromFile("irisKNN9.txt") as KNN<DoubleArray>
-    val featureSets = loadFromFile("irisBoolFeatSet.txt") as Set<BooleanFeatureSet>
-    val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
-    val train = loadFromFile("irisTrain50.txt") as DataFrame
-    val theory = real.extract(train)
+    private val knn = loadFromFile("irisKNN9.txt") as KNN<DoubleArray>
+    private val featureSets = loadFromFile("irisBoolFeatSet.txt") as Set<BooleanFeatureSet>
+    private val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
+    private val train = loadFromFile("irisTrain50.txt") as DataFrame
+    private val theory = real.extract(train)
 
     @Test
     fun extract() {
-        fun createHead(variables: Collection<Term>, outputClass: String) =
-            Struct.of("concept", variables.plus(Atom.of(outputClass)))
-
         val variables = listOf("V1", "V2", "V3", "V4").map { Var.of(it) }
         val cond1 = Struct.of("in", variables[0], Real.of(5.39), Real.of(6.26))
         val cond2 = Struct.of("in", variables[2], Real.of(2.28), Real.of(4.87))
@@ -34,27 +32,27 @@ internal class REALTest {
 
         val expectedTheory = MutableTheory.of(
             Clause.of(
-                createHead(variables, "Iris-setosa"),
+                createHead("concept", variables, "Iris-setosa"),
                 Struct.of("in", variables[3], Real.of(0.09), Real.of(0.65))
             ),
             Clause.of(
-                createHead(variables, "Iris-versicolor"),
+                createHead("concept", variables, "Iris-versicolor"),
                 cond2, cond3
             ),
             Clause.of(
-                createHead(variables, "Iris-versicolor"),
+                createHead("concept", variables, "Iris-versicolor"),
                 cond1, cond3
             ),
             Clause.of(
-                createHead(variables, "Iris-versicolor"),
+                createHead("concept", variables, "Iris-versicolor"),
                 cond1, cond2
             ),
             Clause.of(
-                createHead(variables, "Iris-virginica"),
+                createHead("concept", variables, "Iris-virginica"),
                 Struct.of("in", variables[2], Real.of(4.87), Real.of(6.91))
             ),
             Clause.of(
-                createHead(variables, "Iris-virginica"),
+                createHead("concept", variables, "Iris-virginica"),
                 Struct.of("in", variables[1], Real.of(2.87), Real.of(3.2)),
                 Struct.of("in", variables[3], Real.of(1.64), Real.of(2.51))
             )
