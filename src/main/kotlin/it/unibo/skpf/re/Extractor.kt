@@ -1,10 +1,13 @@
 package it.unibo.skpf.re
 
+import it.unibo.skpf.re.cart.CartExtractor
 import it.unibo.skpf.re.duepan.Duepan
 import it.unibo.skpf.re.real.REAL
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
+import smile.classification.DecisionTree
 import smile.data.DataFrame
+import smile.data.Tuple
 import java.util.function.ToDoubleFunction
 
 /**
@@ -46,7 +49,7 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun ruleExtractionAsLearning(
             predictor: Classifier<DoubleArray>,
-            featureSet: Set<BooleanFeatureSet>
+            featureSet: Collection<BooleanFeatureSet>
         ): Extractor<DoubleArray, Classifier<DoubleArray>> = REAL(predictor, featureSet)
 
         /**
@@ -55,8 +58,17 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun duepan(
             predictor: Classifier<DoubleArray>,
-            featureSet: Set<BooleanFeatureSet>,
+            featureSet: Collection<BooleanFeatureSet>,
             minExamples: Int = 0
         ): Extractor<DoubleArray, Classifier<DoubleArray>> = Duepan(predictor, featureSet, minExamples)
+
+        /**
+         * Creates a new CART extractor
+         */
+        @JvmStatic
+        fun cart(
+            predictor: DecisionTree,
+            featureSet: Collection<BooleanFeatureSet>
+        ): Extractor<Tuple, DecisionTree> = CartExtractor(predictor, featureSet)
     }
 }

@@ -20,7 +20,9 @@ import kotlin.streams.toList
 
 internal class DuepanTest {
 
+    @Suppress("UNCHECKED_CAST")
     private val knn = loadFromFile("irisKNN9.txt") as KNN<DoubleArray>
+    @Suppress("UNCHECKED_CAST")
     private val featureSets = loadFromFile("irisBoolFeatSet.txt") as Set<BooleanFeatureSet>
     private val duepan = Extractor.duepan(knn, featureSets)
     private val train = loadFromFile("irisTrain50.txt") as DataFrame
@@ -32,11 +34,11 @@ internal class DuepanTest {
         val expectedTheory = MutableTheory.of(
             Clause.of(
                 createHead("concept", variables, "Iris-setosa"),
-                Struct.of("in", variables[2], Real.of(0.99), Real.of(2.28))
+                Struct.of("le", variables[2], Real.of(2.28))
             ),
             Clause.of(
                 createHead("concept", variables, "Iris-virginica"),
-                Struct.of("not_in", variables[2], Real.of(0.99), Real.of(2.28)),
+                Struct.of("not_le", variables[2], Real.of(2.28)),
                 Struct.of("not_in", variables[3], Real.of(0.65), Real.of(1.64))
             ),
             Clause.of(

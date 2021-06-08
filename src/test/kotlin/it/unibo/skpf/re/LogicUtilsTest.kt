@@ -61,16 +61,32 @@ class LogicUtilsTest {
                     arrayOf(Atom.of("test"))
                 ),
                 Arguments.of(
-                    Interval(2.6, 8.9), true, "in",
+                    Interval.Between(2.6, 8.9), true, "in",
                     arrayOf(Real.of(2.6), Real.of(8.9))
+                ),
+                Arguments.of(
+                    Interval.LessThan(6.3), true, "le",
+                    arrayOf(Real.of(6.3))
+                ),
+                Arguments.of(
+                    Interval.GreaterThan(3.2), true, "gt",
+                    arrayOf(Real.of(3.2))
                 ),
                 Arguments.of(
                     Value(2.65), false, "not_equal",
                     arrayOf(Atom.of("2.65"))
                 ),
                 Arguments.of(
-                    Interval(14.3, 25.2), false, "not_in",
+                    Interval.Between(14.3, 25.2), false, "not_in",
                     arrayOf(Real.of(14.3), Real.of(25.2))
+                ),
+                Arguments.of(
+                    Interval.LessThan(12.6), false, "not_le",
+                    arrayOf(Real.of(12.6))
+                ),
+                Arguments.of(
+                    Interval.GreaterThan(5.3), false, "not_gt",
+                    arrayOf(Real.of(5.3))
                 )
             )
         }

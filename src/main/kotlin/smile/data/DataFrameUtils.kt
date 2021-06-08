@@ -12,8 +12,8 @@ import smile.data.vector.BaseVector
 import smile.data.vector.DoubleVector
 import smile.data.vector.IntVector
 import smile.data.vector.StringVector
-import java.math.BigDecimal
-import java.math.RoundingMode
+import kotlin.Double.Companion.NEGATIVE_INFINITY
+import kotlin.Double.Companion.POSITIVE_INFINITY
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -134,8 +134,8 @@ fun DataFrame.createRanges(name: String): List<Range> {
     val ranges = initRanges(this, name)
     expandRanges(ranges)
     this.describe()[name].apply {
-        ranges.first().lower = (this!!.min - 0.01).round(2)
-        ranges.last().upper = (this.max + 0.01).round(2)
+        ranges.first().lower = NEGATIVE_INFINITY
+        ranges.last().upper = POSITIVE_INFINITY
     }
     return ranges
 }
@@ -149,11 +149,18 @@ private fun createSet(feature: BaseVector<*, *, *>, dataset: DataFrame) =
         DataTypes.IntegerType ->
             feature.toIntArray().distinct()
         else -> throw IllegalStateException()
-    }.mapIndexed { i, it ->
-        "${feature.name()}_$i" to
-                if (it is Range) Interval(it.lower, it.upper)
-                else Value(it)
-    }.toMap()
+    }.mapIndexed { i, it -> "${feature.name()}_$i" to createOriginalValue(it) }.toMap()
+
+fun createOriginalValue(originalValue: Any): OriginalValue {
+    return if (originalValue is Range)
+        when {
+            originalValue.lower == NEGATIVE_INFINITY -> Interval.LessThan(originalValue.upper)
+            originalValue.upper == POSITIVE_INFINITY -> Interval.GreaterThan(originalValue.lower)
+            else -> Interval.Between(originalValue.lower, originalValue.upper)
+        }
+    else
+        Value(originalValue)
+}
 
 fun DataFrame.splitFeatures(): Set<BooleanFeatureSet> {
     val featureSets: MutableSet<BooleanFeatureSet> = mutableSetOf()

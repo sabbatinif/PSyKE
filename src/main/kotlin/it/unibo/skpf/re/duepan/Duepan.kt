@@ -15,7 +15,7 @@ import kotlin.math.sign
 
 internal class Duepan(
     override val predictor: Classifier<DoubleArray>,
-    override val featureSet: Set<BooleanFeatureSet>,
+    override val featureSet: Collection<BooleanFeatureSet>,
     val minExamples: Int = 0
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
@@ -146,8 +146,8 @@ internal class Duepan(
 
     private fun createBody(variables: Map<String, Var>, node: Node) = sequence {
         for ((constraint, value) in node.constraints)
-            this@Duepan.featureSet.first { it.set.containsKey(constraint) }.apply {
-                yield(createTerm(variables[this.name], this.set[constraint], value == 1.0))
+            featureSet.first { it.set.containsKey(constraint) }.apply {
+                yield(createTerm(variables[this.name], this.set[constraint]!!, value == 1.0))
             }
     }.toList().toTypedArray()
 

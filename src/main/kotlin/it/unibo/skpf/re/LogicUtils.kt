@@ -6,20 +6,31 @@ import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.Real
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
+import java.lang.IllegalStateException
 
-internal fun createTerm(v: Var?, constraint: OriginalValue?, positive: Boolean = true): Struct {
-    val functor = (if (!positive) "not_" else "") +
-            (if (constraint is Interval) "in" else "equal")
+internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean): Struct {
     if (v == null)
-        return Struct.of(functor)
+        throw IllegalStateException()
+    val functor = createFunctor(constraint, positive)
     return when (constraint) {
-        is Interval -> Struct.of(functor, v, Real.of(constraint.lower), Real.of(constraint.upper))
+        is Interval.LessThan -> Struct.of(functor, v, Real.of(constraint.value))
+        is Interval.GreaterThan -> Struct.of(functor, v, Real.of(constraint.value))
+        is Interval.Between -> Struct.of(functor, v, Real.of(constraint.lower), Real.of(constraint.upper))
         is Value -> Struct.of(functor, v, Atom.of(constraint.value.toString()))
-        else -> Struct.of(functor)
     }
 }
 
-internal fun createVariableList(featureSet: Set<BooleanFeatureSet>): Map<String, Var> {
+internal fun createFunctor(constraint: OriginalValue, positive: Boolean = true): String {
+    return (if (!positive) "not_" else "") +
+            when(constraint) {
+                is Interval.LessThan -> "le"
+                is Interval.GreaterThan -> "gt"
+                is Interval.Between -> "in"
+                is Value -> "equal"
+            }
+}
+
+internal fun createVariableList(featureSet: Collection<BooleanFeatureSet>): Map<String, Var> {
     return mapOf(*featureSet.map {
         it.name to Var.of(it.name)
     }.toTypedArray())

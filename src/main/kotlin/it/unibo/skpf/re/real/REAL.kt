@@ -15,7 +15,7 @@ private typealias MapIntToRuleList = Map<Int, MutableList<Rule>>
 
 internal class REAL(
     override val predictor: Classifier<DoubleArray>,
-    override val featureSet: Set<BooleanFeatureSet>
+    override val featureSet: Collection<BooleanFeatureSet>
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
     private lateinit var ruleSet: MapIntToRuleList
@@ -91,7 +91,7 @@ internal class REAL(
         rule.asList().zip(listOf(true, false)) { predicate, truthValue ->
             for (variable in predicate)
                 this.featureSet.first { it.set.containsKey(variable) }.apply {
-                    body.add(createTerm(variables[this.name], this.set[variable], truthValue))
+                    body.add(createTerm(variables[this.name], this.set[variable]!!, truthValue))
                 }
         }
         return body.toTypedArray()

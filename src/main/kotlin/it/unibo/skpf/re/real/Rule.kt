@@ -11,7 +11,7 @@ internal class Rule(
                 this.falsePredicates.containsAll((rule.falsePredicates)))
     }
 
-    fun reduce(featureSets: Set<BooleanFeatureSet>): Rule {
+    fun reduce(featureSets: Collection<BooleanFeatureSet>): Rule {
         val f = this.falsePredicates.toMutableList()
         for (variable in this.truePredicates)
             f.removeAll(
