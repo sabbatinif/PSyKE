@@ -3,8 +3,6 @@ package it.unibo.skpf.re.cart
 import it.unibo.skpf.re.*
 import it.unibo.skpf.re.createHead
 import it.unibo.tuprolog.core.Clause
-import it.unibo.tuprolog.core.Real
-import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
@@ -17,8 +15,8 @@ import smile.data.Tuple
 import smile.data.categories
 import java.lang.IllegalStateException
 
-typealias SplitList = List<NodeSplit>
-typealias SplitSequence = Sequence<Pair<List<NodeSplit>, String>>
+typealias LeafConstraints = List<Pair<String, OriginalValue>>
+typealias LeafSequence = Sequence<Pair<LeafConstraints, String>>
 
 internal class CartExtractor(
     override val predictor: DecisionTree,
@@ -30,14 +28,14 @@ internal class CartExtractor(
         return createTheory(root.asSequence(dataset))
     }
 
-    private fun createTheory(splits: SplitSequence): Theory {
+    private fun createTheory(leaves: LeafSequence): Theory {
         val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
-        for (split in splits)
+        for (leaf in leaves)
             theory.assertZ(
                 Clause.of(
-                createHead("concept", variables.values, split.second),
-                *createBody(variables, split.first)
+                createHead("concept", variables.values, leaf.second),
+                *createBody(variables, leaf.first)
             ))
         return theory
     }
@@ -52,27 +50,23 @@ internal class CartExtractor(
         }
     }
 
-    private fun createBody(variables: Map<String, Var>, constraints: List<NodeSplit>) = sequence {
+    private fun createBody(variables: Map<String, Var>, constraints: LeafConstraints) = sequence {
         for (constraint in constraints)
             yield(
-                Struct.of(
-                    if (constraint.positive) "le" else "gt",
-                    getVariable(constraint.feature, variables),
-                    Real.of(constraint.value)
-                )
+                createTerm(getVariable(constraint.first, variables), constraint.second)
             )
     }.toList().toTypedArray()
 
-    private fun subTree(node: OrdinalNode, dataset: DataFrame, constraints: SplitList): SplitSequence {
+    private fun subTree(node: OrdinalNode, dataset: DataFrame, constraints: LeafConstraints): LeafSequence {
         val split = node.split(dataset.schema())
-        return node.trueChild().asSequence(dataset, constraints.plus(split)).plus(
-            node.falseChild().asSequence(dataset, constraints.plus(split.not()))
+        return node.trueChild().asSequence(dataset, constraints.plus(split.first)).plus(
+            node.falseChild().asSequence(dataset, constraints.plus(split.second))
         )
     }
 
     private fun Node.asSequence(
-        dataset: DataFrame, constraints: SplitList = emptyList(),
-    ): SplitSequence = sequence {
+        dataset: DataFrame, constraints: LeafConstraints = emptyList(),
+    ): LeafSequence = sequence {
         when(val node = this@asSequence) {
             is OrdinalNode -> yieldAll(subTree(node, dataset, constraints))
             is DecisionNode -> yield(constraints to dataset.categories().elementAt(node.output()).toString())

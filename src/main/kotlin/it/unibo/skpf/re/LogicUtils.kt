@@ -8,7 +8,7 @@ import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
 import java.lang.IllegalStateException
 
-internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean): Struct {
+internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = true): Struct {
     if (v == null)
         throw IllegalStateException()
     val functor = createFunctor(constraint, positive)
@@ -20,7 +20,7 @@ internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean): 
     }
 }
 
-internal fun createFunctor(constraint: OriginalValue, positive: Boolean = true): String {
+internal fun createFunctor(constraint: OriginalValue, positive: Boolean): String {
     return (if (!positive) "not_" else "") +
             when(constraint) {
                 is Interval.LessThan -> "le"

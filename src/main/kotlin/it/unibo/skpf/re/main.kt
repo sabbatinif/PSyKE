@@ -26,7 +26,7 @@ fun main() {
         testClassificationExtractor("REAL", train, test, real, knn, printRules = true)
         val duepan = Extractor.duepan(knn, featureSets)
         testClassificationExtractor("Duepan", train, test, duepan, knn, printRules = true)
-break
+
         // fun cart(formula: Formula,
         //             data: DataFrame,
         //             splitRule: SplitRule = SplitRule.GINI,
@@ -46,5 +46,6 @@ break
         val cartEx = Extractor.cart(cart, featureSets)
         testClassificationExtractor("CART", train, test, cartEx, true, false, true)
 //        testClassificationExtractor("CART", train2, test2, cartEx, true, false, true)
+
     }
 }
