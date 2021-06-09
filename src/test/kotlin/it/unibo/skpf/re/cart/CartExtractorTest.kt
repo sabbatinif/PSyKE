@@ -10,22 +10,16 @@ import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import org.junit.jupiter.api.Test
-
 import org.junit.jupiter.api.Assertions.*
 import smile.base.cart.SplitRule
-import smile.classification.KNN
 import smile.classification.cart
 import smile.data.DataFrame
-import smile.data.Tuple
 import smile.data.classes
 import smile.data.formula.Formula
 import smile.data.inputs
-import kotlin.streams.toList
 
 internal class CartExtractorTest {
 
-    @Suppress("UNCHECKED_CAST")
-    private val knn = loadFromFile("irisKNN9.txt") as KNN<DoubleArray>
     @Suppress("UNCHECKED_CAST")
     private val featureSets = loadFromFile("irisBoolFeatSet.txt") as Set<BooleanFeatureSet>
     private val train = loadFromFile("irisTrain50.txt") as DataFrame
