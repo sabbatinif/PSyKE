@@ -5,6 +5,7 @@ import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.createHead
 import it.unibo.skpf.re.loadFromFile
 import it.unibo.tuprolog.core.Clause
+import it.unibo.tuprolog.core.List
 import it.unibo.tuprolog.core.Real
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
@@ -33,16 +34,16 @@ internal class DuepanTest {
         val variables = listOf("V1", "V2", "V3", "V4").map { Var.of(it) }
         val expectedTheory = MutableTheory.of(
             Clause.of(
-                createHead("concept", variables, "Iris-setosa"),
-                Struct.of("le", variables[2], Real.of(2.28))
+                createHead("iris", variables, "setosa"),
+                Struct.of("=<", variables[2], Real.of(2.28))
             ),
             Clause.of(
-                createHead("concept", variables, "Iris-virginica"),
-                Struct.of("not_le", variables[2], Real.of(2.28)),
-                Struct.of("not_in", variables[3], Real.of(0.65), Real.of(1.64))
+                createHead("iris", variables, "virginica"),
+                Struct.of(">", variables[2], Real.of(2.28)),
+                Struct.of("not_in", variables[3], List.of(Real.of(0.65), Real.of(1.64)))
             ),
             Clause.of(
-                createHead("concept", variables, "Iris-versicolor"),
+                createHead("iris", variables, "versicolor"),
                 Struct.of("true")
             )
         )
@@ -61,9 +62,9 @@ internal class DuepanTest {
         val predictions = duepan.predict(test)
         val expected = sequence {
             for (sample in test.stream().toList())
-                if (sample.check("V3_0"))
+                if (sample.check("PetalLength_0"))
                     yield(0)
-                else if (!sample.check("V4_1"))
+                else if (!sample.check("PetalWidth_1"))
                     yield(2)
                 else
                     yield(1)

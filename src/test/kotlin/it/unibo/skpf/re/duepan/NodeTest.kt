@@ -1,11 +1,12 @@
 package it.unibo.skpf.re.duepan
 
+import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import smile.io.Read
 
 class NodeTest {
-    private val dataset = Read.csv("datasets/iris.data")
+    private val dataset = Read.csv("datasets/iris.data", CSVFormat.DEFAULT.withHeader())
     private val nExamples = dataset.nrows()
     private val nodeAll = Node(dataset, nExamples)
     private val node40Setosa = Node(dataset.slice(10, 70), nExamples)
@@ -23,9 +24,9 @@ class NodeTest {
 
     @Test
     fun testDominant() {
-        assertEquals("Iris-setosa", node40Setosa.dominant)
-        assertEquals("Iris-virginica", node10Virginica.dominant)
-        assertEquals("Iris-versicolor", node50Versicolor.dominant)
+        assertEquals("setosa", node40Setosa.dominant)
+        assertEquals("virginica", node10Virginica.dominant)
+        assertEquals("versicolor", node50Versicolor.dominant)
     }
 
     @Test
@@ -85,10 +86,10 @@ class NodeTest {
         val node = Node(
             dataset, nExamples, setOf("V1" to 0.0, "V2" to 1.0)
         )
-        assertEquals(" = Iris-setosa", nodeAll.toString())
-        assertEquals(" = Iris-setosa", node40Setosa.toString())
-        assertEquals(" = Iris-virginica", node10Virginica.toString())
-        assertEquals(" = Iris-versicolor", node50Versicolor.toString())
-        assertEquals("!V1, V2 = Iris-setosa", node.toString())
+        assertEquals(" = setosa", nodeAll.toString())
+        assertEquals(" = setosa", node40Setosa.toString())
+        assertEquals(" = virginica", node10Virginica.toString())
+        assertEquals(" = versicolor", node50Versicolor.toString())
+        assertEquals("!V1, V2 = setosa", node.toString())
     }
 }

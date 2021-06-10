@@ -3,6 +3,7 @@ package it.unibo.skpf.re
 import it.unibo.skpf.re.OriginalValue.Interval
 import it.unibo.skpf.re.OriginalValue.Value
 import it.unibo.tuprolog.core.*
+import it.unibo.tuprolog.core.List
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -20,9 +21,9 @@ class LogicUtilsTest {
     @ArgumentsSource(Companion::class)
     fun testCreateTerm(
         constraint: OriginalValue, positive: Boolean,
-        functor: String, terms: Array<Term>
+        functor: String, term: Term
     ) {
-        val expected = Struct.of(functor, Var.of("V"), *terms)
+        val expected = Struct.of(functor, Var.of("V"), term)
         val actual = createTerm(Var.of("V"), constraint, positive)
         assertTrue(expected.structurallyEquals(actual))
     }
@@ -57,36 +58,30 @@ class LogicUtilsTest {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
             return Stream.of(
                 Arguments.of(
-                    Value("test"), true, "equal",
-                    arrayOf(Atom.of("test"))
+                    Value("test"), true, "=", Atom.of("test")
                 ),
                 Arguments.of(
                     Interval.Between(2.6, 8.9), true, "in",
-                    arrayOf(Real.of(2.6), Real.of(8.9))
+                    List.of(Real.of(2.6), Real.of(8.9))
                 ),
                 Arguments.of(
-                    Interval.LessThan(6.3), true, "le",
-                    arrayOf(Real.of(6.3))
+                    Interval.LessThan(6.3), true, "=<", Real.of(6.3)
                 ),
                 Arguments.of(
-                    Interval.GreaterThan(3.2), true, "gt",
-                    arrayOf(Real.of(3.2))
+                    Interval.GreaterThan(3.2), true, ">", Real.of(3.2)
                 ),
                 Arguments.of(
-                    Value(2.65), false, "not_equal",
-                    arrayOf(Atom.of("2.65"))
+                    Value(2.65), false, "\\=", Atom.of("2.65")
                 ),
                 Arguments.of(
                     Interval.Between(14.3, 25.2), false, "not_in",
-                    arrayOf(Real.of(14.3), Real.of(25.2))
+                    List.of(Real.of(14.3), Real.of(25.2))
                 ),
                 Arguments.of(
-                    Interval.LessThan(12.6), false, "not_le",
-                    arrayOf(Real.of(12.6))
+                    Interval.LessThan(12.6), false, ">", Real.of(12.6)
                 ),
                 Arguments.of(
-                    Interval.GreaterThan(5.3), false, "not_gt",
-                    arrayOf(Real.of(5.3))
+                    Interval.GreaterThan(5.3), false, "=<", Real.of(5.3)
                 )
             )
         }

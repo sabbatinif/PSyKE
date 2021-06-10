@@ -1,5 +1,6 @@
 package it.unibo.skpf.re
 
+import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -30,7 +31,7 @@ class DataFrameUtilsTest {
             "TestContext(classes=$classes)"
     }
 
-    val dataset = Read.csv("datasets/iris.data")
+    val dataset = Read.csv("datasets/iris.data", CSVFormat.DEFAULT.withHeader())
 
     @Test
     fun testRandomSplit() {
@@ -59,7 +60,7 @@ class DataFrameUtilsTest {
     @Test
     fun testCategories() {
         assertEquals(
-            setOf("Iris-setosa", "Iris-versicolor", "Iris-virginica"),
+            setOf("setosa", "versicolor", "virginica"),
             dataset.categories()
         )
     }
@@ -101,7 +102,7 @@ class DataFrameUtilsTest {
             it.isNumeric
         }, description.size)
 
-        val V1 = description["V1"]
+        val V1 = description["SepalLength"]
         val desc = Description(5.84, 0.83, 4.3, 7.9)
         assertNotNull(V1)
         assertEquals(V1!!.min, desc.min)
@@ -198,8 +199,8 @@ class DataFrameUtilsTest {
 
     companion object : ArgumentsProvider {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
-            val iris = Read.csv("datasets/iris.data")
-            val car = Read.csv("datasets/car.data")
+            val iris = Read.csv("datasets/iris.data", CSVFormat.DEFAULT.withHeader())
+            val car = Read.csv("datasets/car.data", CSVFormat.DEFAULT.withHeader())
             return Stream.of(
                 TestContext(iris, setOf("Iris-setosa", "Iris-versicolor", "Iris-virginica")),
                 TestContext(car, setOf("vgood", "good", "acc", "unacc"))

@@ -5,6 +5,7 @@ import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.createHead
 import it.unibo.skpf.re.loadFromFile
 import it.unibo.tuprolog.core.*
+import it.unibo.tuprolog.core.List
 import it.unibo.tuprolog.theory.MutableTheory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -28,35 +29,35 @@ internal class REALTest {
     @Test
     fun extract() {
         val variables = listOf("V1", "V2", "V3", "V4").map { Var.of(it) }
-        val cond1 = Struct.of("in", variables[0], Real.of(5.39), Real.of(6.26))
-        val cond2 = Struct.of("in", variables[2], Real.of(2.28), Real.of(4.87))
-        val cond3 = Struct.of("in", variables[3], Real.of(0.65), Real.of(1.64))
+        val cond1 = Struct.of("in", variables[0], List.of(Real.of(5.39), Real.of(6.26)))
+        val cond2 = Struct.of("in", variables[2], List.of(Real.of(2.28), Real.of(4.87)))
+        val cond3 = Struct.of("in", variables[3], List.of(Real.of(0.65), Real.of(1.64)))
 
         val expectedTheory = MutableTheory.of(
             Clause.of(
-                createHead("concept", variables, "Iris-setosa"),
-                Struct.of("le", variables[3], Real.of(0.65))
+                createHead("iris", variables, "setosa"),
+                Struct.of("=<", variables[3], Real.of(0.65))
             ),
             Clause.of(
-                createHead("concept", variables, "Iris-versicolor"),
+                createHead("iris", variables, "versicolor"),
                 cond2, cond3
             ),
             Clause.of(
-                createHead("concept", variables, "Iris-versicolor"),
+                createHead("iris", variables, "versicolor"),
                 cond1, cond3
             ),
             Clause.of(
-                createHead("concept", variables, "Iris-versicolor"),
+                createHead("iris", variables, "versicolor"),
                 cond1, cond2
             ),
             Clause.of(
-                createHead("concept", variables, "Iris-virginica"),
-                Struct.of("gt", variables[2], Real.of(4.87))
+                createHead("iris", variables, "virginica"),
+                Struct.of(">", variables[2], Real.of(4.87))
             ),
             Clause.of(
-                createHead("concept", variables, "Iris-virginica"),
-                Struct.of("in", variables[1], Real.of(2.87), Real.of(3.2)),
-                Struct.of("gt", variables[3], Real.of(1.64))
+                createHead("iris", variables, "virginica"),
+                Struct.of("in", variables[1], List.of(Real.of(2.87), Real.of(3.2))),
+                Struct.of(">", variables[3], Real.of(1.64))
             )
         )
         assertEquals(expectedTheory.size, theory.size)
@@ -74,15 +75,17 @@ internal class REALTest {
         val predictions = real.predict(test)
         val expected = sequence {
             for (sample in test.stream().toList())
-                if (sample.check("V4_0"))
+                if (sample.check("PetalWidth_0"))
                     yield(0)
                 else if (
-                    sample.check("V3_1") && sample.check("V4_1") ||
-                    sample.check("V1_1") && sample.check("V4_1") ||
-                    sample.check("V3_1") && sample.check("V1_1")
+                    sample.check("PetalLength_1") && sample.check("PetalWidth_1") ||
+                    sample.check("SepalLength_1") && sample.check("PetalWidth_1") ||
+                    sample.check("PetalLength_1") && sample.check("SepalLength_1")
                 )
                     yield(1)
-                else if (sample.check("V3_2") || sample.check("V2_1") && sample.check("V4_2"))
+                else if (sample.check("PetalLength_2") ||
+                    sample.check("SepalWidth_1") && sample.check("PetalWidth_2")
+                )
                     yield(2)
                 else
                     yield(-1)

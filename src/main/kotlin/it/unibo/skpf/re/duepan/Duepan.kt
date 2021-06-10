@@ -6,10 +6,7 @@ import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
-import smile.data.DataFrame
-import smile.data.Tuple
-import smile.data.categories
-import smile.data.inputs
+import smile.data.*
 import java.util.*
 import kotlin.math.sign
 
@@ -41,7 +38,7 @@ internal class Duepan(
             node.children.addAll(best.toList())
         }
         this.optimize()
-        return this.createTheory()
+        return this.createTheory(dataset.name())
     }
 
     private fun initSplits(node: Node) = Pair(
@@ -151,12 +148,12 @@ internal class Duepan(
             }
     }.toList().toTypedArray()
 
-    private fun createTheory(): MutableTheory {
+    private fun createTheory(name: String): MutableTheory {
         val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
         for (node in this.root.asSequence)
             theory.assertZ(Clause.of(
-                createHead("concept", variables.values, node.dominant.toString()),
+                createHead(name, variables.values, node.dominant.toString()),
                 *createBody(variables, node)
             ))
         return theory

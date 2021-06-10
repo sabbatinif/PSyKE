@@ -68,6 +68,9 @@ fun DataFrame.classesAsDoubleArray(outputColumn: Int = lastColumnIndex): DoubleA
 fun DataFrame.classesArray(outputColumn: Int = lastColumnIndex): IntArray =
     this.classes(outputColumn).intVector(0).toIntArray()
 
+fun DataFrame.name(outputColumn: Int = lastColumnIndex): String =
+    this.column(outputColumn).name()
+
 fun std(col: DoubleArray): Double {
     val mean = col.average()
     var std = 0.0

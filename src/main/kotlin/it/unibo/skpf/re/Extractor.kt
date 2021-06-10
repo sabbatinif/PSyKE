@@ -68,7 +68,7 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun cart(
             predictor: DecisionTree,
-            featureSet: Collection<BooleanFeatureSet>
+            featureSet: Collection<BooleanFeatureSet>,
         ): Extractor<Tuple, DecisionTree> = CartExtractor(predictor, featureSet)
     }
 }

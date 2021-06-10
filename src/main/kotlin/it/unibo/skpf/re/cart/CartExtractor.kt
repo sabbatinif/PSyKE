@@ -13,6 +13,7 @@ import smile.classification.DecisionTree
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.categories
+import smile.data.name
 import java.lang.IllegalStateException
 
 typealias LeafConstraints = List<Pair<String, OriginalValue>>
@@ -25,16 +26,16 @@ internal class CartExtractor(
 
     override fun extract(dataset: DataFrame): Theory {
         val root = this.predictor.root()
-        return createTheory(root.asSequence(dataset))
+        return createTheory(root.asSequence(dataset), dataset.name())
     }
 
-    private fun createTheory(leaves: LeafSequence): Theory {
+    private fun createTheory(leaves: LeafSequence, name: String): Theory {
         val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
         for (leaf in leaves)
             theory.assertZ(
                 Clause.of(
-                createHead("concept", variables.values, leaf.second),
+                createHead(name, variables.values, leaf.second),
                 *createBody(variables, leaf.first)
             ))
         return theory

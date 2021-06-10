@@ -80,7 +80,7 @@ internal class REAL(
 
     private fun createClause(dataset: DataFrame, variables: Map<String, Var>, key: Int, rule: Rule): Clause {
         val head = createHead(
-            "concept", variables.values,
+            dataset.name(), variables.values,
             dataset.categories().elementAt(key).toString()
         )
         return Clause.of(head, *createBody(variables, rule))

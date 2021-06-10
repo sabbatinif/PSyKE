@@ -2,12 +2,13 @@ package it.unibo.skpf.re.duepan
 
 import it.unibo.skpf.re.duepan.Node
 import it.unibo.skpf.re.duepan.Split
+import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import smile.io.Read
 
 class SplitTest {
-    private val dataset = Read.csv("datasets/iris.data")
+    private val dataset = Read.csv("datasets/iris.data", CSVFormat.DEFAULT.withHeader())
     private val nExamples = dataset.nrows()
     private val nodeAll = Node(dataset, nExamples)
     private val node40Setosa = Node(dataset.slice(10, 70), nExamples)
