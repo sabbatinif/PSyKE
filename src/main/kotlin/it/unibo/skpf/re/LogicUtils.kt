@@ -7,6 +7,8 @@ import it.unibo.tuprolog.core.List
 import it.unibo.tuprolog.core.Real
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
+import smile.data.DataFrame
+import smile.data.inputs
 import java.lang.IllegalStateException
 
 internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = true): Struct {
@@ -30,10 +32,12 @@ internal fun createFunctor(constraint: OriginalValue, positive: Boolean): String
     }
 }
 
-internal fun createVariableList(featureSet: Collection<BooleanFeatureSet>): Map<String, Var> {
-    return mapOf(*featureSet.map {
-        it.name to Var.of(it.name)
-    }.toTypedArray())
+internal fun createVariableList(featureSet: Collection<BooleanFeatureSet>, dataset: DataFrame? = null): Map<String, Var> {
+    val values =
+        if (featureSet.isNotEmpty())
+            featureSet.map { it.name to Var.of(it.name) }
+        else dataset?.inputs()?.names()?.map { it to Var.of(it) } ?: throw IllegalStateException()
+    return mapOf(*values.toTypedArray())
 }
 
 internal fun createHead(functor: String, variables: Collection<Var>, outClass: String): Struct {

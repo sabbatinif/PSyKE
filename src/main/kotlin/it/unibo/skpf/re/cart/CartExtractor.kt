@@ -2,6 +2,7 @@ package it.unibo.skpf.re.cart
 
 import it.unibo.skpf.re.*
 import it.unibo.skpf.re.createHead
+import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
@@ -14,7 +15,6 @@ import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.categories
 import smile.data.name
-import java.lang.IllegalStateException
 
 typealias LeafConstraints = List<Pair<String, OriginalValue>>
 typealias LeafSequence = Sequence<Pair<LeafConstraints, String>>
@@ -26,36 +26,29 @@ internal class CartExtractor(
 
     override fun extract(dataset: DataFrame): Theory {
         val root = this.predictor.root()
-        return createTheory(root.asSequence(dataset), dataset.name())
+        return createTheory(root.asSequence(dataset), dataset)
     }
 
-    private fun createTheory(leaves: LeafSequence, name: String): Theory {
-        val variables = createVariableList(this.featureSet)
+    private fun createTheory(leaves: LeafSequence, dataset: DataFrame): Theory {
+        val variables = createVariableList(this.featureSet, dataset)
         val theory = MutableTheory.empty()
         for (leaf in leaves)
             theory.assertZ(
                 Clause.of(
-                createHead(name, variables.values, leaf.second),
+                createHead(dataset.name(), variables.values, leaf.second),
                 *createBody(variables, leaf.first)
             ))
         return theory
     }
 
-    private fun getVariable(feature: String, variables: Map<String, Var>): Var {
-        return variables.getOrElse(
-            featureSet.firstOrNull {
-                it.set.containsKey(feature)
-            }?.name ?: feature
-        ) {
-            throw IllegalStateException()
-        }
-    }
-
     private fun createBody(variables: Map<String, Var>, constraints: LeafConstraints) = sequence {
-        for (constraint in constraints)
-            yield(
-                createTerm(getVariable(constraint.first, variables), constraint.second)
-            )
+        for ((name, value) in constraints) {
+            val feature = featureSet.firstOrNull { it.set.containsKey(name) }
+            if (feature == null)
+                yield(createTerm(variables[name], value))
+            else
+                yield(createTerm(variables[feature.name], feature.set[name]!!, value is GreaterThan))
+        }
     }.toList().toTypedArray()
 
     private fun subTree(node: OrdinalNode, dataset: DataFrame, constraints: LeafConstraints): LeafSequence {
