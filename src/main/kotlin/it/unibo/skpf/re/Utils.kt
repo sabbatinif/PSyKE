@@ -1,26 +1,20 @@
 package it.unibo.skpf.re
 
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import java.io.*
 import kotlin.math.pow
 
-fun saveToFile(filename: String, item: Any) {
-    val file = FileOutputStream("src\\test\\resources\\$filename")
-    val outStream = ObjectOutputStream(file)
-    outStream.writeObject(item)
-    outStream.close()
-    file.close()
+internal fun saveToFile(filename: String, item: Any) {
+    val file = File("src").resolve("test").resolve("resources").resolve(filename)
+    return ObjectOutputStream(FileOutputStream(file)).use {
+        it.writeObject(item)
+    }
 }
 
 fun loadFromFile(filename: String): Any {
-    val file = FileInputStream("src\\test\\resources\\$filename")
-    val inStream = ObjectInputStream(file)
-    val item = inStream.readObject()
-    inStream.close()
-    file.close()
-    return item
+    val file = Extractor::class.java.getResourceAsStream("/$filename")!!
+    return ObjectInputStream(file).use {
+        it.readObject()
+    }
 }
 
 fun Double.round(digits: Int = 2): Double {
