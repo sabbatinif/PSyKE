@@ -1,10 +1,11 @@
 package it.unibo.skpf.re
 
-import smile.classification.Classifier
-import smile.classification.DecisionTree
+import smile.base.cart.SplitRule
+import smile.classification.*
 import smile.data.*
-import smile.validation.metric.Accuracy
-import smile.validation.metric.ConfusionMatrix
+import smile.data.formula.Formula
+import smile.io.Read
+import smile.validation.metric.*
 
 fun Array<*>.toInt() =
     this.map { it.toString().toInt() }.toIntArray()
@@ -104,4 +105,31 @@ fun testClassificationExtractor(name: String, train: DataFrame, test: DataFrame,
     if (printRules)
         theory.clauses.forEach { println(it.toString()) }
     return ExtractorPerformance(1.0, accuracy, theory.size.toInt(), 0.0)
+}
+
+fun classify(name: String, testSplit: Double) {
+    println("*** $name ***")
+    val dataset = Read.csv("datasets/$name")
+    val featureSets = dataset.splitFeatures()
+    val (train, test) = dataset.toBoolean(featureSets).randomSplit(testSplit)
+    val x = train.inputsArray()
+    val y = train.classesArray()
+    val knn = knn(x, y, 9)
+//        saveToFile("irisKNN9.txt", knn)
+//        saveToFile("irisTest50.txt", test)
+//        saveToFile("irisTrain50.txt", train)
+//        saveToFile("irisBoolFeatSet.txt", featureSets)
+    testClassifier(test, knn)
+    val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
+    testClassificationExtractor("REAL", train, test, real, knn)
+    val duepan = Extractor.duepan(knn, featureSets)
+    testClassificationExtractor("Duepan", train, test, duepan, knn)
+    val cart = cart(
+        Formula.lhs("Class"),
+        train.inputs().merge(train.classes()),
+        SplitRule.GINI,
+        20, 0, 5
+    )
+    val cartEx = Extractor.cart(cart, featureSets)
+    testClassificationExtractor("CART", train, test, cartEx)
 }

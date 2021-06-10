@@ -60,6 +60,9 @@ fun DataFrame.inputsArray(outputColumn: Int = lastColumnIndex): Array<DoubleArra
     this.inputs(outputColumn).toArray()
 
 fun DataFrame.outputsArray(outputColumn: Int = lastColumnIndex): DoubleArray =
+    this.column(outputColumn).toDoubleArray()
+
+fun DataFrame.classesAsDoubleArray(outputColumn: Int = lastColumnIndex): DoubleArray =
     this.classes(outputColumn).column("Class").toDoubleArray()
 
 fun DataFrame.classesArray(outputColumn: Int = lastColumnIndex): IntArray =
