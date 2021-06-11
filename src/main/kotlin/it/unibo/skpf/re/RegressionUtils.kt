@@ -1,31 +1,29 @@
 package it.unibo.skpf.re
 
-import smile.base.mlp.Layer
+import org.apache.commons.csv.CSVFormat
 import smile.base.mlp.LayerBuilder
-import smile.base.mlp.OutputFunction
 import smile.data.*
 import smile.io.Read
 import smile.math.TimeFunction
 import smile.regression.MLP
 import smile.regression.rbfnet
-import smile.validation.metric.*
 
 fun regression(name: String, testSplit: Double) {
     println("*** $name ***")
-    val dataset = Read.csv("datasets/$name")
+    val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
     val (train, test) = dataset.randomSplit(testSplit)
     val x = train.inputsArray()
     val y = train.outputsArray()
-    val mlp = MLPRegressor(
-        x, y,
-        arrayOf(Layer.tanh(35), Layer.tanh(15), Layer.mse(1, OutputFunction.LINEAR)),
-        200,
-        TimeFunction.linear(0.1, 10000.0, 0.05)
-    )
-    val rbf = rbfnet(x, y, 94, true)
-    val pred = rbf.predict(test.inputsArray())
-    println(mlp.metric(test.inputsArray(), test.outputsArray()).RSquared)
+//    val mlp = MLPRegressor(
+//        x, y,
+//        arrayOf(Layer.tanh(35), Layer.tanh(15), Layer.mse(1, OutputFunction.LINEAR)),
+//        200,
+//        TimeFunction.linear(0.1, 10000.0, 0.05)
+//    )
+    val rbf = rbfnet(x, y, 95, true)
     println(rbf.metric(test.inputsArray(), test.outputsArray()).RSquared)
+    println(rbf.metric(test.inputsArray(), test.outputsArray()).MSE)
+    println(rbf.metric(test.inputsArray(), test.outputsArray()).MAD)
 //    val mse = MSE.of(test.classesAsDoubleArray(), pred)
 //    val r2 = R2.of(test.classesAsDoubleArray(), pred)
 //    println(mse)

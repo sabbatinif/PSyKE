@@ -34,21 +34,21 @@ internal class CartExtractorTest {
 
     @Test
     fun extract() {
-        val variables = listOf("V1", "V2", "V3", "V4").map { Var.of(it) }
+        val variables = listOf("SepalLength", "SepalWidth", "PetalLength", "PetalWidth").map { Var.of(it) }
         val expectedTheory = MutableTheory.of(
             Clause.of(
                 createHead("iris", variables, "versicolor"),
-                Struct.of("=<", variables[2], Real.of(0.5)),
-                Struct.of("=<", variables[3], Real.of(0.5))
+                Struct.of(">", variables[2], Real.of(2.28)),
+                Struct.of("=<", variables[3], Real.of(1.64))
             ),
             Clause.of(
                 createHead("iris", variables, "virginica"),
-                Struct.of("=<", variables[2], Real.of(0.5)),
-                Struct.of(">", variables[3], Real.of(0.5))
+                Struct.of(">", variables[2], Real.of(2.28)),
+                Struct.of(">", variables[3], Real.of(1.64))
             ),
             Clause.of(
                 createHead("iris", variables, "setosa"),
-                Struct.of(">", variables[2], Real.of(0.5))
+                Struct.of("=<", variables[2], Real.of(2.28))
             )
         )
         assertEquals(expectedTheory.size, theory.size)
