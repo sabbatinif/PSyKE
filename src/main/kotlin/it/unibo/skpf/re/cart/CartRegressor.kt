@@ -7,20 +7,21 @@ import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
-import smile.base.cart.CART
 import smile.base.cart.DecisionNode
 import smile.base.cart.Node
 import smile.base.cart.OrdinalNode
+import smile.base.cart.RegressionNode
 import smile.classification.DecisionTree
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.categories
 import smile.data.name
+import smile.regression.RegressionTree
 
-internal class CartExtractor(
-    override val predictor: DecisionTree,
-    override val featureSet: Collection<BooleanFeatureSet>
-) : Extractor<Tuple, DecisionTree> {
+internal class CartRegressor(
+    override val predictor: RegressionTree,
+    override val featureSet: Collection<BooleanFeatureSet> = emptySet()
+) : Extractor<Tuple, RegressionTree> {
 
     override fun extract(dataset: DataFrame): Theory {
         val root = this.predictor.root()
@@ -33,9 +34,9 @@ internal class CartExtractor(
         for (leaf in leaves)
             theory.assertZ(
                 Clause.of(
-                    createHead(dataset.name(), variables.values, leaf.second),
-                    *createBody(variables, leaf.first)
-                ))
+                createHead(dataset.name(), variables.values, leaf.second),
+                *createBody(variables, leaf.first)
+            ))
         return theory
     }
 
@@ -62,6 +63,7 @@ internal class CartExtractor(
         when(val node = this@asSequence) {
             is OrdinalNode -> yieldAll(subTree(node, dataset, constraints))
             is DecisionNode -> yield(constraints to dataset.categories().elementAt(node.output()).toString())
+            is RegressionNode -> yield(constraints to node.output().toString())
         }
     }
 

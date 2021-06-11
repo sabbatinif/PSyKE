@@ -15,12 +15,6 @@ import smile.io.CSV
 import smile.io.Read
 import smile.validation.metric.*
 
-private fun prettyRulesFormatter() =
-    TermFormatter.prettyExpressions(OperatorSet.DEFAULT +
-            Operator("in", Specifier.XFX, 800) +
-            Operator("not_in", Specifier.XFX, 800)
-    )
-
 fun Array<*>.toInt() =
     this.map { it.toString().toInt() }.toIntArray()
 

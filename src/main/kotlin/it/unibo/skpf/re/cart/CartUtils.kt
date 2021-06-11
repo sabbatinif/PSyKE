@@ -5,6 +5,9 @@ import it.unibo.skpf.re.getFieldValue
 import smile.base.cart.OrdinalNode
 import smile.data.type.StructType
 
+typealias LeafConstraints = List<Pair<String, OriginalValue>>
+typealias LeafSequence = Sequence<Pair<LeafConstraints, String>>
+
 val OrdinalNode.value: Double
     get() = getFieldValue("value")
 

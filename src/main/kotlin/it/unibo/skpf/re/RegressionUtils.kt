@@ -1,12 +1,30 @@
 package it.unibo.skpf.re
 
+import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
 import smile.base.mlp.LayerBuilder
 import smile.data.*
+import smile.data.formula.Formula
 import smile.io.Read
 import smile.math.TimeFunction
-import smile.regression.MLP
-import smile.regression.rbfnet
+import smile.regression.*
+
+fun printMetrics(
+    model: Regression<DoubleArray>,
+    input: Array<DoubleArray>,
+    expectedOutput: DoubleArray,
+    r2: Boolean = true,
+    mse: Boolean = true,
+    mad: Boolean = false
+) {
+    val metric = model.metric(input, expectedOutput)
+    if (r2)
+        println("R2 = " + metric.RSquared)
+    if (mse)
+        println("MSE = " + metric.MSE)
+    if (mad)
+        println("MAD = " + metric.MAD)
+}
 
 fun regression(name: String, testSplit: Double) {
     println("*** $name ***")
@@ -21,14 +39,27 @@ fun regression(name: String, testSplit: Double) {
 //        TimeFunction.linear(0.1, 10000.0, 0.05)
 //    )
     val rbf = rbfnet(x, y, 95, true)
-    println(rbf.metric(test.inputsArray(), test.outputsArray()).RSquared)
-    println(rbf.metric(test.inputsArray(), test.outputsArray()).MSE)
-    println(rbf.metric(test.inputsArray(), test.outputsArray()).MAD)
-//    val mse = MSE.of(test.classesAsDoubleArray(), pred)
-//    val r2 = R2.of(test.classesAsDoubleArray(), pred)
-//    println(mse)
-//    println(r2)
+    printMetrics(rbf, test.inputsArray(), test.outputsArray())
+    val cart = cart(
+        Formula.lhs(train.name()),
+        train.inputs().merge(train.outputs()),
+        3, 0, 5
+    )
+    val cartEx = Extractor.cartRegression(cart)
+    testRegressionExtractor("CART", train, test, cartEx, true, true)
+}
 
+fun testRegressionExtractor(
+    name: String,
+    train: DataFrame,
+    test: DataFrame,
+    extractor: Extractor<Tuple, RegressionTree>,
+    metrics: Boolean,
+    printRules: Boolean
+) {
+    val theory = extractor.extract(train)
+    if (printRules)
+        theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }
 }
 
 fun MLPRegressor(

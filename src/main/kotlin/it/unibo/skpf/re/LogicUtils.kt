@@ -2,11 +2,11 @@ package it.unibo.skpf.re
 
 import it.unibo.skpf.re.OriginalValue.Interval
 import it.unibo.skpf.re.OriginalValue.Value
-import it.unibo.tuprolog.core.Atom
+import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.List
-import it.unibo.tuprolog.core.Real
-import it.unibo.tuprolog.core.Struct
-import it.unibo.tuprolog.core.Var
+import it.unibo.tuprolog.core.operators.Operator
+import it.unibo.tuprolog.core.operators.OperatorSet
+import it.unibo.tuprolog.core.operators.Specifier
 import smile.data.DataFrame
 import smile.data.inputs
 import java.lang.IllegalStateException
@@ -43,3 +43,10 @@ internal fun createVariableList(featureSet: Collection<BooleanFeatureSet>, datas
 internal fun createHead(functor: String, variables: Collection<Var>, outClass: String): Struct {
     return Struct.of(functor, variables.plus(Atom.of(outClass)))
 }
+
+internal fun prettyRulesFormatter() =
+    TermFormatter.prettyExpressions(
+        OperatorSet.DEFAULT +
+            Operator("in", Specifier.XFX, 800) +
+            Operator("not_in", Specifier.XFX, 800)
+    )
