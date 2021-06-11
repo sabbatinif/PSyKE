@@ -7,20 +7,17 @@ import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
-import smile.base.cart.CART
-import smile.base.cart.DecisionNode
-import smile.base.cart.Node
-import smile.base.cart.OrdinalNode
-import smile.classification.DecisionTree
+import smile.base.cart.*
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.categories
 import smile.data.name
+import java.lang.IllegalStateException
 
 internal class CartExtractor(
-    override val predictor: DecisionTree,
+    override val predictor: CartPredictor,
     override val featureSet: Collection<BooleanFeatureSet>
-) : Extractor<Tuple, DecisionTree> {
+) : Extractor<Tuple, CartPredictor> {
 
     override fun extract(dataset: DataFrame): Theory {
         val root = this.predictor.root()
@@ -30,11 +27,15 @@ internal class CartExtractor(
     private fun createTheory(leaves: LeafSequence, dataset: DataFrame): Theory {
         val variables = createVariableList(this.featureSet, dataset)
         val theory = MutableTheory.empty()
-        for (leaf in leaves)
+        for ((name, value) in leaves)
             theory.assertZ(
                 Clause.of(
-                    createHead(dataset.name(), variables.values, leaf.second),
-                    *createBody(variables, leaf.first)
+                    when (value) {
+                        is Number -> createHead(dataset.name(), variables.values, value)
+                        is String -> createHead(dataset.name(), variables.values, value)
+                        else -> throw IllegalStateException()
+                    },
+                    *createBody(variables, name)
                 ))
         return theory
     }
@@ -62,9 +63,10 @@ internal class CartExtractor(
         when(val node = this@asSequence) {
             is OrdinalNode -> yieldAll(subTree(node, dataset, constraints))
             is DecisionNode -> yield(constraints to dataset.categories().elementAt(node.output()).toString())
+            is RegressionNode -> yield(constraints to node.output())
         }
     }
 
     override fun predict(dataset: DataFrame): Array<*> =
-        this.predictor.predict(dataset).toTypedArray()
+        this.predictor.predict(dataset)
 }

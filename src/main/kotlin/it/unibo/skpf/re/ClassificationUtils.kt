@@ -1,17 +1,12 @@
 package it.unibo.skpf.re
 
-import it.unibo.tuprolog.core.TermFormatter
+import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.tuprolog.core.format
-import it.unibo.tuprolog.core.operators.Operator
-import it.unibo.tuprolog.core.operators.OperatorSet
-import it.unibo.tuprolog.core.operators.Specifier
 import org.apache.commons.csv.CSVFormat
 import smile.base.cart.SplitRule
 import smile.classification.*
 import smile.data.*
 import smile.data.formula.Formula
-import smile.data.type.StructType
-import smile.io.CSV
 import smile.io.Read
 import smile.validation.metric.*
 
@@ -112,7 +107,7 @@ fun testClassificationExtractor(name: String, train: DataFrame, test: DataFrame,
 }
 
 fun testClassificationExtractor(name: String, train: DataFrame, test: DataFrame,
-                                extractor: Extractor<Tuple, DecisionTree>,
+                                extractor: Extractor<Tuple, CartPredictor>,
                                 printAccuracy: Boolean = true, printMatrix: Boolean = false,
                                 printRules: Boolean = false
 ): ExtractorPerformance {
@@ -136,13 +131,15 @@ fun classifyWithoutDiscretise(name: String, testSplit: Double) {
     val x = train.inputsArray()
     val y = train.classesArray()
     val knn = knn(x, y, 9)
-    val cart = cart(
-        Formula.lhs("Class"),
-        train.inputs().merge(train.classes()),
-        SplitRule.GINI,
-        20, 0, 5
+    val cart = CartPredictor(
+        cart(
+            Formula.lhs("Class"),
+            train.inputs().merge(train.classes()),
+            SplitRule.GINI,
+            20, 0, 5
+        )
     )
-    val cartEx = Extractor.cart(cart, emptySet())
+    val cartEx = Extractor.cart(cart)
     testClassificationExtractor("CART without discretisation", train, test, cartEx, true, true, true)
 }
 
@@ -163,11 +160,13 @@ fun classify(name: String, testSplit: Double) {
     testClassificationExtractor("REAL", train, test, real, knn, true, true, true)
     val duepan = Extractor.duepan(knn, featureSets)
     testClassificationExtractor("Duepan", train, test, duepan, knn, true, true, true)
-    val cart = cart(
-        Formula.lhs("Class"),
-        train.inputs().merge(train.classes()),
-        SplitRule.GINI,
-        20, 0, 5
+    val cart = CartPredictor(
+        cart(
+            Formula.lhs("Class"),
+            train.inputs().merge(train.classes()),
+            SplitRule.GINI,
+            20, 0, 5
+        )
     )
     val cartEx = Extractor.cart(cart, featureSets)
     testClassificationExtractor("CART", train, test, cartEx, true, true, true)

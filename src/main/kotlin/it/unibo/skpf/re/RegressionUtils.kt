@@ -1,5 +1,6 @@
 package it.unibo.skpf.re
 
+import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
 import smile.base.mlp.LayerBuilder
@@ -8,22 +9,27 @@ import smile.data.formula.Formula
 import smile.io.Read
 import smile.math.TimeFunction
 import smile.regression.*
+import smile.validation.metric.MAD
+import smile.validation.metric.MSE
+import smile.validation.metric.R2
 
 fun printMetrics(
-    model: Regression<DoubleArray>,
-    input: Array<DoubleArray>,
-    expectedOutput: DoubleArray,
-    r2: Boolean = true,
-    mse: Boolean = true,
-    mad: Boolean = false
-) {
-    val metric = model.metric(input, expectedOutput)
-    if (r2)
-        println("R2 = " + metric.RSquared)
-    if (mse)
-        println("MSE = " + metric.MSE)
-    if (mad)
-        println("MAD = " + metric.MAD)
+    actual: DoubleArray,
+    expected: DoubleArray,
+    printR2: Boolean = true,
+    printMSE: Boolean = true,
+    printMAD: Boolean = false
+): Triple<Double, Double, Double> {
+    val r2 = R2.of(expected, actual).round(2)
+    val mse = MSE.of(expected, actual).round(2)
+    val mad = MAD.of(expected, actual).round(2)
+    if (printR2)
+        println("Regressor R2 = $r2")
+    if (printMSE)
+        println("Regressor MSE = $mse")
+    if (printMAD)
+        println("Regressor MAD = $mad")
+    return Triple(r2, mse, mad)
 }
 
 fun regression(name: String, testSplit: Double) {
@@ -39,13 +45,18 @@ fun regression(name: String, testSplit: Double) {
 //        TimeFunction.linear(0.1, 10000.0, 0.05)
 //    )
     val rbf = rbfnet(x, y, 95, true)
-    printMetrics(rbf, test.inputsArray(), test.outputsArray())
-    val cart = cart(
-        Formula.lhs(train.name()),
-        train.inputs().merge(train.outputs()),
-        3, 0, 5
+//    saveToFile("artiRBF95.txt", rbf)
+//    saveToFile("artiTest50.txt", test)
+//    saveToFile("artiTrain50.txt", train)
+    printMetrics(rbf.predict(test.inputsArray()), test.outputsArray())
+    val cart = CartPredictor(
+        cart(
+            Formula.lhs(train.name()),
+            train.inputs().merge(train.outputs()),
+            3, 0, 5
+        )
     )
-    val cartEx = Extractor.cartRegression(cart)
+    val cartEx = Extractor.cart(cart)
     testRegressionExtractor("CART", train, test, cartEx, true, true)
 }
 
@@ -53,24 +64,43 @@ fun testRegressionExtractor(
     name: String,
     train: DataFrame,
     test: DataFrame,
-    extractor: Extractor<Tuple, RegressionTree>,
-    metrics: Boolean,
-    printRules: Boolean
+    extractor: Extractor<Tuple, CartPredictor>,
+    printMetrics: Boolean = true,
+    printRules: Boolean = false
 ) {
+    println("\n################################")
+    println("# $name extractor")
+    println("################################\n")
     val theory = extractor.extract(train)
+    if (printMetrics) {
+        val metrics = printMetrics(test.outputsArray(),
+            extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
+            false, false, false
+        )
+        println(theory.size.toString() +
+                " rules with R2 = " + metrics.first +
+                " and MSE = " + metrics.second + " w.r.t. the data"
+        ).also { println() }
+    }
     if (printRules)
         theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }
 }
 
 fun MLPRegressor(
-    x: Array<DoubleArray>, y: DoubleArray, builders: Array<LayerBuilder>, epochs: Int = 10,
+    x: Array<DoubleArray>,
+    y: DoubleArray,
+    builders: Array<LayerBuilder>,
+    epochs: Int = 10,
     learningRate: TimeFunction = TimeFunction.linear(0.01, 10000.0, 0.001),
     momentum: TimeFunction = TimeFunction.constant(0.0),
-    weightDecay: Double = 0.0, rho: Double = 0.0, epsilon: Double = 1E-7) : MLP {
+    weightDecay: Double = 0.0,
+    rho: Double = 0.0,
+    epsilon: Double = 1E-7
+): MLP {
     val net = MLP(x[0].size, *builders)
     net.setLearningRate(learningRate)
     net.setMomentum(momentum)
-    net.setWeightDecay(weightDecay)
+    net.weightDecay = weightDecay
     net.setRMSProp(rho, epsilon)
     for (i in 1 .. epochs) net.update(x, y)
     return net

@@ -6,7 +6,7 @@ import smile.base.cart.OrdinalNode
 import smile.data.type.StructType
 
 typealias LeafConstraints = List<Pair<String, OriginalValue>>
-typealias LeafSequence = Sequence<Pair<LeafConstraints, String>>
+typealias LeafSequence = Sequence<Pair<LeafConstraints, Any>>
 
 val OrdinalNode.value: Double
     get() = getFieldValue("value")

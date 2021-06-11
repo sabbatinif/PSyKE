@@ -16,9 +16,10 @@ internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = 
         throw IllegalStateException()
     val functor = createFunctor(constraint, positive)
     return when (constraint) {
-        is Interval.LessThan -> Struct.of(functor, v, Real.of(constraint.value))
-        is Interval.GreaterThan -> Struct.of(functor, v, Real.of(constraint.value))
-        is Interval.Between -> Struct.of(functor, v, List.of(Real.of(constraint.lower), Real.of(constraint.upper)))
+        is Interval.LessThan -> Struct.of(functor, v, Real.of(constraint.value.round(2)))
+        is Interval.GreaterThan -> Struct.of(functor, v, Real.of(constraint.value.round(2)))
+        is Interval.Between -> Struct.of(functor, v,
+            List.of(Real.of(constraint.lower.round(2)), Real.of(constraint.upper.round(2))))
         is Value -> Struct.of(functor, v, Atom.of(constraint.value.toString()))
     }
 }
@@ -42,6 +43,11 @@ internal fun createVariableList(featureSet: Collection<BooleanFeatureSet>, datas
 
 internal fun createHead(functor: String, variables: Collection<Var>, outClass: String): Struct {
     return Struct.of(functor, variables.plus(Atom.of(outClass)))
+}
+
+internal fun createHead(functor: String, variables: Collection<Var>, output: Number): Struct {
+    val value = if (output is Double) output.round(2) else output
+    return Struct.of(functor, variables.plus(Numeric.of(value)))
 }
 
 internal fun prettyRulesFormatter() =

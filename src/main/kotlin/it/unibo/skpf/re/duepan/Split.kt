@@ -1,7 +1,9 @@
 package it.unibo.skpf.re.duepan
 
-internal class Split(private val parent: Node, val children: Pair<Node, Node>) {
-
+internal class Split(
+    private val parent: Node,
+    val children: Pair<Node, Node>
+) {
     val priority: Double
         get() = this.priority(this.parent)
 
