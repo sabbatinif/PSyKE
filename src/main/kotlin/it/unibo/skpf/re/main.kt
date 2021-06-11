@@ -67,13 +67,10 @@ fun main() {
     testClassificationExtractor("DUEPAN with MLP", train, test, duepanMLP, ann, true, true, true)
     testClassificationExtractor("CART", train, test, cart, true, true, true)
 
+    // test CART without discretising the data set
+    classifyWithoutDiscretise("iris.data", 0.5)
+
 //    classify("iris.data", 0.5)
 //    classify("car.data", 0.2)
 //    regression("arti.csv", 0.2)
-
-//        val cart2 = smile.regression.cart(
-//            Formula.lhs("Class"),
-//            train.inputs().merge(train.classes()),
-//            20, 0, 5
-//        )
 }

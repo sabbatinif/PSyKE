@@ -136,6 +136,22 @@ fun testClassificationExtractor(name: String, train: DataFrame, test: DataFrame,
     return ExtractorPerformance(1.0, accuracy, theory.size.toInt(), 0.0)
 }
 
+fun classifyWithoutDiscretise(name: String, testSplit: Double) {
+    val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
+    val (train, test) = dataset.randomSplit(testSplit)
+    val x = train.inputsArray()
+    val y = train.classesArray()
+    val knn = knn(x, y, 9)
+    val cart = cart(
+        Formula.lhs("Class"),
+        train.inputs().merge(train.classes()),
+        SplitRule.GINI,
+        20, 0, 5
+    )
+    val cartEx = Extractor.cart(cart, emptySet())
+    testClassificationExtractor("CART without discretisation", train, test, cartEx, true, true, true)
+}
+
 fun classify(name: String, testSplit: Double) {
     println("*** $name ***")
     val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
