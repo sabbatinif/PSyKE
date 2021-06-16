@@ -1,13 +1,7 @@
 image: pikalab/ci:ubuntu-jdk11-git-gradle-graphviz
 
-variables:
-  GCMD: "gradle"
-  BEFORE_TASK: ""
-  BUILD_TASK: "clean assemble --parallel"
-  CHECK_CODE_TASK: "ktlintCheck --parallel"
-  TEST_JVM_TASK: "jvmTest -x dokkaHtml"
-  AFTER_TASK: ""
-  GOPTS: "--no-daemon --console=plain"
+before_script:
+  - chmod +x gradlew
 
 stages:
   - build
@@ -15,13 +9,13 @@ stages:
 
 Compile:
   stage: build
-  script: "gradle clean assemble --parallel"
+  script: gradle clean assemble --parallel
   only:
     - branches
 
 Test:
   stage: test
-  script: "gradle test"
+  script: gradle test
   artifacts:
     reports:
       junit: "build/test-results/test/**/TEST-*.xml"
