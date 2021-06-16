@@ -10,12 +10,28 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import smile.data.*
+import smile.data.DataFrame
+import smile.data.Description
+import smile.data.categories
+import smile.data.classes
+import smile.data.createRanges
+import smile.data.describe
+import smile.data.filterByOutput
+import smile.data.inputs
+import smile.data.nCategories
+import smile.data.name
+import smile.data.outputClasses
+import smile.data.outputs
+import smile.data.randomSplit
+import smile.data.splitFeatures
+import smile.data.toBoolean
+import smile.data.toStringList
+import smile.data.toStringSet
 import smile.data.type.DataTypes
+import smile.data.writeColumn
 import smile.io.Read
 import java.lang.IllegalStateException
 import java.util.stream.Stream
-import kotlin.math.round
 
 @Suppress("UNUSED_PARAMETER")
 class DataFrameUtilsTest {
@@ -72,6 +88,11 @@ class DataFrameUtilsTest {
     }
 
     @Test
+    fun testName() {
+        assertEquals("iris", dataset.name())
+    }
+
+    @Test
     fun testOutputClasses() {
         assertEquals(dataset.nrows(), dataset.outputClasses().size)
         dataset.outputClasses().forEach { dataset.categories().contains(it) }
@@ -99,9 +120,12 @@ class DataFrameUtilsTest {
     @Test
     fun testDescribe() {
         val description = dataset.describe()
-        assertEquals(dataset.inputs().schema().fields().count {
-            it.isNumeric
-        }, description.size)
+        assertEquals(
+            dataset.inputs().schema().fields().count {
+                it.isNumeric
+            },
+            description.size
+        )
 
         val V1 = description["SepalLength"]
         val desc = Description(5.84, 0.83, 4.3, 7.9)
@@ -173,7 +197,6 @@ class DataFrameUtilsTest {
                 DataTypes.DoubleType -> assertEquals(classes.size, it.set.size)
                 else -> assertEquals(dataset.column(it.name).toStringArray().distinct().size, it.set.size)
             }
-
         }
     }
 

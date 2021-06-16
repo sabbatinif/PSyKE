@@ -1,12 +1,17 @@
 package it.unibo.skpf.re.cart
 
-import it.unibo.skpf.re.*
+import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.loadFromFile
-import it.unibo.tuprolog.core.*
+import it.unibo.tuprolog.core.Clause
+import it.unibo.tuprolog.core.Real
+import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -14,8 +19,12 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import smile.base.cart.SplitRule
 import smile.classification.cart
-import smile.data.*
+import smile.data.DataFrame
+import smile.data.classes
 import smile.data.formula.Formula
+import smile.data.inputs
+import smile.data.name
+import smile.data.outputs
 import java.util.stream.Stream
 
 internal class CartExtractorTest {
@@ -37,7 +46,7 @@ internal class CartExtractorTest {
             val irisCart = cart(
                 Formula.lhs("Class"),
                 irisTrain.inputs().merge(irisTrain.classes()),
-                SplitRule.GINI,20, 0, 5
+                SplitRule.GINI, 20, 0, 5
             )
             val artiCart = CartPredictor(
                 smile.regression.cart(

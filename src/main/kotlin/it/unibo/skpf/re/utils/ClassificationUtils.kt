@@ -6,11 +6,24 @@ import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
 import smile.base.cart.SplitRule
-import smile.classification.*
-import smile.data.*
+import smile.classification.Classifier
+import smile.classification.DecisionTree
+import smile.classification.cart
+import smile.classification.knn
+import smile.data.DataFrame
+import smile.data.Tuple
+import smile.data.classes
+import smile.data.classesArray
 import smile.data.formula.Formula
+import smile.data.inputs
+import smile.data.inputsArray
+import smile.data.nCategories
+import smile.data.randomSplit
+import smile.data.splitFeatures
+import smile.data.toBoolean
 import smile.io.Read
-import smile.validation.metric.*
+import smile.validation.metric.Accuracy
+import smile.validation.metric.ConfusionMatrix
 
 fun Array<*>.toInt() =
     this.map { it.toString().toInt() }.toIntArray()
@@ -35,12 +48,14 @@ fun fidelity(
     return Accuracy.of(predictor.predict(data.inputsArray()), extractor.predict(data).toInt()).round(2)
 }
 
-fun confusionMatrix(data: DataFrame, predictor: Classifier<DoubleArray>,
-                    extractor: Extractor<*, *>
+fun confusionMatrix(
+    data: DataFrame,
+    predictor: Classifier<DoubleArray>,
+    extractor: Extractor<*, *>
 ): ConfusionMatrix {
     return ConfusionMatrix.of(
         predictor.predict(data.inputsArray()),
-        extractor.predict(data).toInt().map { if (it == -1) data.nCategories() else it}.toIntArray()
+        extractor.predict(data).toInt().map { if (it == -1) data.nCategories() else it }.toIntArray()
     )
 }
 
@@ -61,12 +76,16 @@ fun confusionMatrix(data: DataFrame, predictor: DecisionTree): ConfusionMatrix {
 fun confusionMatrix(data: DataFrame, extractor: Extractor<*, *>): ConfusionMatrix {
     return ConfusionMatrix.of(
         data.classesArray(),
-        extractor.predict(data).toInt().map { if (it == -1) data.nCategories() else it}.toIntArray()
+        extractor.predict(data).toInt().map { if (it == -1) data.nCategories() else it }.toIntArray()
     )
 }
 
-fun testClassifier(test: DataFrame, predictor: Classifier<DoubleArray>,
-                   printAccuracy: Boolean = true, printMatrix: Boolean = false): Double {
+fun testClassifier(
+    test: DataFrame,
+    predictor: Classifier<DoubleArray>,
+    printAccuracy: Boolean = true,
+    printMatrix: Boolean = false
+): Double {
     val accuracy = accuracy(test, predictor)
     if (printAccuracy)
         println("Classifier accuracy: $accuracy")
@@ -75,8 +94,12 @@ fun testClassifier(test: DataFrame, predictor: Classifier<DoubleArray>,
     return accuracy
 }
 
-fun testClassifier(test: DataFrame, predictor: DecisionTree,
-                   printAccuracy: Boolean = true, printMatrix: Boolean = false): Double {
+fun testClassifier(
+    test: DataFrame,
+    predictor: DecisionTree,
+    printAccuracy: Boolean = true,
+    printMatrix: Boolean = false
+): Double {
     val accuracy = accuracy(test, predictor)
     if (printAccuracy)
         println("Classifier accuracy: $accuracy")
@@ -85,11 +108,15 @@ fun testClassifier(test: DataFrame, predictor: DecisionTree,
     return accuracy
 }
 
-fun testClassificationExtractor(name: String, train: DataFrame, test: DataFrame,
-                                extractor: Extractor<*, *>,
-                                predictor: Classifier<DoubleArray>,
-                                printAccuracy: Boolean = true, printMatrix: Boolean = false,
-                                printRules: Boolean = false
+fun testClassificationExtractor(
+    name: String,
+    train: DataFrame,
+    test: DataFrame,
+    extractor: Extractor<*, *>,
+    predictor: Classifier<DoubleArray>,
+    printAccuracy: Boolean = true,
+    printMatrix: Boolean = false,
+    printRules: Boolean = false
 ): ExtractorPerformance {
     val theory = extractor.extract(train)
     val fidelity = fidelity(test, predictor, extractor)
@@ -99,9 +126,11 @@ fun testClassificationExtractor(name: String, train: DataFrame, test: DataFrame,
     println("# $name extractor")
     println("################################\n")
     if (printAccuracy)
-        println(theory.size.toString() +
+        println(
+            theory.size.toString() +
                 " rules with fidelity of " + fidelity +
-                " and accuracy of " + accuracy).also { println() }
+                " and accuracy of " + accuracy
+        ).also { println() }
     if (printMatrix)
         println(confusionMatrix(test, predictor, extractor)).also { println() }
     if (printRules)
@@ -109,10 +138,14 @@ fun testClassificationExtractor(name: String, train: DataFrame, test: DataFrame,
     return ExtractorPerformance(fidelity, accuracy, theory.size.toInt(), missing)
 }
 
-fun testClassificationExtractor(name: String, train: DataFrame, test: DataFrame,
-                                extractor: Extractor<Tuple, CartPredictor>,
-                                printAccuracy: Boolean = true, printMatrix: Boolean = false,
-                                printRules: Boolean = false
+fun testClassificationExtractor(
+    name: String,
+    train: DataFrame,
+    test: DataFrame,
+    extractor: Extractor<Tuple, CartPredictor>,
+    printAccuracy: Boolean = true,
+    printMatrix: Boolean = false,
+    printRules: Boolean = false
 ): ExtractorPerformance {
     val theory = extractor.extract(train)
     val accuracy = accuracy(test, extractor)

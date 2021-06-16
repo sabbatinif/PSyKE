@@ -1,6 +1,7 @@
 package it.unibo.skpf.re.real
 
-import it.unibo.skpf.re.*
+import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
@@ -10,8 +11,13 @@ import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.utils.Cache
 import smile.classification.Classifier
-import smile.data.*
+import smile.data.DataFrame
+import smile.data.Tuple
+import smile.data.categories
+import smile.data.inputsArray
+import smile.data.name
 import smile.data.type.StructType
+import smile.data.writeColumn
 import kotlin.streams.toList
 
 private typealias MapIntToRuleList = Map<Int, MutableList<Rule>>
@@ -52,9 +58,11 @@ internal class REAL(
         return generalise(rule, dataset, sample)
     }
 
-    private fun removeAntecedents(samples: DataFrame,
-                                  predicate: String,
-                                  mutablePredicates: MutableList<String>): DataFrame {
+    private fun removeAntecedents(
+        samples: DataFrame,
+        predicate: String,
+        mutablePredicates: MutableList<String>
+    ): DataFrame {
         val ret = this.subset(samples, predicate)
         if (ret.second) {
             mutablePredicates.remove(predicate)
@@ -69,7 +77,7 @@ internal class REAL(
         rule.asList().zip(mutableRule) { predicates, mutablePredicates ->
             for (predicate in predicates)
                 samples = removeAntecedents(samples, predicate, mutablePredicates)
-            }
+        }
         return Rule(mutableRule.first(), mutableRule.last())
     }
 
@@ -128,7 +136,8 @@ internal class REAL(
         flat(this.ruleSet)
             .firstOrNull {
                 ruleFromExample(schema, tupleToArray(x))
-                    .subRule(it.second) }?.first ?: -1
+                    .subRule(it.second)
+            }?.first ?: -1
 
     private fun tupleToArray(x: Tuple) =
         sequence {

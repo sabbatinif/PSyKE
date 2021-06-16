@@ -3,8 +3,13 @@ package it.unibo.skpf.re.regression
 import it.unibo.skpf.re.regression.iter.Expansion
 import it.unibo.skpf.re.regression.iter.MinUpdate
 import it.unibo.skpf.re.utils.loadFromFile
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -31,7 +36,7 @@ internal class HyperCubeTest {
         )
 
     private val dataset = loadFromFile("artiTrain50.txt") as DataFrame
-    private val dimensions =  mapOf(
+    private val dimensions = mapOf(
         "X" to Pair(0.2, 0.6),
         "Y" to Pair(0.7, 0.9)
     )
@@ -40,9 +45,9 @@ internal class HyperCubeTest {
     private val filteredDataset = DataFrame.of(
         dataset.stream().filter { tuple ->
             (0.2 <= tuple.getDouble("X")) &&
-                    (tuple.getDouble("X") < 0.6) &&
-                    (0.7 <= tuple.getDouble("Y")) &&
-                    (tuple.getDouble("Y") < 0.9)
+                (tuple.getDouble("X") < 0.6) &&
+                (0.7 <= tuple.getDouble("Y")) &&
+                (tuple.getDouble("Y") < 0.9)
         }
     )
 
@@ -157,7 +162,7 @@ internal class HyperCubeTest {
     @Test
     fun testCreateTuple() {
         val tuple = cube.createTuple(dataset.inputs().schema())
-        cube.dimensions.forEach { (name, values)->
+        cube.dimensions.forEach { (name, values) ->
             assertTrue(values.first <= tuple.getDouble(name))
             assertTrue(tuple.getDouble(name) < values.second)
         }

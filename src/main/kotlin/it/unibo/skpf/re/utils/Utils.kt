@@ -1,7 +1,10 @@
 package it.unibo.skpf.re.utils
 
 import it.unibo.skpf.re.Extractor
-import java.io.*
+import java.io.File
+import java.io.FileOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import kotlin.math.pow
 
 internal fun saveToFile(filename: String, item: Any) {

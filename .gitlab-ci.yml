@@ -5,8 +5,19 @@ before_script:
   - source $HOME/.sdkman/bin/sdkman-init.sh
 
 stages:
+  - check
   - build
   - test
+
+Check Code Style:
+  stage: check
+  script:
+    - gradle ktlintCheck --parallel
+  artifacts:
+    paths:
+      - "**/build/reports/ktlint/"
+  only:
+    - branches
 
 Compile:
   stage: build

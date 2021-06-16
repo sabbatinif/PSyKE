@@ -5,12 +5,22 @@ import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
 import smile.base.mlp.LayerBuilder
-import smile.data.*
+import smile.data.DataFrame
+import smile.data.Tuple
 import smile.data.formula.Formula
+import smile.data.inputs
+import smile.data.inputsArray
+import smile.data.name
+import smile.data.outputs
+import smile.data.outputsArray
+import smile.data.randomSplit
 import smile.io.Read
 import smile.math.TimeFunction
 import smile.math.kernel.GaussianKernel
-import smile.regression.*
+import smile.regression.MLP
+import smile.regression.Regression
+import smile.regression.cart
+import smile.regression.svr
 import smile.validation.metric.MAD
 import smile.validation.metric.MSE
 import smile.validation.metric.R2
@@ -81,11 +91,13 @@ fun testRegressionExtractor(
     println("################################\n")
     val theory = extractor.extract(train)
     if (printMetrics) {
-        val metrics = printMetrics(test.outputsArray(),
+        val metrics = printMetrics(
+            test.outputsArray(),
             extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
             false, false, false
         )
-        println(theory.size.toString() +
+        println(
+            theory.size.toString() +
                 " rules with R2 = " + metrics.first +
                 " and MSE = " + metrics.second + " w.r.t. the data"
         ).also { println() }
@@ -108,19 +120,23 @@ fun testRegressionExtractor(
     println("################################\n")
     val theory = extractor.extract(train)
     if (printMetrics) {
-        val metrics = printMetrics(test.outputsArray(),
+        val metrics = printMetrics(
+            test.outputsArray(),
             extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
             false, false, false
         )
-        println(theory.size.toString() +
+        println(
+            theory.size.toString() +
                 " rules with R2 = " + metrics.first +
                 " and MSE = " + metrics.second + " w.r.t. the data"
         )
-        val metricsFid = printMetrics(predictor.predict(test.inputsArray()),
+        val metricsFid = printMetrics(
+            predictor.predict(test.inputsArray()),
             extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
             false, false, false
         )
-        println("R2 = " + metricsFid.first +
+        println(
+            "R2 = " + metricsFid.first +
                 " and MSE = " + metricsFid.second + " w.r.t. the black box"
         ).also { println() }
     }
@@ -144,6 +160,6 @@ fun MLPRegressor(
     net.setMomentum(momentum)
     net.weightDecay = weightDecay
     net.setRMSProp(rho, epsilon)
-    for (i in 1 .. epochs) net.update(x, y)
+    for (i in 1..epochs) net.update(x, y)
     return net
 }

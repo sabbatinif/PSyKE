@@ -10,7 +10,6 @@ import smile.classification.Classifier
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.regression.Regression
-import smile.regression.RegressionTree
 import java.util.function.ToDoubleFunction
 
 /**

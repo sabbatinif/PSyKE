@@ -1,7 +1,8 @@
 package it.unibo.skpf.re.cart
 
 import it.unibo.skpf.re.OriginalValue
-import it.unibo.skpf.re.OriginalValue.Interval.*
+import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
+import it.unibo.skpf.re.OriginalValue.Interval.LessThan
 import it.unibo.skpf.re.utils.getFieldValue
 import smile.base.cart.OrdinalNode
 import smile.data.type.StructType

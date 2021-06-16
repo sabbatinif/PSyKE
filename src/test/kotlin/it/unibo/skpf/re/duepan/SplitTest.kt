@@ -1,7 +1,5 @@
 package it.unibo.skpf.re.duepan
 
-import it.unibo.skpf.re.duepan.Node
-import it.unibo.skpf.re.duepan.Split
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

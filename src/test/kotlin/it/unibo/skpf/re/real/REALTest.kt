@@ -4,13 +4,15 @@ import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.loadFromFile
-import it.unibo.tuprolog.core.*
+import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.List
+import it.unibo.tuprolog.core.Real
+import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-
 import smile.classification.KNN
 import smile.data.DataFrame
 import smile.data.Tuple

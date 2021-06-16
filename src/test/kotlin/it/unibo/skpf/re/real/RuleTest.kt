@@ -1,8 +1,10 @@
 package it.unibo.skpf.re.real
 
-import smile.data.splitFeatures
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import smile.data.splitFeatures
 import smile.io.Read
 
 class RuleTest {

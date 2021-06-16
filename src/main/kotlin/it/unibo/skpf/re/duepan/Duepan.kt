@@ -1,6 +1,7 @@
 package it.unibo.skpf.re.duepan
 
-import it.unibo.skpf.re.*
+import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
@@ -9,8 +10,12 @@ import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
-import smile.data.*
-import java.util.*
+import smile.data.DataFrame
+import smile.data.Tuple
+import smile.data.categories
+import smile.data.inputs
+import smile.data.name
+import java.util.SortedSet
 import kotlin.math.sign
 
 internal class Duepan(
@@ -24,9 +29,11 @@ internal class Duepan(
     private fun init(dataset: DataFrame): SortedSet<Node> {
         this.root = Node(dataset, dataset.nrows())
         val queue: SortedSet<Node> =
-            sortedSetOf(kotlin.Comparator { n1, n2 ->
-                (n1.priority - n2.priority).sign.toInt()
-            })
+            sortedSetOf(
+                kotlin.Comparator { n1, n2 ->
+                    (n1.priority - n2.priority).sign.toInt()
+                }
+            )
         queue.add(this.root)
         return queue
     }
@@ -52,7 +59,7 @@ internal class Duepan(
     )
 
     private fun createSplits(node: Node, names: Array<String>): SortedSet<Split> {
-        val (splits, constraints)  = initSplits(node)
+        val (splits, constraints) = initSplits(node)
         for (column in (names.filterNot { constraints.contains(it) }))
             try {
                 splits.add(this.createSplit(node, column))
@@ -72,9 +79,11 @@ internal class Duepan(
     }
 
     private fun createSamples(node: Node, column: String, value: Double) =
-        DataFrame.of(node.samples.stream().filter {
-            it[column] == value
-        })
+        DataFrame.of(
+            node.samples.stream().filter {
+                it[column] == value
+            }
+        )
 
     private fun createSplit(node: Node, column: String): Split {
         val trueExamples = createSamples(node, column, 1.0)
@@ -155,10 +164,12 @@ internal class Duepan(
         val variables = createVariableList(this.featureSet)
         val theory = MutableTheory.empty()
         for (node in this.root.asSequence)
-            theory.assertZ(Clause.of(
-                createHead(name, variables.values, node.dominant.toString()),
-                *createBody(variables, node)
-            ))
+            theory.assertZ(
+                Clause.of(
+                    createHead(name, variables.values, node.dominant.toString()),
+                    *createBody(variables, node)
+                )
+            )
         return theory
     }
 }

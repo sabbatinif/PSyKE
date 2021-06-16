@@ -13,7 +13,6 @@ import it.unibo.tuprolog.theory.MutableTheory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-
 import smile.classification.KNN
 import smile.data.DataFrame
 import smile.data.Tuple

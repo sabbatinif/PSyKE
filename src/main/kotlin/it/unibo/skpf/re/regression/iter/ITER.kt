@@ -1,22 +1,29 @@
 package it.unibo.skpf.re.regression.iter
 
-import it.unibo.skpf.re.*
+import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Extractor
+import it.unibo.skpf.re.OriginalValue.Interval.Between
+import it.unibo.skpf.re.regression.HyperCube
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
-import it.unibo.skpf.re.regression.HyperCube
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
-import smile.data.*
+import smile.data.DataFrame
+import smile.data.Tuple
+import smile.data.inputs
+import smile.data.name
+import smile.data.outputsArray
 import smile.data.type.StructType
 import smile.regression.Regression
-import kotlin.streams.toList
-import kotlin.streams.asStream
-import it.unibo.skpf.re.OriginalValue.Interval.Between
 import javax.management.InvalidAttributeValueException
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.streams.asStream
+import kotlin.streams.toList
 
 class ITER(
     override val predictor: Regression<DoubleArray>,
@@ -43,7 +50,7 @@ class ITER(
                 hyperCube.expandAll(minUpdates, surrounding)
             }
             nPoints--
-        } while (hyperCubes.any { HyperCube.checkOverlap(hyperCubes.toMutableList(), hyperCubes) } )
+        } while (hyperCubes.any { HyperCube.checkOverlap(hyperCubes.toMutableList(), hyperCubes) })
         hyperCubes.forEach { it.updateMean(dataset.inputs(), predictor) }
         return Triple(hyperCubes.toMutableList(), minUpdates, surrounding)
     }
@@ -104,11 +111,13 @@ class ITER(
         limits: MutableSet<Limit>
     ) = sequence {
         hyperCubes.forEach {
-            yield(it to bestCube(
-                dataset,
-                it,
-                createTempCubes(dataset, limits, it, surrounding, minUpdates, hyperCubes)
-            ))
+            yield(
+                it to bestCube(
+                    dataset,
+                    it,
+                    createTempCubes(dataset, limits, it, surrounding, minUpdates, hyperCubes)
+                )
+            )
         }
     }.toList().filter { it.second != null }
 
@@ -126,7 +135,7 @@ class ITER(
                     fakeDataset = fakeDataset.union(fake)
                 limit.cube.updateMean(fakeDataset, predictor)
                 Expansion(limit.cube, limit.feature, limit.direction, abs(cube.mean - limit.cube.mean))
-        }.minByOrNull { it.distance }
+            }.minByOrNull { it.distance }
     }
 
     private fun createFakeSamples(
@@ -205,10 +214,10 @@ class ITER(
         val (a, b) = cube.get(feature)
         val size = minUpdates.first { it.name == feature }.value
         return cube.copy() to
-                if (direction == '-')
-                    max(a - size, surrounding.getFirst(feature)) to a
-                else
-                    b to min(b + size, surrounding.getSecond(feature))
+            if (direction == '-')
+                max(a - size, surrounding.getFirst(feature)) to a
+            else
+                b to min(b + size, surrounding.getSecond(feature))
     }
 
     private fun checkLimits(limits: MutableSet<Limit>, cube: HyperCube, feature: String): Char? {
@@ -256,7 +265,8 @@ class ITER(
                 Clause.of(
                     createHead(dataset.name(), variables.values, cube.mean),
                     *createBody(variables, cube.dimensions)
-                ))
+                )
+            )
         return theory
     }
 

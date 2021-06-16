@@ -1,16 +1,20 @@
 package it.unibo.skpf.re.cart
 
-import it.unibo.skpf.re.*
-import it.unibo.skpf.re.utils.createHead
+import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
 import it.unibo.skpf.re.utils.TypeNotAllowedException
+import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
-import smile.base.cart.*
+import smile.base.cart.DecisionNode
+import smile.base.cart.Node
+import smile.base.cart.OrdinalNode
+import smile.base.cart.RegressionNode
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.categories
@@ -38,7 +42,8 @@ internal class CartExtractor(
                         else -> throw TypeNotAllowedException(value.javaClass.toString())
                     },
                     *createBody(variables, name)
-                ))
+                )
+            )
         return theory
     }
 
@@ -60,9 +65,10 @@ internal class CartExtractor(
     }
 
     private fun Node.asSequence(
-        dataset: DataFrame, constraints: LeafConstraints = emptyList(),
+        dataset: DataFrame,
+        constraints: LeafConstraints = emptyList(),
     ): LeafSequence = sequence {
-        when(val node = this@asSequence) {
+        when (val node = this@asSequence) {
             is OrdinalNode -> yieldAll(subTree(node, dataset, constraints))
             is DecisionNode -> yield(constraints to dataset.categories().elementAt(node.output()).toString())
             is RegressionNode -> yield(constraints to node.output())

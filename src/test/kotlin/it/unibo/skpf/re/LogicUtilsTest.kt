@@ -1,14 +1,21 @@
 package it.unibo.skpf.re
 
 import it.unibo.skpf.re.OriginalValue.Interval
-import it.unibo.skpf.re.OriginalValue.Interval.*
+import it.unibo.skpf.re.OriginalValue.Interval.Between
+import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
+import it.unibo.skpf.re.OriginalValue.Interval.LessThan
 import it.unibo.skpf.re.OriginalValue.Value
 import it.unibo.skpf.re.utils.createFunctor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
-import it.unibo.tuprolog.core.*
+import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.List
+import it.unibo.tuprolog.core.Numeric
+import it.unibo.tuprolog.core.Real
+import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.core.Var
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -26,8 +33,10 @@ class LogicUtilsTest {
     @ParameterizedTest
     @ArgumentsSource(TermArguments::class)
     fun testCreateTerm(
-        constraint: OriginalValue, positive: Boolean,
-        functor: String, term: Term
+        constraint: OriginalValue,
+        positive: Boolean,
+        functor: String,
+        term: Term
     ) {
         val expected = Struct.of(functor, Var.of("V"), term)
         val actual = createTerm(Var.of("V"), constraint, positive)
@@ -62,7 +71,8 @@ class LogicUtilsTest {
         assertEquals(
             Struct.of(
                 "functor",
-                listOf(*vars,
+                listOf(
+                    *vars,
                     when (output) {
                         is Number -> Numeric.of(output)
                         is String -> Atom.of(output)

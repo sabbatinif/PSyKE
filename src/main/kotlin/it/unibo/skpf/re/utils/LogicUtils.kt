@@ -2,10 +2,17 @@ package it.unibo.skpf.re.utils
 
 import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.OriginalValue
-import it.unibo.skpf.re.OriginalValue.Interval.*
-import it.unibo.skpf.re.OriginalValue.*
-import it.unibo.tuprolog.core.*
+import it.unibo.skpf.re.OriginalValue.Interval.Between
+import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
+import it.unibo.skpf.re.OriginalValue.Interval.LessThan
+import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.List
+import it.unibo.tuprolog.core.Numeric
+import it.unibo.tuprolog.core.Real
+import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.TermFormatter
+import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.core.operators.Operator
 import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.core.operators.Specifier
@@ -17,16 +24,18 @@ internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = 
         throw IllegalArgumentException("Null variable")
     val functor = createFunctor(constraint, positive)
     return when (constraint) {
-        is Interval.LessThan -> Struct.of(functor, v, Real.of(constraint.value.round(2)))
-        is Interval.GreaterThan -> Struct.of(functor, v, Real.of(constraint.value.round(2)))
-        is Interval.Between -> Struct.of(functor, v,
-            List.of(Real.of(constraint.lower.round(2)), Real.of(constraint.upper.round(2))))
+        is LessThan -> Struct.of(functor, v, Real.of(constraint.value.round(2)))
+        is GreaterThan -> Struct.of(functor, v, Real.of(constraint.value.round(2)))
+        is Between -> Struct.of(
+            functor, v,
+            List.of(Real.of(constraint.lower.round(2)), Real.of(constraint.upper.round(2)))
+        )
         is Value -> Struct.of(functor, v, Atom.of(constraint.value.toString()))
     }
 }
 
 internal fun createFunctor(constraint: OriginalValue, positive: Boolean): String {
-    return when(constraint) {
+    return when (constraint) {
         is LessThan -> if (positive) "=<" else ">"
         is GreaterThan -> if (positive) ">" else "=<"
         is Between -> if (positive) "in" else "not_in"

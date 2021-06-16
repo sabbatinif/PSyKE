@@ -4,7 +4,7 @@ import java.io.Serializable
 import kotlin.Double.Companion.NEGATIVE_INFINITY
 import kotlin.Double.Companion.POSITIVE_INFINITY
 
-sealed class OriginalValue: Serializable {
+sealed class OriginalValue : Serializable {
     sealed class Interval(
         val lower: Double,
         val upper: Double
@@ -28,4 +28,3 @@ sealed class OriginalValue: Serializable {
         val value: Any
     ) : OriginalValue()
 }
-

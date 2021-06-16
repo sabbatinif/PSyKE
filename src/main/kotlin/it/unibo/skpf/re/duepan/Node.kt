@@ -1,8 +1,8 @@
 package it.unibo.skpf.re.duepan
 
+import smile.data.DataFrame
 import smile.data.nCategories
 import smile.data.outputClasses
-import smile.data.DataFrame
 
 internal class Node(
     val samples: DataFrame,
@@ -20,7 +20,7 @@ internal class Node(
         get() = 1.0 * this.samples.nrows() / this.nExamples
 
     val correct: Int
-        get() =  this.samples.outputClasses().count { it == this.dominant }
+        get() = this.samples.outputClasses().count { it == this.dominant }
 
     val dominant: Any
         get() = this.samples.outputClasses()

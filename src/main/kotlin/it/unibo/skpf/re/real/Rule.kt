@@ -7,8 +7,10 @@ internal class Rule(
     val falsePredicates: List<String>
 ) {
     fun subRule(rule: Rule): Boolean {
-        return (this.truePredicates.containsAll(rule.truePredicates) &&
-                this.falsePredicates.containsAll((rule.falsePredicates)))
+        return (
+            this.truePredicates.containsAll(rule.truePredicates) &&
+                this.falsePredicates.containsAll((rule.falsePredicates))
+            )
     }
 
     fun reduce(featureSets: Collection<BooleanFeatureSet>): Rule {

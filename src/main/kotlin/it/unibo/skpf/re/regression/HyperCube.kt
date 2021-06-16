@@ -8,7 +8,11 @@ import smile.data.Tuple
 import smile.data.describe
 import smile.data.type.StructType
 import smile.regression.Regression
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.random.Random
 import kotlin.streams.toList
 
@@ -65,7 +69,7 @@ class HyperCube(
     ) {
         this.limits[update.name] =
             max(getFirst(update.name) - update.value, surrounding.getFirst(update.name)) to
-                    min(getSecond(update.name) + update.value, surrounding.getSecond(update.name))
+                min(getSecond(update.name) + update.value, surrounding.getSecond(update.name))
     }
 
     private fun zipDimensions(cube: HyperCube) = sequence {
@@ -77,7 +81,8 @@ class HyperCube(
     fun overlap(cube: HyperCube): Boolean {
         zipDimensions(cube).forEach {
             if ((it.otherCube.first >= it.thisCube.second) ||
-                (it.thisCube.first >= it.otherCube.second))
+                (it.thisCube.first >= it.otherCube.second)
+            )
                 return false
         }
         return true
@@ -94,7 +99,7 @@ class HyperCube(
     private fun equal(cube: HyperCube): Boolean =
         zipDimensions(cube).all {
             (abs(it.thisCube.first - it.otherCube.first) < (1.0 / 1000)) &&
-                    (abs(it.thisCube.second - it.otherCube.second) < (1.0 / 1000))
+                (abs(it.thisCube.second - it.otherCube.second) < (1.0 / 1000))
         }
 
     fun hasVolume(): Boolean =
@@ -120,7 +125,7 @@ class HyperCube(
         val data = dataset.stream().filter { tuple ->
             this.dimensions.all { (name, values) ->
                 (values.first <= tuple.getDouble(name)) &&
-                        (tuple.getDouble(name) < values.second)
+                    (tuple.getDouble(name) < values.second)
             }
         }.toList()
         return if (data.isNotEmpty()) DataFrame.of(data) else null
@@ -134,7 +139,8 @@ class HyperCube(
             limits.map { (_, values) ->
                 Random.nextDouble(values.first, values.second)
             }.toDoubleArray(),
-            schema)
+            schema
+        )
     }
 
     fun updateMean(dataset: DataFrame, predictor: Regression<DoubleArray>) {

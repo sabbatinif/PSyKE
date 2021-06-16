@@ -89,17 +89,20 @@ fun createDescriptionPair(name: String, column: DoubleArray): Pair<String, Descr
 }
 
 fun DataFrame.describe(): Map<String, Description> =
-    mapOf(*this.inputs().schema().fields()
-        .filter { it.isNumeric }
-        .map { field ->
-            createDescriptionPair(field.name, this.column(field.name).toDoubleArray())
-        }.toTypedArray()
+    mapOf(
+        *this.inputs().schema().fields()
+            .filter { it.isNumeric }
+            .map { field ->
+                createDescriptionPair(field.name, this.column(field.name).toDoubleArray())
+            }.toTypedArray()
     )
 
 fun DataFrame.filterByOutput(output: Any): DataFrame =
-    DataFrame.of(this.stream().filter {
-        it.get(this.lastColumnIndex) == output
-    })
+    DataFrame.of(
+        this.stream().filter {
+            it.get(this.lastColumnIndex) == output
+        }
+    )
 
 private fun createFakeColumn(value: Any, n: Int, field: StructField) =
     when (value) {
@@ -199,7 +202,7 @@ private fun condition(original: OriginalValue, value: Any) =
     else
         throw IllegalArgumentException(
             "Can only associate Interval to Double and Value to String\n" +
-                    "Actual types are " + original.javaClass + " and " + value.javaClass
+                "Actual types are " + original.javaClass + " and " + value.javaClass
         )
 
 private fun createColumn(name: String, value: OriginalValue, column: BaseVector<*, *, *>) =
@@ -216,4 +219,3 @@ fun DataFrame.toStringList(): List<String> =
 
 fun DataFrame.toStringSet(): Set<String> =
     this.toStringList().toSet()
-
