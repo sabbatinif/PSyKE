@@ -2,6 +2,7 @@ image: pikalab/ci:ubuntu-jdk11-git-gradle-graphviz
 
 before_script:
   - chmod +x gradlew
+  - source $HOME/.sdkman/bin/sdkman-init.sh
 
 stages:
   - build
