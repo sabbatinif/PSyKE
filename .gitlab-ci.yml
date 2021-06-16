@@ -15,14 +15,13 @@ stages:
 
 Compile:
   stage: build
-  script:
-    - gradle clean assemble --parallel
+  script: "gradle clean assemble --parallel"
   only:
     - branches
 
 Test:
   stage: test
-  script: gradle test
+  script: "gradle test"
   artifacts:
     reports:
       junit: "build/test-results/test/**/TEST-*.xml"
