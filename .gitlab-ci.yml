@@ -14,7 +14,7 @@ before_script:
   - source $HOME/.sdkman/bin/sdkman-init.sh
 
 stages:
-  - check
+#   check
   - build
   - test
 
