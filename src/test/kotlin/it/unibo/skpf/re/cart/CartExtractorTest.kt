@@ -1,6 +1,8 @@
 package it.unibo.skpf.re.cart
 
 import it.unibo.skpf.re.*
+import it.unibo.skpf.re.utils.createHead
+import it.unibo.skpf.re.utils.loadFromFile
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.theory.Theory
@@ -20,7 +22,7 @@ internal class CartExtractorTest {
 
     @ParameterizedTest
     @ArgumentsSource(Companion::class)
-    fun extract(expectedTheory: Theory, extractor: CartExtractor, train: DataFrame) {
+    fun testExtract(expectedTheory: Theory, extractor: CartExtractor, train: DataFrame) {
         val theory = extractor.extract(train)
         assertEquals(expectedTheory.size, theory.size)
         expectedTheory.zip(theory) { expected, actual ->
@@ -30,7 +32,6 @@ internal class CartExtractorTest {
 
     companion object : ArgumentsProvider {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
-            @Suppress("UNCHECKED_CAST")
             val irisTrain = loadFromFile("irisTrain50.txt") as DataFrame
             val artiTrain = loadFromFile("artiTrain50.txt") as DataFrame
             val irisCart = cart(

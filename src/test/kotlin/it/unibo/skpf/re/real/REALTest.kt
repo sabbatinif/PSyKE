@@ -2,8 +2,8 @@ package it.unibo.skpf.re.real
 
 import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.createHead
-import it.unibo.skpf.re.loadFromFile
+import it.unibo.skpf.re.utils.createHead
+import it.unibo.skpf.re.utils.loadFromFile
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.List
 import it.unibo.tuprolog.theory.MutableTheory
@@ -27,7 +27,7 @@ internal class REALTest {
     private val theory = real.extract(train)
 
     @Test
-    fun extract() {
+    fun testExtract() {
         val variables = listOf("V1", "V2", "V3", "V4").map { Var.of(it) }
         val cond1 = Struct.of("in", variables[0], List.of(Real.of(5.39), Real.of(6.26)))
         val cond2 = Struct.of("in", variables[2], List.of(Real.of(2.28), Real.of(4.87)))
@@ -67,7 +67,7 @@ internal class REALTest {
     }
 
     @Test
-    fun predict() {
+    fun testPredict() {
         fun Tuple.check(field: String): Boolean =
             this[field].toString().toDouble() == 1.0
 

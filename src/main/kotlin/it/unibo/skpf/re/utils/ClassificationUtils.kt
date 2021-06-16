@@ -1,5 +1,7 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.utils
 
+import it.unibo.skpf.re.Extractor
+import it.unibo.skpf.re.ExtractorPerformance
 import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
@@ -34,7 +36,8 @@ fun fidelity(
 }
 
 fun confusionMatrix(data: DataFrame, predictor: Classifier<DoubleArray>,
-                    extractor: Extractor<*, *>): ConfusionMatrix {
+                    extractor: Extractor<*, *>
+): ConfusionMatrix {
     return ConfusionMatrix.of(
         predictor.predict(data.inputsArray()),
         extractor.predict(data).toInt().map { if (it == -1) data.nCategories() else it}.toIntArray()

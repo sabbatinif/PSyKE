@@ -1,6 +1,9 @@
 package it.unibo.skpf.re.real
 
 import it.unibo.skpf.re.*
+import it.unibo.skpf.re.utils.createHead
+import it.unibo.skpf.re.utils.createTerm
+import it.unibo.skpf.re.utils.createVariableList
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.Var

@@ -4,7 +4,8 @@ import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.OriginalValue
 import it.unibo.skpf.re.OriginalValue.Interval
 import it.unibo.skpf.re.OriginalValue.Value
-import it.unibo.skpf.re.round
+import it.unibo.skpf.re.utils.TypeNotAllowedException
+import it.unibo.skpf.re.utils.round
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
@@ -105,7 +106,7 @@ private fun createFakeColumn(value: Any, n: Int, field: StructField) =
         is Double -> DoubleVector.of(field, DoubleArray(n) { value })
         is Int -> IntVector.of(field, IntArray(n) { value })
         is String -> StringVector.of(field, *Array(n) { value })
-        else -> throw IllegalStateException()
+        else -> throw TypeNotAllowedException(value.javaClass.toString())
     }
 
 fun DataFrame.writeColumn(feature: String, value: Any): DataFrame =
@@ -154,7 +155,7 @@ private fun createSet(feature: BaseVector<*, *, *>, dataset: DataFrame) =
             feature.toStringArray().distinct()
         DataTypes.IntegerType ->
             feature.toIntArray().distinct()
-        else -> throw IllegalStateException()
+        else -> throw TypeNotAllowedException(feature.type().javaClass.toString())
     }.mapIndexed { i, it -> "${feature.name()}_$i" to createOriginalValue(it) }.toMap()
 
 fun createOriginalValue(originalValue: Any): OriginalValue {
@@ -196,7 +197,10 @@ private fun condition(original: OriginalValue, value: Any) =
     else if ((original is Value) && (value is String))
         (original.value == value)
     else
-        throw IllegalStateException()
+        throw IllegalArgumentException(
+            "Can only associate Interval to Double and Value to String\n" +
+                    "Actual types are " + original.javaClass + " and " + value.javaClass
+        )
 
 private fun createColumn(name: String, value: OriginalValue, column: BaseVector<*, *, *>) =
     DoubleVector.of(

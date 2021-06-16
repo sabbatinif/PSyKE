@@ -1,7 +1,9 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.utils
 
-import it.unibo.skpf.re.OriginalValue.Interval
-import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.OriginalValue
+import it.unibo.skpf.re.OriginalValue.Interval.*
+import it.unibo.skpf.re.OriginalValue.*
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.List
 import it.unibo.tuprolog.core.operators.Operator
@@ -9,11 +11,10 @@ import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.core.operators.Specifier
 import smile.data.DataFrame
 import smile.data.inputs
-import java.lang.IllegalStateException
 
 internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = true): Struct {
     if (v == null)
-        throw IllegalStateException()
+        throw IllegalArgumentException("Null variable")
     val functor = createFunctor(constraint, positive)
     return when (constraint) {
         is Interval.LessThan -> Struct.of(functor, v, Real.of(constraint.value.round(2)))
@@ -26,9 +27,9 @@ internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = 
 
 internal fun createFunctor(constraint: OriginalValue, positive: Boolean): String {
     return when(constraint) {
-        is Interval.LessThan -> if (positive) "=<" else ">"
-        is Interval.GreaterThan -> if (positive) ">" else "=<"
-        is Interval.Between -> if (positive) "in" else "not_in"
+        is LessThan -> if (positive) "=<" else ">"
+        is GreaterThan -> if (positive) ">" else "=<"
+        is Between -> if (positive) "in" else "not_in"
         is Value -> if (positive) "=" else "\\="
     }
 }
@@ -37,7 +38,9 @@ internal fun createVariableList(featureSet: Collection<BooleanFeatureSet>, datas
     val values =
         if (featureSet.isNotEmpty())
             featureSet.map { it.name to Var.of(it.name) }
-        else dataset?.inputs()?.names()?.map { it to Var.of(it) } ?: throw IllegalStateException()
+        else
+            dataset?.inputs()?.names()?.map { it to Var.of(it) }
+                ?: throw NullPointerException("dataset cannot be null if featureSet is empty")
     return mapOf(*values.toTypedArray())
 }
 

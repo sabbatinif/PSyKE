@@ -1,0 +1,45 @@
+image: pikalab/ci:ubuntu-jdk11-git-gradle-graphviz
+
+variables:
+  GCMD: "gradle"
+  BEFORE_TASK: ""
+  BUILD_TASK: "clean assemble --parallel"
+  CHECK_CODE_TASK: "ktlintCheck --parallel"
+  TEST_JVM_TASK: "jvmTest -x dokkaHtml"
+  AFTER_TASK: ""
+  GOPTS: "--no-daemon --console=plain"
+
+before_script:
+  - chmod +x gradlew
+  - source $HOME/.sdkman/bin/sdkman-init.sh
+
+stages:
+  - check
+  - build
+  - test
+
+Check Code Style:
+  stage: check
+  script:
+    - $GCMD $BEFORE_TASK $CHECK_CODE_TASK $AFTER_TASK $GOPTS
+  artifacts:
+    paths:
+      - "**/build/reports/ktlint/"
+  only:
+    - branches
+
+Compile:
+  stage: build
+  script:
+    - $GCMD $BEFORE_TASK $BUILD_TASK $AFTER_TASK $GOPTS
+  only:
+    - branches
+
+Test JVM:
+  stage: test
+  script: $GCMD $BEFORE_TASK $TEST_JVM_TASK $AFTER_TASK $GOPTS
+  artifacts:
+    reports:
+      junit: "**/build/test-results/jvmTest/*.xml"
+  only:
+    - branches

@@ -1,5 +1,6 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.utils
 
+import it.unibo.skpf.re.Extractor
 import java.io.*
 import kotlin.math.pow
 

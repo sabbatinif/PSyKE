@@ -4,10 +4,12 @@ import it.unibo.skpf.re.cart.CartExtractor
 import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.skpf.re.duepan.Duepan
 import it.unibo.skpf.re.real.REAL
+import it.unibo.skpf.re.regression.iter.ITER
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame
 import smile.data.Tuple
+import smile.regression.Regression
 import smile.regression.RegressionTree
 import java.util.function.ToDoubleFunction
 
@@ -64,12 +66,27 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         ): Extractor<DoubleArray, Classifier<DoubleArray>> = Duepan(predictor, featureSet, minExamples)
 
         /**
-         * Creates a new CART extractor for classification
+         * Creates a new CART extractor
          */
         @JvmStatic
         fun cart(
             predictor: CartPredictor,
             featureSet: Collection<BooleanFeatureSet> = emptySet(),
         ): Extractor<Tuple, CartPredictor> = CartExtractor(predictor, featureSet)
+
+        /**
+         * Creates a new ITER extractor
+         */
+        @JvmStatic
+        fun iter(
+            predictor: Regression<DoubleArray>,
+            minUpdate: Double = 0.1,
+            nPoints: Int = 1,
+            maxIterations: Int = 600,
+            minExamples: Int = 250,
+            threshold: Double = 0.1,
+            fillGaps: Boolean = false
+        ): Extractor<DoubleArray, Regression<DoubleArray>> =
+            ITER(predictor, emptySet(), minUpdate, nPoints, maxIterations, minExamples, threshold, fillGaps)
     }
 }

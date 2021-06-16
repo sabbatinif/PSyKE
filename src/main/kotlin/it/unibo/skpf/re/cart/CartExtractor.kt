@@ -1,8 +1,11 @@
 package it.unibo.skpf.re.cart
 
 import it.unibo.skpf.re.*
-import it.unibo.skpf.re.createHead
+import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
+import it.unibo.skpf.re.utils.TypeNotAllowedException
+import it.unibo.skpf.re.utils.createTerm
+import it.unibo.skpf.re.utils.createVariableList
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
@@ -12,7 +15,6 @@ import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.categories
 import smile.data.name
-import java.lang.IllegalStateException
 
 internal class CartExtractor(
     override val predictor: CartPredictor,
@@ -33,7 +35,7 @@ internal class CartExtractor(
                     when (value) {
                         is Number -> createHead(dataset.name(), variables.values, value)
                         is String -> createHead(dataset.name(), variables.values, value)
-                        else -> throw IllegalStateException()
+                        else -> throw TypeNotAllowedException(value.javaClass.toString())
                     },
                     *createBody(variables, name)
                 ))

@@ -1,6 +1,9 @@
 package it.unibo.skpf.re.duepan
 
 import it.unibo.skpf.re.*
+import it.unibo.skpf.re.utils.createHead
+import it.unibo.skpf.re.utils.createTerm
+import it.unibo.skpf.re.utils.createVariableList
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
@@ -61,7 +64,7 @@ internal class Duepan(
 
     private fun bestSplit(node: Node, names: Array<String>): Pair<Node, Node>? {
         if (node.samples.nrows() < this.minExamples)
-            return null //println("Pochi esempi")
+            throw NotImplementedError()
         if (node.nClasses == 1)
             return null
         val splits = createSplits(node, names)

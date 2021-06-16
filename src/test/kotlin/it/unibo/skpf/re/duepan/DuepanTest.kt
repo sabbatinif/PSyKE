@@ -2,8 +2,8 @@ package it.unibo.skpf.re.duepan
 
 import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.createHead
-import it.unibo.skpf.re.loadFromFile
+import it.unibo.skpf.re.utils.createHead
+import it.unibo.skpf.re.utils.loadFromFile
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.List
 import it.unibo.tuprolog.core.Real
@@ -30,7 +30,7 @@ internal class DuepanTest {
     private val theory = duepan.extract(train)
 
     @Test
-    fun extract() {
+    fun testExtract() {
         val variables = listOf("V1", "V2", "V3", "V4").map { Var.of(it) }
         val expectedTheory = MutableTheory.of(
             Clause.of(
@@ -54,7 +54,7 @@ internal class DuepanTest {
     }
 
     @Test
-    fun predict() {
+    fun testPredict() {
         fun Tuple.check(field: String): Boolean =
             this[field].toString().toDouble() == 1.0
 

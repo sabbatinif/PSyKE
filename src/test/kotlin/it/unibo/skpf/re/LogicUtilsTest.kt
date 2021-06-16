@@ -1,7 +1,12 @@
 package it.unibo.skpf.re
 
 import it.unibo.skpf.re.OriginalValue.Interval
+import it.unibo.skpf.re.OriginalValue.Interval.*
 import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.skpf.re.utils.createFunctor
+import it.unibo.skpf.re.utils.createHead
+import it.unibo.skpf.re.utils.createTerm
+import it.unibo.skpf.re.utils.createVariableList
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.List
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -14,11 +19,12 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import smile.data.splitFeatures
 import smile.io.Read
+import java.lang.IllegalStateException
 import java.util.stream.Stream
 
 class LogicUtilsTest {
     @ParameterizedTest
-    @ArgumentsSource(Companion::class)
+    @ArgumentsSource(TermArguments::class)
     fun testCreateTerm(
         constraint: OriginalValue, positive: Boolean,
         functor: String, term: Term
@@ -43,18 +49,61 @@ class LogicUtilsTest {
         }
     }
 
-    @Test
-    fun testCreateHead() {
-        val outputClass = "class"
+    @ParameterizedTest
+    @ArgumentsSource(FunctorArguments::class)
+    fun testCreateFunctor(originalValue: OriginalValue, positive: Boolean, functor: String) {
+        assertEquals(functor, createFunctor(originalValue, positive))
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(HeadArguments::class)
+    fun testCreateHead(output: Any) {
         val vars = arrayOf(Var.of("v1"), Var.of("v2"), Var.of("v3"))
-        val terms = listOf(*vars, Atom.of(outputClass))
         assertEquals(
-            Struct.of("functor", terms),
-            createHead("functor", vars.toList(), outputClass)
+            Struct.of(
+                "functor",
+                listOf(*vars,
+                    when (output) {
+                        is Number -> Numeric.of(output)
+                        is String -> Atom.of(output)
+                        else -> throw IllegalStateException()
+                    }
+                )
+            ),
+            when (output) {
+                is Number -> createHead("functor", vars.toList(), output)
+                is String -> createHead("functor", vars.toList(), output)
+                else -> throw IllegalStateException()
+            }
         )
     }
 
-    companion object : ArgumentsProvider {
+    object HeadArguments : ArgumentsProvider {
+        override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
+            return Stream.of(
+                Arguments.of("setosa"),
+                Arguments.of(1),
+                Arguments.of(2.5)
+            )
+        }
+    }
+
+    object FunctorArguments : ArgumentsProvider {
+        override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
+            return Stream.of(
+                Arguments.of(LessThan(5.3), true, "=<"),
+                Arguments.of(LessThan(4.6), false, ">"),
+                Arguments.of(GreaterThan(9.6), true, ">"),
+                Arguments.of(GreaterThan(3.2), false, "=<"),
+                Arguments.of(Between(1.2, 3.6), true, "in"),
+                Arguments.of(Between(2.6, 7.1), false, "not_in"),
+                Arguments.of(Value("V"), true, "="),
+                Arguments.of(Value("value"), false, "\\=")
+            )
+        }
+    }
+
+    object TermArguments : ArgumentsProvider {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
             return Stream.of(
                 Arguments.of(

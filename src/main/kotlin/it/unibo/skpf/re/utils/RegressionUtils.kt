@@ -1,5 +1,6 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.utils
 
+import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
@@ -8,6 +9,7 @@ import smile.data.*
 import smile.data.formula.Formula
 import smile.io.Read
 import smile.math.TimeFunction
+import smile.math.kernel.GaussianKernel
 import smile.regression.*
 import smile.validation.metric.MAD
 import smile.validation.metric.MSE
@@ -44,11 +46,17 @@ fun regression(name: String, testSplit: Double) {
 //        200,
 //        TimeFunction.linear(0.1, 10000.0, 0.05)
 //    )
-    val rbf = rbfnet(x, y, 95, true)
+
+//    val rbf = rbfnet(x, y, 95, true)
+
+    val svr = svr(train.inputsArray(), train.outputsArray(), GaussianKernel(0.06), 0.005, 1.0)
 //    saveToFile("artiRBF95.txt", rbf)
 //    saveToFile("artiTest50.txt", test)
 //    saveToFile("artiTrain50.txt", train)
-    printMetrics(rbf.predict(test.inputsArray()), test.outputsArray())
+
+    printMetrics(svr.predict(test.inputsArray()), test.outputsArray())
+    val iter = Extractor.iter(svr, minUpdate = (1.0 / 8), threshold = 0.18)
+    testRegressionExtractor("ITER", train, test, iter, svr, true, true)
     val cart = CartPredictor(
         cart(
             Formula.lhs(train.name()),
@@ -80,6 +88,40 @@ fun testRegressionExtractor(
         println(theory.size.toString() +
                 " rules with R2 = " + metrics.first +
                 " and MSE = " + metrics.second + " w.r.t. the data"
+        ).also { println() }
+    }
+    if (printRules)
+        theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }
+}
+
+fun testRegressionExtractor(
+    name: String,
+    train: DataFrame,
+    test: DataFrame,
+    extractor: Extractor<*, *>,
+    predictor: Regression<DoubleArray>,
+    printMetrics: Boolean = true,
+    printRules: Boolean = false
+) {
+    println("\n################################")
+    println("# $name extractor")
+    println("################################\n")
+    val theory = extractor.extract(train)
+    if (printMetrics) {
+        val metrics = printMetrics(test.outputsArray(),
+            extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
+            false, false, false
+        )
+        println(theory.size.toString() +
+                " rules with R2 = " + metrics.first +
+                " and MSE = " + metrics.second + " w.r.t. the data"
+        )
+        val metricsFid = printMetrics(predictor.predict(test.inputsArray()),
+            extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
+            false, false, false
+        )
+        println("R2 = " + metricsFid.first +
+                " and MSE = " + metricsFid.second + " w.r.t. the black box"
         ).also { println() }
     }
     if (printRules)
