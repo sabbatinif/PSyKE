@@ -17,7 +17,8 @@ dependencies {
     implementation "com.github.haifengl:smile-kotlin:2.6.0"
     implementation 'org.slf4j:slf4j-simple:1.7.30'
     implementation 'it.unibo.tuprolog:theory-jvm:0.17.4'
-    implementation group: 'org.bytedeco', name: 'openblas-platform', version: '0.3.13-1.5.5'
+//    implementation group: 'org.bytedeco', name: 'openblas-platform', version: '0.3.13-1.5.5'
+    testImplementation 'it.unibo.tuprolog:dsl-theory-jvm:0.17.4'
     testImplementation(platform("org.junit:junit-bom:5.7.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
@@ -38,12 +39,7 @@ test {
     useJUnitPlatform()
 }
 
-allprojects {
-    apply plugin: "org.jlleitschuh.gradle.ktlint"
-}
-
 detekt {
-    toolVersion = "1.17.1"
     config = files("config/detekt/detekt.yml")
     buildUponDefaultConfig = true
 }

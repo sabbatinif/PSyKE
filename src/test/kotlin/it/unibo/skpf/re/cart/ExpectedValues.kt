@@ -5,34 +5,19 @@ import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Real
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
-import it.unibo.tuprolog.theory.MutableTheory
+import it.unibo.tuprolog.dsl.theory.prolog
 import it.unibo.tuprolog.theory.Theory
 
 object ExpectedValues {
-    private val artiVariables = listOf("X", "Y").map { Var.of(it) }
 
-    val expectedArtiTheory = Theory.of(
-        Clause.of(
-            createHead("z", artiVariables, 0.7),
-            Struct.of("=<", artiVariables[0], Real.of(0.5)),
-            Struct.of("=<", artiVariables[1], Real.of(0.5))
-        ),
-        Clause.of(
-            createHead("z", artiVariables, 0.4),
-            Struct.of("=<", artiVariables[0], Real.of(0.5)),
-            Struct.of(">", artiVariables[1], Real.of(0.5))
-        ),
-        Clause.of(
-            createHead("z", artiVariables, 0.3),
-            Struct.of(">", artiVariables[0], Real.of(0.5)),
-            Struct.of("=<", artiVariables[1], Real.of(0.5))
-        ),
-        Clause.of(
-            createHead("z", artiVariables, 0.0),
-            Struct.of(">", artiVariables[0], Real.of(0.5)),
-            Struct.of(">", artiVariables[1], Real.of(0.5))
+    val expectedArtiTheory = prolog {
+        theoryOf(
+            rule { "z"(X, Y, 0.7) `if` ((X lowerThanOrEqualsTo 0.5) and (Y lowerThanOrEqualsTo 0.5)) },
+            rule { "z"(X, Y, 0.4) `if` ((X lowerThanOrEqualsTo 0.5) and (Y greaterThan 0.5)) },
+            rule { "z"(X, Y, 0.3) `if` ((X greaterThan 0.5) and (Y lowerThanOrEqualsTo 0.5)) },
+            rule { "z"(X, Y, 0.0) `if` ((X greaterThan 0.5) and (Y greaterThan  0.5)) },
         )
-    )
+    }
 
     private val irisVariables = listOf("SepalLength", "SepalWidth", "PetalLength", "PetalWidth").map { Var.of(it) }
 

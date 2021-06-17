@@ -30,9 +30,7 @@ internal class CartExtractorTest {
     fun testExtract(expectedTheory: Theory, extractor: CartExtractor, train: DataFrame) {
         val theory = extractor.extract(train)
         assertEquals(expectedTheory.size, theory.size)
-        expectedTheory.zip(theory) { expected, actual ->
-            assertTrue(expected.structurallyEquals(actual))
-        }
+        assertTrue(expectedTheory.equals(theory, useVarCompleteName = false))
     }
 
     companion object : ArgumentsProvider {
