@@ -3,8 +3,8 @@ package smile.data
 import it.unibo.skpf.re.schema.Feature
 import it.unibo.skpf.re.schema.Schema
 import it.unibo.skpf.re.schema.Value
-import it.unibo.skpf.re.schema.Value.Interval
 import it.unibo.skpf.re.schema.Value.Constant
+import it.unibo.skpf.re.schema.Value.Interval
 import it.unibo.skpf.re.utils.TypeNotAllowedException
 import it.unibo.skpf.re.utils.round
 import smile.data.type.DataTypes

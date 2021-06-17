@@ -1,6 +1,5 @@
 package it.unibo.skpf.re.classification.duepan
 
-import it.unibo.skpf.re.schema.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.schema.Schema
 import it.unibo.skpf.re.utils.createHead

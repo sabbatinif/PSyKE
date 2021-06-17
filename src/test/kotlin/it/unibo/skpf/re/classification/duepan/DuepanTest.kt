@@ -1,7 +1,7 @@
 package it.unibo.skpf.re.classification.duepan
 
-import it.unibo.skpf.re.schema.Feature
 import it.unibo.skpf.re.Extractor
+import it.unibo.skpf.re.Schemas
 import it.unibo.skpf.re.schema.Schema
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.loadFromFile
@@ -24,7 +24,7 @@ internal class DuepanTest {
     @Suppress("UNCHECKED_CAST")
     private val knn = loadFromFile("irisKNN9.txt") as KNN<DoubleArray>
     @Suppress("UNCHECKED_CAST")
-    private val featureSets: Schema = Schema.Unordered(loadFromFile("irisBoolFeatSet.txt"))
+    private val featureSets: Schema = Schemas.iris
     private val duepan = Extractor.duepan(knn, featureSets)
     private val train = loadFromFile("irisTrain50.txt") as DataFrame
     private val theory = duepan.extract(train)

@@ -1,9 +1,9 @@
 package it.unibo.skpf.re.regression.iter
 
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.schema.Value.Interval.Between
 import it.unibo.skpf.re.regression.HyperCube
 import it.unibo.skpf.re.schema.Schema
+import it.unibo.skpf.re.schema.Value.Interval.Between
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
