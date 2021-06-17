@@ -170,8 +170,9 @@ fun DataFrame.filterByOutput(output: Any): DataFrame =
  */
 private fun createFakeColumn(
     value: Any,
-    n: Int, field:
-    StructField
+    n: Int,
+    field:
+        StructField
 ): BaseVector<*, *, *> =
     when (value) {
         is Double -> DoubleVector.of(field, DoubleArray(n) { value })

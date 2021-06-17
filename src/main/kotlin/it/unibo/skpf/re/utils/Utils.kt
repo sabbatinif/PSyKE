@@ -92,7 +92,7 @@ internal fun condition(original: OriginalValue, value: Any) =
     else
         throw IllegalArgumentException(
             "Can only associate Interval to Double and Value to String\n" +
-                    "Actual types are " + original.javaClass + " and " + value.javaClass
+                "Actual types are " + original.javaClass + " and " + value.javaClass
         )
 
 internal fun createColumn(name: String, value: OriginalValue, column: BaseVector<*, *, *>) =
