@@ -1,6 +1,7 @@
 package smile.data
 
 import it.unibo.skpf.re.schema.Feature
+import it.unibo.skpf.re.schema.Schema
 import it.unibo.skpf.re.schema.Value
 import it.unibo.skpf.re.schema.Value.Interval
 import it.unibo.skpf.re.schema.Value.Constant
@@ -176,16 +177,16 @@ fun createOriginalValue(originalValue: Any): Value {
         Constant(originalValue)
 }
 
-fun DataFrame.splitFeatures(): Set<Feature> {
+fun DataFrame.splitFeatures(): Schema {
     val features: MutableSet<Feature> = mutableSetOf()
     for (feature in this.inputs())
         features.add(
             Feature(feature.name(), createSet(feature, this))
         )
-    return features.toSet()
+    return Schema.Unordered(features.toSet())
 }
 
-fun DataFrame.toBoolean(features: Set<Feature>): DataFrame {
+fun DataFrame.toBoolean(features: Schema): DataFrame {
     val outputColumns: MutableList<BaseVector<*, *, *>> = mutableListOf()
     for (column in this.inputs()) {
         val match = features.filter { it.name == column.name() }

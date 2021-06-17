@@ -2,6 +2,7 @@ package it.unibo.skpf.re.duepan
 
 import it.unibo.skpf.re.schema.Feature
 import it.unibo.skpf.re.Extractor
+import it.unibo.skpf.re.schema.Schema
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
@@ -21,7 +22,7 @@ import kotlin.streams.toList
 
 internal class Duepan(
     override val predictor: Classifier<DoubleArray>,
-    override val feature: Collection<Feature>,
+    override val schema: Schema,
     val minExamples: Int = 0
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
@@ -158,13 +159,13 @@ internal class Duepan(
 
     private fun createBody(variables: Map<String, Var>, node: Node) = sequence {
         for ((constraint, value) in node.constraints)
-            feature.first { it.admissibleValues.containsKey(constraint) }.apply {
+            schema.first { it.admissibleValues.containsKey(constraint) }.apply {
                 yield(createTerm(variables[this.name], this.admissibleValues[constraint]!!, value == 1.0))
             }
     }.toList().toTypedArray()
 
     private fun createTheory(name: String): MutableTheory {
-        val variables = createVariableList(this.feature)
+        val variables = createVariableList(this.schema)
         val theory = MutableTheory.empty()
         for (node in this.root.asSequence)
             theory.assertZ(

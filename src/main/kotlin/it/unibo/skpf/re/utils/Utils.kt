@@ -14,11 +14,12 @@ internal fun saveToFile(filename: String, item: Any) {
     }
 }
 
-fun loadFromFile(filename: String): Any {
+@Suppress("UNCHECKED_CAST")
+fun <T> loadFromFile(filename: String): T {
     val file = Extractor::class.java.getResourceAsStream("/$filename")!!
     return ObjectInputStream(file).use {
         it.readObject()
-    }
+    } as T
 }
 
 fun Double.round(digits: Int = 2): Double {

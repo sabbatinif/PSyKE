@@ -52,7 +52,7 @@ internal class CartExtractorTest {
             @Suppress("UNCHECKED_CAST")
             val irisCartEx = Extractor.cart(
                 CartPredictor(irisCart),
-                loadFromFile("irisBoolFeatSet.txt") as Set<Feature>
+                loadFromFile("irisBoolFeatSet.txt")
             )
             val artiCartEx = Extractor.cart(artiCart)
 
