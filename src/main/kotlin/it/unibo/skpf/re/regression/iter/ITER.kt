@@ -2,7 +2,7 @@ package it.unibo.skpf.re.regression.iter
 
 import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.OriginalValue.Interval.Between
+import it.unibo.skpf.re.Value.Interval.Between
 import it.unibo.skpf.re.regression.HyperCube
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm

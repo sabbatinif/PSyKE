@@ -4,7 +4,7 @@ import java.io.Serializable
 
 data class Feature(
     val name: String,
-    val set: Map<String, OriginalValue>
+    val admissibleValues: Map<String, Value>
 ) : Serializable {
     companion object {
         const val serialVersionUID = 5329556256856403770L

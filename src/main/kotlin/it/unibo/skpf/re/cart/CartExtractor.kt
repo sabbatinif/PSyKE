@@ -2,7 +2,7 @@ package it.unibo.skpf.re.cart
 
 import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
+import it.unibo.skpf.re.Value.Interval.GreaterThan
 import it.unibo.skpf.re.utils.TypeNotAllowedException
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
@@ -49,11 +49,11 @@ internal class CartExtractor(
 
     private fun createBody(variables: Map<String, Var>, constraints: LeafConstraints) = sequence {
         for ((name, value) in constraints) {
-            val feature = feature.firstOrNull { it.set.containsKey(name) }
+            val feature = feature.firstOrNull { it.admissibleValues.containsKey(name) }
             if (feature == null)
                 yield(createTerm(variables[name], value))
             else
-                yield(createTerm(variables[feature.name], feature.set[name]!!, value is GreaterThan))
+                yield(createTerm(variables[feature.name], feature.admissibleValues[name]!!, value is GreaterThan))
         }
     }.toList().toTypedArray()
 

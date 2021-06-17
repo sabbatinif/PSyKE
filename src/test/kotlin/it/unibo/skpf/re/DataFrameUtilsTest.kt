@@ -194,8 +194,8 @@ class DataFrameUtilsTest {
         }
         featureSet.forEach {
             when (dataset.schema().field(it.name).type) {
-                DataTypes.DoubleType -> assertEquals(classes.size, it.set.size)
-                else -> assertEquals(dataset.column(it.name).toStringArray().distinct().size, it.set.size)
+                DataTypes.DoubleType -> assertEquals(classes.size, it.admissibleValues.size)
+                else -> assertEquals(dataset.column(it.name).toStringArray().distinct().size, it.admissibleValues.size)
             }
         }
     }
@@ -208,12 +208,12 @@ class DataFrameUtilsTest {
         assertEquals(dataset.nrows(), boolDataset.nrows())
         assertEquals(dataset.outputs().toStringList(), boolDataset.outputs().toStringList())
         assertEquals(
-            featureSet.fold(0) { acc, it -> acc + it.set.size },
+            featureSet.fold(0) { acc, it -> acc + it.admissibleValues.size },
             boolDataset.inputs().ncols()
         )
         featureSet.forEach {
-            val subDataset = boolDataset.select(*it.set.keys.toTypedArray())
-            assertEquals(it.set.size, subDataset.ncols())
+            val subDataset = boolDataset.select(*it.admissibleValues.keys.toTypedArray())
+            assertEquals(it.admissibleValues.size, subDataset.ncols())
             subDataset.stream().forEach {
                 assertEquals(1, it.toArray().count { it == 1.0 })
                 assertEquals(subDataset.ncols() - 1, it.toArray().count { it == 0.0 })

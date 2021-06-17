@@ -101,8 +101,8 @@ internal class REAL(
         val body: MutableList<Term> = mutableListOf()
         rule.asList().zip(listOf(true, false)) { predicate, truthValue ->
             for (variable in predicate)
-                this.feature.first { it.set.containsKey(variable) }.apply {
-                    body.add(createTerm(variables[this.name], this.set[variable]!!, truthValue))
+                this.feature.first { it.admissibleValues.containsKey(variable) }.apply {
+                    body.add(createTerm(variables[this.name], this.admissibleValues[variable]!!, truthValue))
                 }
         }
         return body.toTypedArray()

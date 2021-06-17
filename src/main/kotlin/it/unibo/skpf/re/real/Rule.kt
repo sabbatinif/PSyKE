@@ -18,8 +18,8 @@ internal class Rule(
         for (variable in this.truePredicates)
             f.removeAll(
                 features.filter { featSet ->
-                    variable in featSet.set.keys
-                }.map { it.set.keys }.flatten()
+                    variable in featSet.admissibleValues.keys
+                }.map { it.admissibleValues.keys }.flatten()
             )
         return Rule(this.truePredicates, f)
     }

@@ -1,11 +1,11 @@
 package it.unibo.skpf.re.utils
 
 import it.unibo.skpf.re.Feature
-import it.unibo.skpf.re.OriginalValue
-import it.unibo.skpf.re.OriginalValue.Interval.Between
-import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
-import it.unibo.skpf.re.OriginalValue.Interval.LessThan
-import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.skpf.re.Value
+import it.unibo.skpf.re.Value.Interval.Between
+import it.unibo.skpf.re.Value.Interval.GreaterThan
+import it.unibo.skpf.re.Value.Interval.LessThan
+import it.unibo.skpf.re.Value.Constant
 import it.unibo.skpf.re.utils.LogicUtils.priority
 import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.List
@@ -24,7 +24,7 @@ object LogicUtils {
     const val priority = 800
 }
 
-internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = true): Struct {
+internal fun createTerm(v: Var?, constraint: Value, positive: Boolean = true): Struct {
     if (v == null)
         throw IllegalArgumentException("Null variable")
     val functor = createFunctor(constraint, positive)
@@ -35,16 +35,16 @@ internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = 
             functor, v,
             List.of(Real.of(constraint.lower.round(2)), Real.of(constraint.upper.round(2)))
         )
-        is Value -> Struct.of(functor, v, Atom.of(constraint.value.toString()))
+        is Constant -> Struct.of(functor, v, Atom.of(constraint.value.toString()))
     }
 }
 
-internal fun createFunctor(constraint: OriginalValue, positive: Boolean): String {
+internal fun createFunctor(constraint: Value, positive: Boolean): String {
     return when (constraint) {
         is LessThan -> if (positive) "=<" else ">"
         is GreaterThan -> if (positive) ">" else "=<"
         is Between -> if (positive) "in" else "not_in"
-        is Value -> if (positive) "=" else "\\="
+        is Constant -> if (positive) "=" else "\\="
     }
 }
 

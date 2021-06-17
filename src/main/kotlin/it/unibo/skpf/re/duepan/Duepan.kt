@@ -158,8 +158,8 @@ internal class Duepan(
 
     private fun createBody(variables: Map<String, Var>, node: Node) = sequence {
         for ((constraint, value) in node.constraints)
-            feature.first { it.set.containsKey(constraint) }.apply {
-                yield(createTerm(variables[this.name], this.set[constraint]!!, value == 1.0))
+            feature.first { it.admissibleValues.containsKey(constraint) }.apply {
+                yield(createTerm(variables[this.name], this.admissibleValues[constraint]!!, value == 1.0))
             }
     }.toList().toTypedArray()
 

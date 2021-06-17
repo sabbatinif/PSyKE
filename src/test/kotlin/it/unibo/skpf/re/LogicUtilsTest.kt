@@ -1,10 +1,10 @@
 package it.unibo.skpf.re
 
-import it.unibo.skpf.re.OriginalValue.Interval
-import it.unibo.skpf.re.OriginalValue.Interval.Between
-import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
-import it.unibo.skpf.re.OriginalValue.Interval.LessThan
-import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.skpf.re.Value.Interval
+import it.unibo.skpf.re.Value.Interval.Between
+import it.unibo.skpf.re.Value.Interval.GreaterThan
+import it.unibo.skpf.re.Value.Interval.LessThan
+import it.unibo.skpf.re.Value.Constant
 import it.unibo.skpf.re.utils.createFunctor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
@@ -33,7 +33,7 @@ class LogicUtilsTest {
     @ParameterizedTest
     @ArgumentsSource(TermArguments::class)
     fun testCreateTerm(
-        constraint: OriginalValue,
+        constraint: Value,
         positive: Boolean,
         functor: String,
         term: Term
@@ -60,7 +60,7 @@ class LogicUtilsTest {
 
     @ParameterizedTest
     @ArgumentsSource(FunctorArguments::class)
-    fun testCreateFunctor(originalValue: OriginalValue, positive: Boolean, functor: String) {
+    fun testCreateFunctor(originalValue: Value, positive: Boolean, functor: String) {
         assertEquals(functor, createFunctor(originalValue, positive))
     }
 
@@ -107,8 +107,8 @@ class LogicUtilsTest {
                 Arguments.of(GreaterThan(3.2), false, "=<"),
                 Arguments.of(Between(1.2, 3.6), true, "in"),
                 Arguments.of(Between(2.6, 7.1), false, "not_in"),
-                Arguments.of(Value("V"), true, "="),
-                Arguments.of(Value("value"), false, "\\=")
+                Arguments.of(Constant("V"), true, "="),
+                Arguments.of(Constant("value"), false, "\\=")
             )
         }
     }
@@ -117,7 +117,7 @@ class LogicUtilsTest {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
             return Stream.of(
                 Arguments.of(
-                    Value("test"), true, "=", Atom.of("test")
+                    Constant("test"), true, "=", Atom.of("test")
                 ),
                 Arguments.of(
                     Interval.Between(2.6, 8.9), true, "in",
@@ -130,7 +130,7 @@ class LogicUtilsTest {
                     Interval.GreaterThan(3.2), true, ">", Real.of(3.2)
                 ),
                 Arguments.of(
-                    Value(2.65), false, "\\=", Atom.of("2.65")
+                    Constant(2.65), false, "\\=", Atom.of("2.65")
                 ),
                 Arguments.of(
                     Interval.Between(14.3, 25.2), false, "not_in",

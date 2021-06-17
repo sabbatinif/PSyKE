@@ -1,9 +1,9 @@
 package smile.data
 
 import it.unibo.skpf.re.Feature
-import it.unibo.skpf.re.OriginalValue
-import it.unibo.skpf.re.OriginalValue.Interval
-import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.skpf.re.Value
+import it.unibo.skpf.re.Value.Interval
+import it.unibo.skpf.re.Value.Constant
 import it.unibo.skpf.re.utils.TypeNotAllowedException
 import it.unibo.skpf.re.utils.round
 import smile.data.type.DataTypes
@@ -165,7 +165,7 @@ private fun createSet(feature: BaseVector<*, *, *>, dataset: DataFrame) =
         else -> throw TypeNotAllowedException(feature.type().javaClass.toString())
     }.mapIndexed { i, it -> "${feature.name()}_$i" to createOriginalValue(it) }.toMap()
 
-fun createOriginalValue(originalValue: Any): OriginalValue {
+fun createOriginalValue(originalValue: Any): Value {
     return if (originalValue is Range)
         when {
             originalValue.lower == NEGATIVE_INFINITY -> Interval.LessThan(originalValue.upper)
@@ -173,7 +173,7 @@ fun createOriginalValue(originalValue: Any): OriginalValue {
             else -> Interval.Between(originalValue.lower, originalValue.upper)
         }
     else
-        Value(originalValue)
+        Constant(originalValue)
 }
 
 fun DataFrame.splitFeatures(): Set<Feature> {
@@ -192,16 +192,16 @@ fun DataFrame.toBoolean(features: Set<Feature>): DataFrame {
         if (match.isEmpty())
             outputColumns.add(column)
         else
-            for ((name, value) in match.first().set)
+            for ((name, value) in match.first().admissibleValues)
                 outputColumns.add(createColumn(name, value, column))
     }
     return DataFrame.of(*outputColumns.toTypedArray()).merge(this.outputs())
 }
 
-private fun condition(original: OriginalValue, value: Any) =
+private fun condition(original: Value, value: Any) =
     if ((original is Interval) && (value is Double))
         (original.lower <= value) && (value < original.upper)
-    else if ((original is Value) && (value is String))
+    else if ((original is Constant) && (value is String))
         (original.value == value)
     else
         throw IllegalArgumentException(
@@ -209,12 +209,12 @@ private fun condition(original: OriginalValue, value: Any) =
                 "Actual types are " + original.javaClass + " and " + value.javaClass
         )
 
-private fun createColumn(name: String, value: OriginalValue, column: BaseVector<*, *, *>) =
+private fun createColumn(name: String, value: Value, column: BaseVector<*, *, *>) =
     DoubleVector.of(
         StructField(name, DataTypes.DoubleType),
         when (value) {
             is Interval -> column.toDoubleArray().toTypedArray()
-            is Value -> column.toStringArray().toList().toTypedArray()
+            is Constant -> column.toStringArray().toList().toTypedArray()
         }.map { if (condition(value, it)) 1.0 else 0.0 }.toDoubleArray()
     )
 
