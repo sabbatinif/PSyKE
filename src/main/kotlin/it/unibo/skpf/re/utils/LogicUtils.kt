@@ -20,7 +20,7 @@ import it.unibo.tuprolog.core.operators.Specifier
 import smile.data.DataFrame
 import smile.data.inputs
 
-object LogicUtils {
+internal object LogicUtils {
     const val priority = 800
 }
 

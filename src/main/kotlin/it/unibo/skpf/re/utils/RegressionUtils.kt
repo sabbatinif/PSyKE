@@ -168,10 +168,8 @@ fun testRegressionExtractor(
             extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
             false, false, false
         )
-        println(
-            "R2 = " + metricsFid.first +
-                " and MSE = " + metricsFid.second + " w.r.t. the black box"
-        ).also { println() }
+        println("R2 = ${metricsFid.first} and MSE = ${metricsFid.second} w.r.t. the black box")
+            .also { println() }
     }
     if (printRules)
         theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }

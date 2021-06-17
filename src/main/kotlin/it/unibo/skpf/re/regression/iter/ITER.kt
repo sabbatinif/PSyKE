@@ -25,7 +25,7 @@ import kotlin.math.min
 import kotlin.streams.asStream
 import kotlin.streams.toList
 
-class ITER(
+internal class ITER(
     override val predictor: Regression<DoubleArray>,
     override val schema: Schema = Schema.Empty,
     private val minUpdate: Double,

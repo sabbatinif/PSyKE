@@ -16,7 +16,7 @@ import kotlin.math.min
 import kotlin.random.Random
 import kotlin.streams.toList
 
-class HyperCube(
+internal class HyperCube(
     private val limits: MutableMap<String, Pair<Double, Double>> = mutableMapOf(),
     private var output: Double
 ) {

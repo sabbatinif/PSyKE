@@ -18,8 +18,17 @@ class CartPredictor(private val predictor: CART) : ToDoubleFunction<Tuple> {
             else -> throw TypeNotAllowedException(predictor.javaClass.toString())
         }
 
+    /**
+     * Root node of the tree predictor.
+     * @return the rood node of the tree predictor.
+     */
     fun root(): Node = predictor.root()
 
+    /**
+     * Predicts the supplied instances.
+     * @param data is the DataFrame to predict.
+     * @return an Array of predictions.
+     */
     fun predict(data: DataFrame): Array<*> =
         when (predictor) {
             is DecisionTree -> predictor.predict(data).toTypedArray()

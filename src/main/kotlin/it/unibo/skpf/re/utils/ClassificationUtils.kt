@@ -1,7 +1,7 @@
 package it.unibo.skpf.re.utils
 
+import it.unibo.skpf.re.ClassifierPerformance
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.ExtractorPerformance
 import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.skpf.re.utils.ClassificationUtils.k
 import it.unibo.skpf.re.utils.ClassificationUtils.maxDepth
@@ -131,7 +131,7 @@ fun testClassificationExtractor(
     printAccuracy: Boolean = true,
     printMatrix: Boolean = false,
     printRules: Boolean = false
-): ExtractorPerformance {
+): ClassifierPerformance {
     val theory = extractor.extract(train)
     val fidelity = fidelity(test, predictor, extractor)
     val accuracy = accuracy(test, extractor)
@@ -149,7 +149,7 @@ fun testClassificationExtractor(
         println(confusionMatrix(test, predictor, extractor)).also { println() }
     if (printRules)
         theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }
-    return ExtractorPerformance(fidelity, accuracy, theory.size.toInt(), missing)
+    return ClassifierPerformance(fidelity, accuracy, theory.size.toInt(), missing)
 }
 
 fun testClassificationExtractor(
@@ -160,7 +160,7 @@ fun testClassificationExtractor(
     printAccuracy: Boolean = true,
     printMatrix: Boolean = false,
     printRules: Boolean = false
-): ExtractorPerformance {
+): ClassifierPerformance {
     val theory = extractor.extract(train)
     val accuracy = accuracy(test, extractor)
     println("\n################################")
@@ -172,7 +172,7 @@ fun testClassificationExtractor(
         println(confusionMatrix(test, extractor)).also { println() }
     if (printRules)
         theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }
-    return ExtractorPerformance(1.0, accuracy, theory.size.toInt(), 0.0)
+    return ClassifierPerformance(1.0, accuracy, theory.size.toInt(), 0.0)
 }
 
 @Suppress("UNUSED_VARIABLE")
