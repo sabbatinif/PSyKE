@@ -1,4 +1,4 @@
-package it.unibo.skpf.re.classification.duepan
+package it.unibo.skpf.re.classification.trepan
 
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.schema.Schema
@@ -19,7 +19,7 @@ import java.util.SortedSet
 import kotlin.math.sign
 import kotlin.streams.toList
 
-internal class Duepan(
+internal class Trepan(
     override val predictor: Classifier<DoubleArray>,
     override val schema: Schema,
     val minExamples: Int = 0

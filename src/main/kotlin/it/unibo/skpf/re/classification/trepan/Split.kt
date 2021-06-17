@@ -1,4 +1,4 @@
-package it.unibo.skpf.re.classification.duepan
+package it.unibo.skpf.re.classification.trepan
 
 internal class Split(
     private val parent: Node,

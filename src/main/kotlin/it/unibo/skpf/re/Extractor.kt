@@ -2,7 +2,7 @@ package it.unibo.skpf.re
 
 import it.unibo.skpf.re.cart.CartExtractor
 import it.unibo.skpf.re.cart.CartPredictor
-import it.unibo.skpf.re.classification.duepan.Duepan
+import it.unibo.skpf.re.classification.trepan.Trepan
 import it.unibo.skpf.re.classification.real.REAL
 import it.unibo.skpf.re.regression.iter.ITER
 import it.unibo.skpf.re.schema.Schema
@@ -56,14 +56,14 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         ): Extractor<DoubleArray, Classifier<DoubleArray>> = REAL(predictor, schema)
 
         /**
-         * Creates a new Duepan extractor.
+         * Creates a new Trepan extractor.
          */
         @JvmStatic
-        fun duepan(
+        fun trepan(
             predictor: Classifier<DoubleArray>,
             schema: Schema = Schema.Empty,
             minExamples: Int = 0
-        ): Extractor<DoubleArray, Classifier<DoubleArray>> = Duepan(predictor, schema, minExamples)
+        ): Extractor<DoubleArray, Classifier<DoubleArray>> = Trepan(predictor, schema, minExamples)
 
         /**
          * Creates a new CART extractor.

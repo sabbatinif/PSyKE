@@ -1,4 +1,4 @@
-package it.unibo.skpf.re.classification.duepan
+package it.unibo.skpf.re.classification.trepan
 
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.Schemas
@@ -19,15 +19,15 @@ import smile.data.DataFrame
 import smile.data.Tuple
 import kotlin.streams.toList
 
-internal class DuepanTest {
+internal class TrepanTest {
 
     @Suppress("UNCHECKED_CAST")
     private val knn = loadFromFile("irisKNN9.txt") as KNN<DoubleArray>
     @Suppress("UNCHECKED_CAST")
     private val featureSets: Schema = Schemas.iris
-    private val duepan = Extractor.duepan(knn, featureSets)
+    private val trepan = Extractor.trepan(knn, featureSets)
     private val train = loadFromFile("irisTrain50.txt") as DataFrame
-    private val theory = duepan.extract(train)
+    private val theory = trepan.extract(train)
 
     @Test
     fun testExtract() {
@@ -59,7 +59,7 @@ internal class DuepanTest {
             this[field].toString().toDouble() == 1.0
 
         val test = loadFromFile("irisTest50.txt") as DataFrame
-        val predictions = duepan.predict(test)
+        val predictions = trepan.predict(test)
         val expected = sequence {
             for (sample in test.stream().toList())
                 if (sample.check("PetalLength_0"))

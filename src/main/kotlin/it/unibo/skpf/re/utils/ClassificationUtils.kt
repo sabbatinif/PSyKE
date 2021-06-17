@@ -209,8 +209,8 @@ fun classify(name: String, testSplit: Double) {
     testClassifier(test, knn)
     val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
     testClassificationExtractor("REAL", train, test, real, knn, true, true, true)
-    val duepan = Extractor.duepan(knn, featureSets)
-    testClassificationExtractor("Duepan", train, test, duepan, knn, true, true, true)
+    val trepan = Extractor.trepan(knn, featureSets)
+    testClassificationExtractor("Trepan", train, test, trepan, knn, true, true, true)
     val cart = CartPredictor(
         cart(
             Formula.lhs("Class"),
