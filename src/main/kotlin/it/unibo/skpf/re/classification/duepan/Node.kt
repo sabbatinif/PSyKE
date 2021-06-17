@@ -1,4 +1,4 @@
-package it.unibo.skpf.re.duepan
+package it.unibo.skpf.re.classification.duepan
 
 import smile.data.DataFrame
 import smile.data.nCategories
