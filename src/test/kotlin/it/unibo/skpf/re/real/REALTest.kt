@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.real
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.loadFromFile
@@ -23,7 +23,7 @@ internal class REALTest {
     @Suppress("UNCHECKED_CAST")
     private val knn = loadFromFile("irisKNN9.txt") as KNN<DoubleArray>
     @Suppress("UNCHECKED_CAST")
-    private val featureSets = loadFromFile("irisBoolFeatSet.txt") as Set<BooleanFeatureSet>
+    private val featureSets = loadFromFile("irisBoolFeatSet.txt") as Set<Feature>
     private val real = Extractor.ruleExtractionAsLearning(knn, featureSets)
     private val train = loadFromFile("irisTrain50.txt") as DataFrame
     private val theory = real.extract(train)

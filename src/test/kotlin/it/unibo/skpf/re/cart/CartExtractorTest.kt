@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.cart
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.cart.ExpectedValues.expectedArtiTheory
 import it.unibo.skpf.re.cart.ExpectedValues.expectedIrisTheory
@@ -52,7 +52,7 @@ internal class CartExtractorTest {
             @Suppress("UNCHECKED_CAST")
             val irisCartEx = Extractor.cart(
                 CartPredictor(irisCart),
-                loadFromFile("irisBoolFeatSet.txt") as Set<BooleanFeatureSet>
+                loadFromFile("irisBoolFeatSet.txt") as Set<Feature>
             )
             val artiCartEx = Extractor.cart(artiCart)
 

@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.cart
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
 import it.unibo.skpf.re.utils.TypeNotAllowedException
@@ -22,7 +22,7 @@ import smile.data.name
 
 internal class CartExtractor(
     override val predictor: CartPredictor,
-    override val featureSet: Collection<BooleanFeatureSet>
+    override val feature: Collection<Feature>
 ) : Extractor<Tuple, CartPredictor> {
 
     override fun extract(dataset: DataFrame): Theory {
@@ -31,7 +31,7 @@ internal class CartExtractor(
     }
 
     private fun createTheory(leaves: LeafSequence, dataset: DataFrame): Theory {
-        val variables = createVariableList(this.featureSet, dataset)
+        val variables = createVariableList(this.feature, dataset)
         val theory = MutableTheory.empty()
         for ((name, value) in leaves)
             theory.assertZ(
@@ -49,7 +49,7 @@ internal class CartExtractor(
 
     private fun createBody(variables: Map<String, Var>, constraints: LeafConstraints) = sequence {
         for ((name, value) in constraints) {
-            val feature = featureSet.firstOrNull { it.set.containsKey(name) }
+            val feature = feature.firstOrNull { it.set.containsKey(name) }
             if (feature == null)
                 yield(createTerm(variables[name], value))
             else

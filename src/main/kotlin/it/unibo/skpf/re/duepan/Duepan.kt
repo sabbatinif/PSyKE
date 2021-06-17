@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.duepan
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
@@ -21,7 +21,7 @@ import kotlin.streams.toList
 
 internal class Duepan(
     override val predictor: Classifier<DoubleArray>,
-    override val featureSet: Collection<BooleanFeatureSet>,
+    override val feature: Collection<Feature>,
     val minExamples: Int = 0
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
@@ -158,13 +158,13 @@ internal class Duepan(
 
     private fun createBody(variables: Map<String, Var>, node: Node) = sequence {
         for ((constraint, value) in node.constraints)
-            featureSet.first { it.set.containsKey(constraint) }.apply {
+            feature.first { it.set.containsKey(constraint) }.apply {
                 yield(createTerm(variables[this.name], this.set[constraint]!!, value == 1.0))
             }
     }.toList().toTypedArray()
 
     private fun createTheory(name: String): MutableTheory {
-        val variables = createVariableList(this.featureSet)
+        val variables = createVariableList(this.feature)
         val theory = MutableTheory.empty()
         for (node in this.root.asSequence)
             theory.assertZ(

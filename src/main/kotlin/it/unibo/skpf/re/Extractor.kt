@@ -28,7 +28,7 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
      * A collection of sets of discretised features. Each set corresponds
      * to a set of features derived from a single non-discrete feature.
      */
-    val featureSet: Collection<BooleanFeatureSet>
+    val feature: Collection<Feature>
 
     /**
      * Extracts rules from the underlying predictor.
@@ -51,8 +51,8 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun ruleExtractionAsLearning(
             predictor: Classifier<DoubleArray>,
-            featureSet: Collection<BooleanFeatureSet>
-        ): Extractor<DoubleArray, Classifier<DoubleArray>> = REAL(predictor, featureSet)
+            feature: Collection<Feature>
+        ): Extractor<DoubleArray, Classifier<DoubleArray>> = REAL(predictor, feature)
 
         /**
          * Creates a new Duepan extractor.
@@ -60,9 +60,9 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun duepan(
             predictor: Classifier<DoubleArray>,
-            featureSet: Collection<BooleanFeatureSet>,
+            feature: Collection<Feature>,
             minExamples: Int = 0
-        ): Extractor<DoubleArray, Classifier<DoubleArray>> = Duepan(predictor, featureSet, minExamples)
+        ): Extractor<DoubleArray, Classifier<DoubleArray>> = Duepan(predictor, feature, minExamples)
 
         /**
          * Creates a new CART extractor.
@@ -70,8 +70,8 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun cart(
             predictor: CartPredictor,
-            featureSet: Collection<BooleanFeatureSet> = emptySet(),
-        ): Extractor<Tuple, CartPredictor> = CartExtractor(predictor, featureSet)
+            feature: Collection<Feature> = emptySet(),
+        ): Extractor<Tuple, CartPredictor> = CartExtractor(predictor, feature)
 
         /**
          * Creates a new ITER extractor.

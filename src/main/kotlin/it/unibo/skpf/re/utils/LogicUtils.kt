@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.utils
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.OriginalValue
 import it.unibo.skpf.re.OriginalValue.Interval.Between
 import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
@@ -49,12 +49,12 @@ internal fun createFunctor(constraint: OriginalValue, positive: Boolean): String
 }
 
 internal fun createVariableList(
-    featureSet: Collection<BooleanFeatureSet>,
+    feature: Collection<Feature>,
     dataset: DataFrame? = null
 ): Map<String, Var> {
     val values =
-        if (featureSet.isNotEmpty())
-            featureSet.map { it.name to Var.of(it.name) }
+        if (feature.isNotEmpty())
+            feature.map { it.name to Var.of(it.name) }
         else
             dataset?.inputs()?.names()?.map { it to Var.of(it) }
                 ?: throw NullPointerException("dataset cannot be null if featureSet is empty")

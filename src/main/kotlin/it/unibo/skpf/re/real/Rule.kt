@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.real
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 
 internal class Rule(
     val truePredicates: List<String>,
@@ -13,11 +13,11 @@ internal class Rule(
             )
     }
 
-    fun reduce(featureSets: Collection<BooleanFeatureSet>): Rule {
+    fun reduce(features: Collection<Feature>): Rule {
         val f = this.falsePredicates.toMutableList()
         for (variable in this.truePredicates)
             f.removeAll(
-                featureSets.filter { featSet ->
+                features.filter { featSet ->
                     variable in featSet.set.keys
                 }.map { it.set.keys }.flatten()
             )

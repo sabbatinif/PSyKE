@@ -1,6 +1,6 @@
 package smile.data
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.OriginalValue
 import it.unibo.skpf.re.OriginalValue.Interval
 import it.unibo.skpf.re.OriginalValue.Value
@@ -176,19 +176,19 @@ fun createOriginalValue(originalValue: Any): OriginalValue {
         Value(originalValue)
 }
 
-fun DataFrame.splitFeatures(): Set<BooleanFeatureSet> {
-    val featureSets: MutableSet<BooleanFeatureSet> = mutableSetOf()
+fun DataFrame.splitFeatures(): Set<Feature> {
+    val features: MutableSet<Feature> = mutableSetOf()
     for (feature in this.inputs())
-        featureSets.add(
-            BooleanFeatureSet(feature.name(), createSet(feature, this))
+        features.add(
+            Feature(feature.name(), createSet(feature, this))
         )
-    return featureSets.toSet()
+    return features.toSet()
 }
 
-fun DataFrame.toBoolean(featureSets: Set<BooleanFeatureSet>): DataFrame {
+fun DataFrame.toBoolean(features: Set<Feature>): DataFrame {
     val outputColumns: MutableList<BaseVector<*, *, *>> = mutableListOf()
     for (column in this.inputs()) {
-        val match = featureSets.filter { it.name == column.name() }
+        val match = features.filter { it.name == column.name() }
         if (match.isEmpty())
             outputColumns.add(column)
         else

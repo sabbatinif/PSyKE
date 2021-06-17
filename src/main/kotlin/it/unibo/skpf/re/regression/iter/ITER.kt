@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.regression.iter
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.OriginalValue.Interval.Between
 import it.unibo.skpf.re.regression.HyperCube
@@ -27,7 +27,7 @@ import kotlin.streams.toList
 
 class ITER(
     override val predictor: Regression<DoubleArray>,
-    override val featureSet: Collection<BooleanFeatureSet> = emptySet(),
+    override val feature: Collection<Feature> = emptySet(),
     private val minUpdate: Double,
     private var nPoints: Int,
     private var maxIterations: Int,

@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.real
 
-import it.unibo.skpf.re.BooleanFeatureSet
+import it.unibo.skpf.re.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
@@ -24,7 +24,7 @@ private typealias MapIntToRuleList = Map<Int, MutableList<Rule>>
 
 internal class REAL(
     override val predictor: Classifier<DoubleArray>,
-    override val featureSet: Collection<BooleanFeatureSet>
+    override val feature: Collection<Feature>
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
     private lateinit var ruleSet: MapIntToRuleList
@@ -82,7 +82,7 @@ internal class REAL(
     }
 
     private fun createTheory(dataset: DataFrame): MutableTheory {
-        val variables = createVariableList(this.featureSet)
+        val variables = createVariableList(this.feature)
         val theory = MutableTheory.empty()
         for ((key, rule) in flat(ruleSet))
             theory.assertZ(createClause(dataset, variables, key, rule))
@@ -101,7 +101,7 @@ internal class REAL(
         val body: MutableList<Term> = mutableListOf()
         rule.asList().zip(listOf(true, false)) { predicate, truthValue ->
             for (variable in predicate)
-                this.featureSet.first { it.set.containsKey(variable) }.apply {
+                this.feature.first { it.set.containsKey(variable) }.apply {
                     body.add(createTerm(variables[this.name], this.set[variable]!!, truthValue))
                 }
         }
@@ -129,7 +129,7 @@ internal class REAL(
         schema.fields().zip(x.toTypedArray()) { field, value ->
             (if (value == 1.0) t else f).add(field.name)
         }
-        return Rule(t, f).reduce(this.featureSet)
+        return Rule(t, f).reduce(this.feature)
     }
 
     private fun predict(x: Tuple, schema: StructType): Int =
