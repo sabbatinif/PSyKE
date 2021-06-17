@@ -5,9 +5,9 @@ comments:
     active: false
     searchInInnerClass: false
   UndocumentedPublicFunction:
-    active: true
+    active: false
   UndocumentedPublicProperty:
-    active: true
+    active: false
 complexity:
   LongMethod:
     threshold: 40
