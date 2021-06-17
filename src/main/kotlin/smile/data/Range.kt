@@ -23,16 +23,30 @@ data class Range(
     var upper: Double = this.mean
 
     /**
-     * Opens the range lowerbound.
+     * Makes the range right-bounded infinite.
      */
-    fun openLower() {
+    fun leftInfinite() {
         this.lower = NEGATIVE_INFINITY
     }
 
     /**
-     * Opens the range upperbound.
+     * Makes the range left-bounded infinite.
      */
-    fun openUpper() {
+    fun rightInfinite() {
         this.upper = POSITIVE_INFINITY
+    }
+
+    /**
+     * Expands the range towards right.
+     */
+    fun expandRight() {
+        this.upper += this.std
+    }
+
+    /**
+     * Expands the range towards left.
+     */
+    fun expandLeft() {
+        this.lower -= this.std
     }
 }

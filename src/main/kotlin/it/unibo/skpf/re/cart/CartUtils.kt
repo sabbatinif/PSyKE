@@ -10,7 +10,7 @@ import smile.data.type.StructType
 typealias LeafConstraints = List<Pair<String, OriginalValue>>
 typealias LeafSequence = Sequence<Pair<LeafConstraints, Any>>
 
-val OrdinalNode.value: Double
+internal val OrdinalNode.value: Double
     get() = getFieldValue("value")
 
 internal fun OrdinalNode.split(fields: StructType) = Pair(

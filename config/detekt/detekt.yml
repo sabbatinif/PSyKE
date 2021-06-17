@@ -5,11 +5,12 @@ comments:
     active: false
     searchInInnerClass: false
   UndocumentedPublicFunction:
-    active: false
+    active: true
   UndocumentedPublicProperty:
-    active: false
+    active: true
 complexity:
   LongMethod:
+    threshold: 40
     active: true
   LongParameterList:
     active: false
@@ -36,3 +37,5 @@ style:
     ignoreNumbers: ['-2', '-1', '0', '0.5', '1', '2', '3', '4', '10', '100', '360.0']
   ThrowsCount:
     max: 10
+  SerialVersionUIDInSerializableClass:
+    active: false

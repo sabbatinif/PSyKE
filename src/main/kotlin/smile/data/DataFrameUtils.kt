@@ -1,11 +1,11 @@
 package smile.data
 
 import it.unibo.skpf.re.BooleanFeatureSet
-import it.unibo.skpf.re.OriginalValue
-import it.unibo.skpf.re.OriginalValue.Interval
-import it.unibo.skpf.re.OriginalValue.Value
 import it.unibo.skpf.re.utils.TypeNotAllowedException
-import it.unibo.skpf.re.utils.round
+import it.unibo.skpf.re.utils.createColumn
+import it.unibo.skpf.re.utils.createDescriptionPair
+import it.unibo.skpf.re.utils.createSet
+import it.unibo.skpf.re.utils.expandRanges
 import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
@@ -13,13 +13,15 @@ import smile.data.vector.BaseVector
 import smile.data.vector.DoubleVector
 import smile.data.vector.IntVector
 import smile.data.vector.StringVector
-import kotlin.Double.Companion.NEGATIVE_INFINITY
-import kotlin.Double.Companion.POSITIVE_INFINITY
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.streams.toList
 
+/**
+ * Splits this DataFrame into a Pair of DataFrame.
+ * @param percent is the test set percentage.
+ * @param seed (optional) is the random seed.
+ * @return a Pair with the training and test partitions.
+ */
 fun DataFrame.randomSplit(percent: Double, seed: Long = 10L): Pair<DataFrame, DataFrame> {
     val r1 = Random(seed)
     val r2 = Random(seed)
@@ -32,21 +34,49 @@ fun DataFrame.randomSplit(percent: Double, seed: Long = 10L): Pair<DataFrame, Da
     return train to test
 }
 
+/**
+ * The index of the last column of this DataFrame.
+ */
 val DataFrame.lastColumnIndex: Int
     get() = this.ncols() - 1
 
+/**
+ * Selects only the input DataFrame columns.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return a DataFrame with only the input columns.
+ */
 fun DataFrame.inputs(outputColumn: Int = lastColumnIndex): DataFrame =
     this.drop(outputColumn)
 
-fun DataFrame.categories(i: Int = lastColumnIndex): Set<Any> =
-    this.outputClasses(i).distinct().toSet()
+/**
+ * Generates a set with the output column distinct values.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return the set of distinct output values.
+ */
+fun DataFrame.categories(outputColumn: Int = lastColumnIndex): Set<Any> =
+    this.outputClasses(outputColumn).distinct().toSet()
 
-fun DataFrame.nCategories(i: Int = lastColumnIndex): Int =
-    this.categories(i).size
+/**
+ * Counts the number of distinct output classes.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return the number of output classes.
+ */
+fun DataFrame.nCategories(outputColumn: Int = lastColumnIndex): Int =
+    this.categories(outputColumn).size
 
-fun DataFrame.outputClasses(i: Int = lastColumnIndex): List<Any> =
-    this.stream().map { it[i] }.toList()
+/**
+ * Creates a list from the DataFrame output column.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return the output column as list.
+ */
+fun DataFrame.outputClasses(outputColumn: Int = lastColumnIndex): List<Any> =
+    this.stream().map { it[outputColumn] }.toList()
 
+/**
+ * Selects the output column from this DataFrame and converts its values to IntegerType.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return a DataFrame with the only output column as IntegerType.
+ */
 fun DataFrame.classes(outputColumn: Int = lastColumnIndex): DataFrame {
     val classes = categories(outputColumn)
     return DataFrame.of(
@@ -58,49 +88,72 @@ fun DataFrame.classes(outputColumn: Int = lastColumnIndex): DataFrame {
     )
 }
 
+/**
+ * Selects the output column from this DataFrame.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return a DataFrame with the only output column.
+ */
 fun DataFrame.outputs(outputColumn: Int = lastColumnIndex): DataFrame =
     this.select(outputColumn)
 
+/**
+ * Selects the input columns from this DataFrame and converts it into an Array of DoubleArray.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return the input columns as an Array of DoubleArray
+ */
 fun DataFrame.inputsArray(outputColumn: Int = lastColumnIndex): Array<DoubleArray> =
     this.inputs(outputColumn).toArray()
 
+/**
+ * Selects the output column from this DataFrame and converts it into a DoubleArray.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return the output column as a DoubleArray
+ */
 fun DataFrame.outputsArray(outputColumn: Int = lastColumnIndex): DoubleArray =
     this.column(outputColumn).toDoubleArray()
 
+/**
+ * Selects the output column from this DataFrame and converts it into a DoubleArray.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return the output class column as a DoubleArray.
+ */
 fun DataFrame.classesAsDoubleArray(outputColumn: Int = lastColumnIndex): DoubleArray =
     this.classes(outputColumn).column("Class").toDoubleArray()
 
+/**
+ * Selects the output column from this DataFrame and converts it into an IntArray.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return the output class column as an IntArray.
+ */
 fun DataFrame.classesArray(outputColumn: Int = lastColumnIndex): IntArray =
     this.classes(outputColumn).intVector(0).toIntArray()
 
+/**
+ * Selects the name of the output column from this DataFrame.
+ * @param outputColumn (optional) is the index of the output column.
+ * @return this DataFrame output column name.
+ */
 fun DataFrame.name(outputColumn: Int = lastColumnIndex): String =
     this.column(outputColumn).name()
 
-fun std(col: DoubleArray): Double {
-    val mean = col.average()
-    var std = 0.0
-    col.forEach { std += (it - mean).pow(2.0) }
-    return sqrt(std / col.size)
-}
-
-fun createDescriptionPair(name: String, column: DoubleArray): Pair<String, Description> {
-    return name to Description(
-        column.average(),
-        std(column),
-        column.minByOrNull { it } ?: 0.0,
-        column.maxByOrNull { it } ?: 1.0
-    )
-}
-
+/**
+ * Creates a Map with a Description for each DataFrame column.
+ * @return the Map associating column name and description.
+ */
 fun DataFrame.describe(): Map<String, Description> =
     mapOf(
         *this.inputs().schema().fields()
             .filter { it.isNumeric }
             .map { field ->
-                createDescriptionPair(field.name, this.column(field.name).toDoubleArray())
+                field.name to createDescriptionPair(this.column(field.name).toDoubleArray())
             }.toTypedArray()
     )
 
+/**
+ * Filter this DataFrame with respect to the output value.
+ * @param output is the output value for the matching.
+ * @return the filtered DataFrame.
+ */
 fun DataFrame.filterByOutput(output: Any): DataFrame =
     DataFrame.of(
         this.stream().filter {
@@ -108,7 +161,18 @@ fun DataFrame.filterByOutput(output: Any): DataFrame =
         }
     )
 
-private fun createFakeColumn(value: Any, n: Int, field: StructField) =
+/**
+ * Creates a DataFrame column with the supplied parameters.
+ * @param value is the value of each element of the column.
+ * @param n is the column dimension,
+ * @param field is the column StructField.
+ * @return the created column.
+ */
+private fun createFakeColumn(
+    value: Any,
+    n: Int, field:
+    StructField
+): BaseVector<*, *, *> =
     when (value) {
         is Double -> DoubleVector.of(field, DoubleArray(n) { value })
         is Int -> IntVector.of(field, IntArray(n) { value })
@@ -116,6 +180,12 @@ private fun createFakeColumn(value: Any, n: Int, field: StructField) =
         else -> throw TypeNotAllowedException(value.javaClass.toString())
     }
 
+/**
+ * Writes the supplied value in all elements of the specified column.
+ * @param feature is the name of the column to write.
+ * @param value is the value to write.
+ * @return the modified DataFrame.
+ */
 fun DataFrame.writeColumn(feature: String, value: Any): DataFrame =
     DataFrame.of(
         *this.map {
@@ -126,56 +196,31 @@ fun DataFrame.writeColumn(feature: String, value: Any): DataFrame =
         }.toTypedArray()
     )
 
-fun DataFrame.initRanges(name: String) =
+private fun DataFrame.initRanges(name: String) =
     this.categories().map {
         val desc = this.filterByOutput(it).describe()[name]
         Range(desc!!.mean, desc.stdDev)
     }.sortedWith(compareBy { it.mean })
 
-private fun expandRanges(ranges: List<Range>) {
-    ranges.zipWithNext { r1, r2 ->
-        while (r1.upper < r2.lower) {
-            r1.upper += r1.std
-            r2.lower -= r2.std
-        }
-        val mean = ((r1.upper - r1.std + r2.lower + r2.std) / 2).round(2)
-        r1.upper = mean
-        r2.lower = mean
-    }
-}
-
+/**
+ * Creates a List of Range for the specified feature.
+ * @param name is the feature name.
+ * @return the List with the sorted ranges.
+ */
 fun DataFrame.createRanges(name: String): List<Range> {
     val ranges = this.initRanges(name)
     expandRanges(ranges)
     this.describe()[name].apply {
-        ranges.first().openLower()
-        ranges.last().openUpper()
+        ranges.first().leftInfinite()
+        ranges.last().rightInfinite()
     }
     return ranges
 }
 
-private fun createSet(feature: BaseVector<*, *, *>, dataset: DataFrame) =
-    when (feature.type()) {
-        DataTypes.DoubleType ->
-            dataset.createRanges(feature.name())
-        DataTypes.StringType ->
-            feature.toStringArray().distinct()
-        DataTypes.IntegerType ->
-            feature.toIntArray().distinct()
-        else -> throw TypeNotAllowedException(feature.type().javaClass.toString())
-    }.mapIndexed { i, it -> "${feature.name()}_$i" to createOriginalValue(it) }.toMap()
-
-fun createOriginalValue(originalValue: Any): OriginalValue {
-    return if (originalValue is Range)
-        when {
-            originalValue.lower == NEGATIVE_INFINITY -> Interval.LessThan(originalValue.upper)
-            originalValue.upper == POSITIVE_INFINITY -> Interval.GreaterThan(originalValue.lower)
-            else -> Interval.Between(originalValue.lower, originalValue.upper)
-        }
-    else
-        Value(originalValue)
-}
-
+/**
+ * Creates a data structure for efficiently discretise this DataFrame.
+ * @return the discretisation logic.
+ */
 fun DataFrame.splitFeatures(): Set<BooleanFeatureSet> {
     val featureSets: MutableSet<BooleanFeatureSet> = mutableSetOf()
     for (feature in this.inputs())
@@ -185,6 +230,11 @@ fun DataFrame.splitFeatures(): Set<BooleanFeatureSet> {
     return featureSets.toSet()
 }
 
+/**
+ * One-hot encodes the numerical and categorical features of this DataFrame.
+ * @param featureSets is the encoding strategy.
+ * @return the one-hot encoded DataFrame.
+ */
 fun DataFrame.toBoolean(featureSets: Set<BooleanFeatureSet>): DataFrame {
     val outputColumns: MutableList<BaseVector<*, *, *>> = mutableListOf()
     for (column in this.inputs()) {
@@ -198,28 +248,16 @@ fun DataFrame.toBoolean(featureSets: Set<BooleanFeatureSet>): DataFrame {
     return DataFrame.of(*outputColumns.toTypedArray()).merge(this.outputs())
 }
 
-private fun condition(original: OriginalValue, value: Any) =
-    if ((original is Interval) && (value is Double))
-        (original.lower <= value) && (value < original.upper)
-    else if ((original is Value) && (value is String))
-        (original.value == value)
-    else
-        throw IllegalArgumentException(
-            "Can only associate Interval to Double and Value to String\n" +
-                "Actual types are " + original.javaClass + " and " + value.javaClass
-        )
-
-private fun createColumn(name: String, value: OriginalValue, column: BaseVector<*, *, *>) =
-    DoubleVector.of(
-        StructField(name, DataTypes.DoubleType),
-        when (value) {
-            is Interval -> column.toDoubleArray().toTypedArray()
-            is Value -> column.toStringArray().toList().toTypedArray()
-        }.map { if (condition(value, it)) 1.0 else 0.0 }.toDoubleArray()
-    )
-
+/**
+ * Converts this DataFrame into a String List.
+ * @return this DataFrame as a List of strings.
+ */
 fun DataFrame.toStringList(): List<String> =
-    this.stream().toList().map { it.toString() }
+    this.stream().map { it.toString() }.toList()
 
+/**
+ * Converts this DataFrame into a String Set.
+ * @return this DataFrame as a Set of strings.
+ */
 fun DataFrame.toStringSet(): Set<String> =
     this.toStringList().toSet()
