@@ -15,7 +15,7 @@ object ExpectedValues {
             rule { "z"(X, Y, 0.7) `if` ((X lowerThanOrEqualsTo 0.5) and (Y lowerThanOrEqualsTo 0.5)) },
             rule { "z"(X, Y, 0.4) `if` ((X lowerThanOrEqualsTo 0.5) and (Y greaterThan 0.5)) },
             rule { "z"(X, Y, 0.3) `if` ((X greaterThan 0.5) and (Y lowerThanOrEqualsTo 0.5)) },
-            rule { "z"(X, Y, 0.0) `if` ((X greaterThan 0.5) and (Y greaterThan  0.5)) },
+            rule { "z"(X, Y, 0.0) `if` ((X greaterThan 0.5) and (Y greaterThan 0.5)) },
         )
     }
 

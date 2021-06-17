@@ -21,7 +21,7 @@ import smile.data.DataFrame
 import smile.data.inputs
 
 object LogicUtils {
-    const val priority =  800
+    const val priority = 800
 }
 
 internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = true): Struct {
