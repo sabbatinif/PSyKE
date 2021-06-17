@@ -1,4 +1,4 @@
-package it.unibo.skpf.re.real
+package it.unibo.skpf.re.classification.real
 
 import it.unibo.skpf.re.schema.Feature
 import it.unibo.skpf.re.Extractor
