@@ -1,8 +1,8 @@
 package it.unibo.skpf.re.cart
 
-import it.unibo.skpf.re.Feature
+import it.unibo.skpf.re.schema.Feature
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.Value.Interval.GreaterThan
+import it.unibo.skpf.re.schema.Value.Interval.GreaterThan
 import it.unibo.skpf.re.utils.TypeNotAllowedException
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm

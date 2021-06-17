@@ -1,10 +1,11 @@
 package it.unibo.skpf.re
 
-import it.unibo.skpf.re.Value.Interval
-import it.unibo.skpf.re.Value.Interval.Between
-import it.unibo.skpf.re.Value.Interval.GreaterThan
-import it.unibo.skpf.re.Value.Interval.LessThan
-import it.unibo.skpf.re.Value.Constant
+import it.unibo.skpf.re.schema.Value
+import it.unibo.skpf.re.schema.Value.Interval
+import it.unibo.skpf.re.schema.Value.Interval.Between
+import it.unibo.skpf.re.schema.Value.Interval.GreaterThan
+import it.unibo.skpf.re.schema.Value.Interval.LessThan
+import it.unibo.skpf.re.schema.Value.Constant
 import it.unibo.skpf.re.utils.createFunctor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm

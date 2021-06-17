@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.real
 
-import it.unibo.skpf.re.Feature
+import it.unibo.skpf.re.schema.Feature
 
 internal class Rule(
     val truePredicates: List<String>,

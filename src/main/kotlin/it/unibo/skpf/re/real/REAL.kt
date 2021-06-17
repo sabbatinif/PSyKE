@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.real
 
-import it.unibo.skpf.re.Feature
+import it.unibo.skpf.re.schema.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm

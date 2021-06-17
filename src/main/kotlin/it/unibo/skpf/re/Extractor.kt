@@ -5,6 +5,7 @@ import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.skpf.re.duepan.Duepan
 import it.unibo.skpf.re.real.REAL
 import it.unibo.skpf.re.regression.iter.ITER
+import it.unibo.skpf.re.schema.Feature
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame

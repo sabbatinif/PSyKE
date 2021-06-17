@@ -1,4 +1,4 @@
-package it.unibo.skpf.re
+package it.unibo.skpf.re.schema
 
 import java.io.Serializable
 

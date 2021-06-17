@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.cart
 
-import it.unibo.skpf.re.Feature
+import it.unibo.skpf.re.schema.Feature
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.cart.ExpectedValues.expectedArtiTheory
 import it.unibo.skpf.re.cart.ExpectedValues.expectedIrisTheory
