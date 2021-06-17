@@ -1,4 +1,4 @@
-package it.unibo.skpf.re.duepan
+package it.unibo.skpf.re.classification.duepan
 
 import it.unibo.skpf.re.BooleanFeatureSet
 import it.unibo.skpf.re.Extractor

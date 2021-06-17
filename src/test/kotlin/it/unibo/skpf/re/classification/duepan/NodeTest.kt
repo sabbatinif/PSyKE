@@ -1,4 +1,4 @@
-package it.unibo.skpf.re.duepan
+package it.unibo.skpf.re.classification.duepan
 
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Assertions.assertEquals
