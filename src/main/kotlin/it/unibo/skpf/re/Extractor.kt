@@ -13,40 +13,40 @@ import smile.regression.Regression
 import java.util.function.ToDoubleFunction
 
 /**
- * An explanator capable of extracting rules from trained black box
- * @param T is a parameter for defining the underlying black box type
- * @param F is the type of the underlying black box
+ * An explanator capable of extracting rules from trained black box.
+ * @param T is a parameter for defining the underlying black box type.
+ * @param F is the type of the underlying black box.
  */
 interface Extractor<T, F : ToDoubleFunction<T>> {
 
     /**
-     * The underlying black box predictor
+     * The underlying black box predictor.
      */
     val predictor: F
 
     /**
      * A collection of sets of discretised features. Each set corresponds
-     * to a set of features derived from a single non-discrete feature
+     * to a set of features derived from a single non-discrete feature.
      */
     val featureSet: Collection<BooleanFeatureSet>
 
     /**
-     * Extracts rules from the underlying predictor
-     * @param dataset is the set of instances to be used for the extraction
-     * @return the theory created from the extracted rules
+     * Extracts rules from the underlying predictor.
+     * @param dataset is the set of instances to be used for the extraction.
+     * @return the theory created from the extracted rules.
      */
     fun extract(dataset: DataFrame): Theory
 
     /**
-     * Predicts the output values of every sample in dataset
-     * @param dataset is the set of instances to predict
-     * @return an array of predictions
+     * Predicts the output values of every sample in dataset.
+     * @param dataset is the set of instances to predict.
+     * @return an array of predictions.
      */
     fun predict(dataset: DataFrame): Array<*>
 
     companion object {
         /**
-         * Creates a new Rule-Extraction-As-Learning extractor
+         * Creates a new Rule-Extraction-As-Learning extractor.
          */
         @JvmStatic
         fun ruleExtractionAsLearning(
@@ -55,7 +55,7 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         ): Extractor<DoubleArray, Classifier<DoubleArray>> = REAL(predictor, featureSet)
 
         /**
-         * Creates a new Duepan extractor
+         * Creates a new Duepan extractor.
          */
         @JvmStatic
         fun duepan(
@@ -65,7 +65,7 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         ): Extractor<DoubleArray, Classifier<DoubleArray>> = Duepan(predictor, featureSet, minExamples)
 
         /**
-         * Creates a new CART extractor
+         * Creates a new CART extractor.
          */
         @JvmStatic
         fun cart(
@@ -74,7 +74,7 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         ): Extractor<Tuple, CartPredictor> = CartExtractor(predictor, featureSet)
 
         /**
-         * Creates a new ITER extractor
+         * Creates a new ITER extractor.
          */
         @JvmStatic
         fun iter(
