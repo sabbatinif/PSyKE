@@ -3,6 +3,10 @@ package it.unibo.skpf.re.utils
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.ExtractorPerformance
 import it.unibo.skpf.re.cart.CartPredictor
+import it.unibo.skpf.re.utils.ClassificationUtils.k
+import it.unibo.skpf.re.utils.ClassificationUtils.maxDepth
+import it.unibo.skpf.re.utils.ClassificationUtils.maxNodes
+import it.unibo.skpf.re.utils.ClassificationUtils.nodeSize
 import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
 import smile.base.cart.SplitRule
@@ -24,6 +28,16 @@ import smile.data.toBoolean
 import smile.io.Read
 import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
+
+object ClassificationUtils {
+    // cart params
+    const val maxDepth = 20
+    const val maxNodes = 0
+    const val nodeSize = 5
+
+    // knn params
+    const val k = 9
+}
 
 fun Array<*>.toInt() =
     this.map { it.toString().toInt() }.toIntArray()
@@ -161,18 +175,19 @@ fun testClassificationExtractor(
     return ExtractorPerformance(1.0, accuracy, theory.size.toInt(), 0.0)
 }
 
+@Suppress("UNUSED_VARIABLE")
 fun classifyWithoutDiscretise(name: String, testSplit: Double) {
     val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
     val (train, test) = dataset.randomSplit(testSplit)
     val x = train.inputsArray()
     val y = train.classesArray()
-    val knn = knn(x, y, 9)
+    val knn = knn(x, y, k)
     val cart = CartPredictor(
         cart(
             Formula.lhs("Class"),
             train.inputs().merge(train.classes()),
             SplitRule.GINI,
-            20, 0, 5
+            maxDepth, maxNodes, nodeSize
         )
     )
     val cartEx = Extractor.cart(cart)
@@ -186,7 +201,7 @@ fun classify(name: String, testSplit: Double) {
     val (train, test) = dataset.toBoolean(featureSets).randomSplit(testSplit)
     val x = train.inputsArray()
     val y = train.classesArray()
-    val knn = knn(x, y, 9)
+    val knn = knn(x, y, k)
 //    saveToFile("irisKNN9.txt", knn)
 //    saveToFile("irisTest50.txt", test)
 //    saveToFile("irisTrain50.txt", train)
@@ -201,7 +216,7 @@ fun classify(name: String, testSplit: Double) {
             Formula.lhs("Class"),
             train.inputs().merge(train.classes()),
             SplitRule.GINI,
-            20, 0, 5
+            maxDepth, maxNodes, nodeSize
         )
     )
     val cartEx = Extractor.cart(cart, featureSets)

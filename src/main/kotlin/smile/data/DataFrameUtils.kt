@@ -23,8 +23,12 @@ import kotlin.streams.toList
 fun DataFrame.randomSplit(percent: Double, seed: Long = 10L): Pair<DataFrame, DataFrame> {
     val r1 = Random(seed)
     val r2 = Random(seed)
-    val train = DataFrame.of(this.stream().toList().filter { r1.nextDouble() >= percent })
-    val test = DataFrame.of(this.stream().toList().filter { r2.nextDouble() < percent })
+    var train: DataFrame
+    var test: DataFrame
+    this.stream().toList().apply {
+        train = DataFrame.of(this.filter { r1.nextDouble() >= percent })
+        test = DataFrame.of(this.filter { r2.nextDouble() < percent })
+    }
     return train to test
 }
 
@@ -122,9 +126,9 @@ fun DataFrame.writeColumn(feature: String, value: Any): DataFrame =
         }.toTypedArray()
     )
 
-private fun initRanges(dataset: DataFrame, name: String) =
-    dataset.categories().map {
-        val desc = dataset.filterByOutput(it).describe()[name]
+fun DataFrame.initRanges(name: String) =
+    this.categories().map {
+        val desc = this.filterByOutput(it).describe()[name]
         Range(desc!!.mean, desc.stdDev)
     }.sortedWith(compareBy { it.mean })
 
@@ -141,11 +145,11 @@ private fun expandRanges(ranges: List<Range>) {
 }
 
 fun DataFrame.createRanges(name: String): List<Range> {
-    val ranges = initRanges(this, name)
+    val ranges = this.initRanges(name)
     expandRanges(ranges)
     this.describe()[name].apply {
-        ranges.first().lower = NEGATIVE_INFINITY
-        ranges.last().upper = POSITIVE_INFINITY
+        ranges.first().openLower()
+        ranges.last().openUpper()
     }
     return ranges
 }

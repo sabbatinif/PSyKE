@@ -98,13 +98,13 @@ class HyperCube(
 
     private fun equal(cube: HyperCube): Boolean =
         zipDimensions(cube).all {
-            (abs(it.thisCube.first - it.otherCube.first) < (1.0 / 1000)) &&
-                (abs(it.thisCube.second - it.otherCube.second) < (1.0 / 1000))
+            (abs(it.thisCube.first - it.otherCube.first) < epsilon) &&
+                (abs(it.thisCube.second - it.otherCube.second) < epsilon)
         }
 
     fun hasVolume(): Boolean =
         this.limits.all { (_, values) ->
-            values.second - values.first > 1 / 1000
+            values.second - values.first > epsilon
         }
 
     fun equal(cubes: Collection<HyperCube>): Boolean {
@@ -156,6 +156,8 @@ class HyperCube(
         updateDimension(feature, Pair(lower, upper))
 
     companion object {
+        const val epsilon = 1.0 / 1000
+
         @JvmStatic
         fun createSurroundingCube(dataset: DataFrame) =
             HyperCube(

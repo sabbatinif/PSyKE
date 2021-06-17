@@ -13,11 +13,16 @@ internal class Split(
 
         listOf(trueNode, falseNode).forEach {
             if (parent.nClasses > it.nClasses)
-                priority -= 100
+                priority -= priorityBonus
         }
         if (trueNode.dominant == falseNode.dominant)
-            priority += 200
+            priority += priorityPenalty
 
         return priority
+    }
+
+    companion object {
+        const val priorityPenalty = 200
+        const val priorityBonus = 100
     }
 }

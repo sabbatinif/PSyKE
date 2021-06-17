@@ -1,0 +1,38 @@
+comments:
+  EndOfSentenceFormat:
+    active: true
+  UndocumentedPublicClass:
+    active: false
+    searchInInnerClass: false
+  UndocumentedPublicFunction:
+    active: false
+  UndocumentedPublicProperty:
+    active: false
+complexity:
+  LongMethod:
+    active: true
+  LongParameterList:
+    active: false
+  NestedBlockDepth:
+    threshold: 5
+  TooManyFunctions:
+    thresholdInClasses: 18
+    thresholdInFiles: 25
+    ignoreDeprecated: true
+    ignorePrivate: true
+    ignoreOverridden: true
+    thresholdInInterfaces: 20
+    thresholdInObjects: 20
+naming:
+  MemberNameEqualsClassName:
+    active: true
+performance:
+  SpreadOperator:
+    active: false
+style:
+  ForbiddenComment:
+    allowedPatterns: 'TODO:'
+  MagicNumber:
+    ignoreNumbers: ['-2', '-1', '0', '0.5', '1', '2', '3', '4', '10', '100', '360.0']
+  ThrowsCount:
+    max: 10

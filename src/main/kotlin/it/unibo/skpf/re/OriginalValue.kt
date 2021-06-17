@@ -27,4 +27,8 @@ sealed class OriginalValue : Serializable {
     data class Value(
         val value: Any
     ) : OriginalValue()
+
+    companion object {
+        const val serialVersionUID = -7371941503712701496L
+    }
 }

@@ -9,10 +9,11 @@ stages:
   - build
   - test
 
-Check Code Style:
+Check Code Style and Quality:
   stage: check
   script:
     - gradle ktlintCheck --parallel
+    - gradle detekt --parallel
   artifacts:
     paths:
       - "**/build/reports/ktlint/"

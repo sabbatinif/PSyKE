@@ -73,6 +73,9 @@ internal class REALTest {
         fun Tuple.check(field: String): Boolean =
             this[field].toString().toDouble() == 1.0
 
+        fun Tuple.checkAll(vararg fields: String): Boolean =
+            fields.all { this.check(it) }
+
         val test = loadFromFile("irisTest50.txt") as DataFrame
         val predictions = real.predict(test)
         val expected = sequence {
@@ -80,13 +83,13 @@ internal class REALTest {
                 if (sample.check("PetalWidth_0"))
                     yield(0)
                 else if (
-                    sample.check("PetalLength_1") && sample.check("PetalWidth_1") ||
-                    sample.check("SepalLength_1") && sample.check("PetalWidth_1") ||
-                    sample.check("PetalLength_1") && sample.check("SepalLength_1")
+                    sample.checkAll("PetalLength_1", "PetalWidth_1") ||
+                    sample.checkAll("SepalLength_1", "PetalWidth_1") ||
+                    sample.checkAll("PetalLength_1", "SepalLength_1")
                 )
                     yield(1)
                 else if (sample.check("PetalLength_2") ||
-                    sample.check("SepalWidth_1") && sample.check("PetalWidth_2")
+                    sample.checkAll("SepalWidth_1", "PetalWidth_2")
                 )
                     yield(2)
                 else

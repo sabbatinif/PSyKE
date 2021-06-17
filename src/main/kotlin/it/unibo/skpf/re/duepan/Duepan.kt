@@ -17,6 +17,7 @@ import smile.data.inputs
 import smile.data.name
 import java.util.SortedSet
 import kotlin.math.sign
+import kotlin.streams.toList
 
 internal class Duepan(
     override val predictor: Classifier<DoubleArray>,
@@ -61,11 +62,7 @@ internal class Duepan(
     private fun createSplits(node: Node, names: Array<String>): SortedSet<Split> {
         val (splits, constraints) = initSplits(node)
         for (column in (names.filterNot { constraints.contains(it) }))
-            try {
-                splits.add(this.createSplit(node, column))
-            } catch (e: IndexOutOfBoundsException) {
-                continue
-            }
+            this.createSplit(node, column)?.let { splits.add(it) }
         return splits
     }
 
@@ -78,21 +75,27 @@ internal class Duepan(
         return if (splits.isEmpty()) null else splits.first().children
     }
 
-    private fun createSamples(node: Node, column: String, value: Double) =
-        DataFrame.of(
-            node.samples.stream().filter {
-                it[column] == value
-            }
-        )
+    private fun createSamples(node: Node, column: String, value: Double): DataFrame? {
+        val filtered = node.samples.stream().filter {
+            it[column] == value
+        }.toList()
+        return if (filtered.isNotEmpty())
+            DataFrame.of(filtered)
+        else
+            null
+    }
 
-    private fun createSplit(node: Node, column: String): Split {
+    private fun createSplit(node: Node, column: String): Split? {
         val trueExamples = createSamples(node, column, 1.0)
         val falseExamples = createSamples(node, column, 0.0)
         val trueConstraints = node.constraints.plus(Pair(column, 1.0))
         val falseConstraints = node.constraints.plus(Pair(column, 0.0))
-        val trueNode = Node(trueExamples, node.nExamples, trueConstraints)
-        val falseNode = Node(falseExamples, node.nExamples, falseConstraints)
-        return Split(node, trueNode to falseNode)
+        val trueNode = trueExamples?.let { Node(it, node.nExamples, trueConstraints) }
+        val falseNode = falseExamples?.let { Node(it, node.nExamples, falseConstraints) }
+        return if (trueNode == null || falseNode == null)
+            null
+        else
+            Split(node, trueNode to falseNode)
     }
 
     private tailrec fun predict(x: Tuple, node: Node, categories: Set<Any>): Int {

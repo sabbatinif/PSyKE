@@ -6,6 +6,7 @@ import it.unibo.skpf.re.OriginalValue.Interval.Between
 import it.unibo.skpf.re.OriginalValue.Interval.GreaterThan
 import it.unibo.skpf.re.OriginalValue.Interval.LessThan
 import it.unibo.skpf.re.OriginalValue.Value
+import it.unibo.skpf.re.utils.LogicUtils.priority
 import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.List
 import it.unibo.tuprolog.core.Numeric
@@ -18,6 +19,10 @@ import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.core.operators.Specifier
 import smile.data.DataFrame
 import smile.data.inputs
+
+object LogicUtils {
+    const val priority = 800
+}
 
 internal fun createTerm(v: Var?, constraint: OriginalValue, positive: Boolean = true): Struct {
     if (v == null)
@@ -43,7 +48,10 @@ internal fun createFunctor(constraint: OriginalValue, positive: Boolean): String
     }
 }
 
-internal fun createVariableList(featureSet: Collection<BooleanFeatureSet>, dataset: DataFrame? = null): Map<String, Var> {
+internal fun createVariableList(
+    featureSet: Collection<BooleanFeatureSet>,
+    dataset: DataFrame? = null
+): Map<String, Var> {
     val values =
         if (featureSet.isNotEmpty())
             featureSet.map { it.name to Var.of(it.name) }
@@ -65,6 +73,6 @@ internal fun createHead(functor: String, variables: Collection<Var>, output: Num
 internal fun prettyRulesFormatter() =
     TermFormatter.prettyExpressions(
         OperatorSet.DEFAULT +
-            Operator("in", Specifier.XFX, 800) +
-            Operator("not_in", Specifier.XFX, 800)
+            Operator("in", Specifier.XFX, priority) +
+            Operator("not_in", Specifier.XFX, priority)
     )

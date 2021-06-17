@@ -2,6 +2,17 @@ package it.unibo.skpf.re.utils
 
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.cart.CartPredictor
+import it.unibo.skpf.re.utils.RegressionUtils.C
+import it.unibo.skpf.re.utils.RegressionUtils.decaySteps
+import it.unibo.skpf.re.utils.RegressionUtils.endLearningRate
+import it.unibo.skpf.re.utils.RegressionUtils.epsilon
+import it.unibo.skpf.re.utils.RegressionUtils.initLearningRate
+import it.unibo.skpf.re.utils.RegressionUtils.maxDepth
+import it.unibo.skpf.re.utils.RegressionUtils.maxNodes
+import it.unibo.skpf.re.utils.RegressionUtils.minUpdate
+import it.unibo.skpf.re.utils.RegressionUtils.nodeSize
+import it.unibo.skpf.re.utils.RegressionUtils.sigma
+import it.unibo.skpf.re.utils.RegressionUtils.threshold
 import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
 import smile.base.mlp.LayerBuilder
@@ -25,6 +36,27 @@ import smile.validation.metric.MAD
 import smile.validation.metric.MSE
 import smile.validation.metric.R2
 
+object RegressionUtils {
+    // svm params
+    const val sigma = 0.06
+    const val epsilon = 0.005
+    const val C = 1.0
+
+    // mlp params
+    const val initLearningRate = 0.01
+    const val decaySteps = 10000.0
+    const val endLearningRate = 0.001
+
+    // iter params
+    const val minUpdate = 1.0 / 8
+    const val threshold = 0.18
+
+    // cart params
+    const val maxDepth = 3
+    const val maxNodes = 0
+    const val nodeSize = 5
+}
+
 fun printMetrics(
     actual: DoubleArray,
     expected: DoubleArray,
@@ -44,6 +76,7 @@ fun printMetrics(
     return Triple(r2, mse, mad)
 }
 
+@Suppress("UNUSED_VARIABLE")
 fun regression(name: String, testSplit: Double) {
     println("*** $name ***")
     val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
@@ -59,19 +92,19 @@ fun regression(name: String, testSplit: Double) {
 
 //    val rbf = rbfnet(x, y, 95, true)
 
-    val svr = svr(train.inputsArray(), train.outputsArray(), GaussianKernel(0.06), 0.005, 1.0)
+    val svr = svr(train.inputsArray(), train.outputsArray(), GaussianKernel(sigma), epsilon, C)
 //    saveToFile("artiRBF95.txt", rbf)
 //    saveToFile("artiTest50.txt", test)
 //    saveToFile("artiTrain50.txt", train)
 
     printMetrics(svr.predict(test.inputsArray()), test.outputsArray())
-    val iter = Extractor.iter(svr, minUpdate = (1.0 / 8), threshold = 0.18)
+    val iter = Extractor.iter(svr, minUpdate = minUpdate, threshold = threshold)
     testRegressionExtractor("ITER", train, test, iter, svr, true, true)
     val cart = CartPredictor(
         cart(
             Formula.lhs(train.name()),
             train.inputs().merge(train.outputs()),
-            3, 0, 5
+            maxDepth, maxNodes, nodeSize
         )
     )
     val cartEx = Extractor.cart(cart)
@@ -144,12 +177,12 @@ fun testRegressionExtractor(
         theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }
 }
 
-fun MLPRegressor(
+fun mlpRegressor(
     x: Array<DoubleArray>,
     y: DoubleArray,
     builders: Array<LayerBuilder>,
     epochs: Int = 10,
-    learningRate: TimeFunction = TimeFunction.linear(0.01, 10000.0, 0.001),
+    learningRate: TimeFunction = TimeFunction.linear(initLearningRate, decaySteps, endLearningRate),
     momentum: TimeFunction = TimeFunction.constant(0.0),
     weightDecay: Double = 0.0,
     rho: Double = 0.0,
@@ -160,6 +193,6 @@ fun MLPRegressor(
     net.setMomentum(momentum)
     net.weightDecay = weightDecay
     net.setRMSProp(rho, epsilon)
-    for (i in 1..epochs) net.update(x, y)
+    (1..epochs).forEach { _ -> net.update(x, y) }
     return net
 }
