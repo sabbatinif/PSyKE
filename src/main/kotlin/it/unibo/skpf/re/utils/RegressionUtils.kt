@@ -76,6 +76,7 @@ fun printMetrics(
     return Triple(r2, mse, mad)
 }
 
+@Suppress("UNUSED_VARIABLE")
 fun regression(name: String, testSplit: Double) {
     println("*** $name ***")
     val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())

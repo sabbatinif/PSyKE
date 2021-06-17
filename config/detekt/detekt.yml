@@ -2,15 +2,15 @@ comments:
   EndOfSentenceFormat:
     active: true
   UndocumentedPublicClass:
-    active: true
+    active: false
     searchInInnerClass: false
   UndocumentedPublicFunction:
-    active: true
+    active: false
   UndocumentedPublicProperty:
-    active: true
+    active: false
 complexity:
   LongMethod:
-    active: false
+    active: true
   LongParameterList:
     active: false
   NestedBlockDepth:
@@ -25,7 +25,7 @@ complexity:
     thresholdInObjects: 20
 naming:
   MemberNameEqualsClassName:
-    active: false
+    active: true
 performance:
   SpreadOperator:
     active: false

@@ -175,6 +175,7 @@ fun testClassificationExtractor(
     return ExtractorPerformance(1.0, accuracy, theory.size.toInt(), 0.0)
 }
 
+@Suppress("UNUSED_VARIABLE")
 fun classifyWithoutDiscretise(name: String, testSplit: Double) {
     val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
     val (train, test) = dataset.randomSplit(testSplit)

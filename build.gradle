@@ -47,3 +47,7 @@ detekt {
     config = files("config/detekt/detekt.yml")
     buildUponDefaultConfig = true
 }
+
+compileKotlin {
+    kotlinOptions.allWarningsAsErrors = true
+}
