@@ -9,7 +9,7 @@ import java.io.Serializable
  *                         discretised feature and the value contains the
  *                         effective mapping with the original feature values.
  */
-data class Feature(
+data class DiscreteFeature(
     val name: String,
     val admissibleValues: Map<String, Value>
 ) : Serializable {

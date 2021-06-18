@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.classification.real
 
-import it.unibo.skpf.re.schema.Feature
+import it.unibo.skpf.re.schema.DiscreteFeature
 
 internal class Rule(
     val truePredicates: List<String>,
@@ -13,7 +13,7 @@ internal class Rule(
             )
     }
 
-    fun reduce(features: Collection<Feature>): Rule {
+    fun reduce(features: Collection<DiscreteFeature>): Rule {
         val f = this.falsePredicates.toMutableList()
         for (variable in this.truePredicates)
             f.removeAll(

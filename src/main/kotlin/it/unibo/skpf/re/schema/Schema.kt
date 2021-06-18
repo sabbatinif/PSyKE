@@ -3,20 +3,20 @@ package it.unibo.skpf.re.schema
 import java.io.Serializable
 
 sealed class Schema(
-    protected open val features: Collection<Feature>
-) : Collection<Feature> by features, Serializable {
+    protected open val features: Collection<DiscreteFeature>
+) : Collection<DiscreteFeature> by features, Serializable {
 
     data class Ordered(
-        override val features: List<Feature> = emptyList()
-    ) : Schema(features), List<Feature> by features {
+        override val features: List<DiscreteFeature> = emptyList()
+    ) : Schema(features), List<DiscreteFeature> by features {
 
-        constructor(vararg features: Feature) : this(listOf(*features))
+        constructor(vararg features: DiscreteFeature) : this(listOf(*features))
 
-        override fun iterator(): Iterator<Feature> = features.iterator()
+        override fun iterator(): Iterator<DiscreteFeature> = features.iterator()
 
-        override fun contains(element: Feature): Boolean = features.contains(element)
+        override fun contains(element: DiscreteFeature): Boolean = features.contains(element)
 
-        override fun containsAll(elements: Collection<Feature>): Boolean = features.containsAll(elements)
+        override fun containsAll(elements: Collection<DiscreteFeature>): Boolean = features.containsAll(elements)
 
         override fun isEmpty(): Boolean = features.isEmpty()
 
@@ -25,16 +25,16 @@ sealed class Schema(
     }
 
     data class Unordered(
-        override val features: Set<Feature> = emptySet()
-    ) : Schema(features), Set<Feature> by features {
+        override val features: Set<DiscreteFeature> = emptySet()
+    ) : Schema(features), Set<DiscreteFeature> by features {
 
-        constructor(vararg features: Feature) : this(setOf(*features))
+        constructor(vararg features: DiscreteFeature) : this(setOf(*features))
 
-        override fun iterator(): Iterator<Feature> = features.iterator()
+        override fun iterator(): Iterator<DiscreteFeature> = features.iterator()
 
-        override fun contains(element: Feature): Boolean = features.contains(element)
+        override fun contains(element: DiscreteFeature): Boolean = features.contains(element)
 
-        override fun containsAll(elements: Collection<Feature>): Boolean = features.containsAll(elements)
+        override fun containsAll(elements: Collection<DiscreteFeature>): Boolean = features.containsAll(elements)
 
         override fun isEmpty(): Boolean = features.isEmpty()
 

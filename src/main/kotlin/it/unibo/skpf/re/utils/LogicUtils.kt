@@ -1,6 +1,6 @@
 package it.unibo.skpf.re.utils
 
-import it.unibo.skpf.re.schema.Feature
+import it.unibo.skpf.re.schema.DiscreteFeature
 import it.unibo.skpf.re.schema.Value
 import it.unibo.skpf.re.schema.Value.Constant
 import it.unibo.skpf.re.schema.Value.Interval.Between
@@ -49,7 +49,7 @@ internal fun createFunctor(constraint: Value, positive: Boolean): String {
 }
 
 internal fun createVariableList(
-    feature: Collection<Feature>,
+    feature: Collection<DiscreteFeature>,
     dataset: DataFrame? = null
 ): Map<String, Var> {
     val values =

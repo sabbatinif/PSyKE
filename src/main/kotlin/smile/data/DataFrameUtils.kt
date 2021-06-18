@@ -1,6 +1,6 @@
 package smile.data
 
-import it.unibo.skpf.re.schema.Feature
+import it.unibo.skpf.re.schema.DiscreteFeature
 import it.unibo.skpf.re.schema.Schema
 import it.unibo.skpf.re.utils.TypeNotAllowedException
 import it.unibo.skpf.re.utils.createColumn
@@ -224,10 +224,10 @@ fun DataFrame.createRanges(name: String): List<Range> {
  * @return the discretisation logic.
  */
 fun DataFrame.splitFeatures(): Schema {
-    val features: MutableSet<Feature> = mutableSetOf()
+    val features: MutableSet<DiscreteFeature> = mutableSetOf()
     for (feature in this.inputs())
         features.add(
-            Feature(feature.name(), createSet(feature, this))
+            DiscreteFeature(feature.name(), createSet(feature, this))
         )
     return Schema.Unordered(features.toSet())
 }
