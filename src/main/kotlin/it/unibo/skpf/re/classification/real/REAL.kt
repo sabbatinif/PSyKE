@@ -1,5 +1,7 @@
 package it.unibo.skpf.re.classification.real
 
+import MapIntToRuleList
+import flatten
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.schema.Discretization
 import it.unibo.skpf.re.utils.createHead
@@ -10,6 +12,7 @@ import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.utils.Cache
+import optimise
 import smile.classification.Classifier
 import smile.data.DataFrame
 import smile.data.Tuple
@@ -18,9 +21,8 @@ import smile.data.inputsArray
 import smile.data.name
 import smile.data.type.StructType
 import smile.data.writeColumn
+import java.lang.IndexOutOfBoundsException
 import kotlin.streams.toList
-
-private typealias MapIntToRuleList = Map<Int, MutableList<Rule>>
 
 internal class REAL(
     override val predictor: Classifier<DoubleArray>,
@@ -31,11 +33,9 @@ internal class REAL(
     private val ruleSetCache: Cache<DataFrame, MapIntToRuleList> = Cache.simpleLru()
 
     private fun init(dataset: DataFrame): MapIntToRuleList {
-        return mapOf(
-            *dataset.categories().mapIndexed { i, _ ->
-                i to mutableListOf<Rule>()
-            }.toTypedArray()
-        )
+        return dataset.categories().mapIndexed { i, _ ->
+            i to mutableListOf<Rule>()
+        }.toMap()
     }
 
     override fun extract(dataset: DataFrame): MutableTheory {
@@ -47,10 +47,11 @@ internal class REAL(
         val ruleSet = this.init(dataset)
         for (sample in dataset.inputsArray())
             ruleSet.getValue(this.predictor.predict(sample)).apply {
-                if (!covers(dataset, sample, this))
+                if (!covers(dataset, sample, this)) {
                     this.add(createNewRule(dataset, sample))
+                }
             }
-        return this.optimise(ruleSet)
+        return ruleSet.also { it.optimise() }
     }
 
     private fun createNewRule(dataset: DataFrame, sample: DoubleArray): Rule {
@@ -72,11 +73,12 @@ internal class REAL(
     }
 
     private fun generalise(rule: Rule, dataset: DataFrame, sample: DoubleArray): Rule {
-        val mutableRule = rule.asMutable()
+        val mutableRule = rule.toMutableLists()
         var samples = DataFrame.of(arrayOf(sample), *dataset.names())
-        rule.asList().zip(mutableRule) { predicates, mutablePredicates ->
-            for (predicate in predicates)
+        rule.toLists().zip(mutableRule) { predicates, mutablePredicates ->
+            for (predicate in predicates) {
                 samples = removeAntecedents(samples, predicate, mutablePredicates)
+            }
         }
         return Rule(mutableRule.first(), mutableRule.last())
     }
@@ -84,8 +86,9 @@ internal class REAL(
     private fun createTheory(dataset: DataFrame): MutableTheory {
         val variables = createVariableList(this.discretization)
         val theory = MutableTheory.empty()
-        for ((key, rule) in flat(ruleSet))
+        for ((key, rule) in ruleSet.flatten()) {
             theory.assertZ(createClause(dataset, variables, key, rule))
+        }
         return theory
     }
 
@@ -99,29 +102,23 @@ internal class REAL(
 
     private fun createBody(variables: Map<String, Var>, rule: Rule): Array<Term> {
         val body: MutableList<Term> = mutableListOf()
-        rule.asList().zip(listOf(true, false)) { predicate, truthValue ->
-            for (variable in predicate)
+        rule.toLists().zip(listOf(true, false)) { predicate, truthValue ->
+            for (variable in predicate) {
                 this.discretization.first { it.admissibleValues.containsKey(variable) }.apply {
                     body.add(createTerm(variables[this.name], this.admissibleValues[variable]!!, truthValue))
                 }
+            }
         }
         return body.toTypedArray()
     }
 
     private fun subset(x: DataFrame, feature: String): Pair<DataFrame, Boolean> {
-        val all = x.writeColumn(feature, 0.0)
-            .union(x.writeColumn(feature, 1.0))
+        val all = x.writeColumn(feature, 0.0).union(x.writeColumn(feature, 1.0))
         return Pair(all, this.predictor.predict(all.toArray()).distinct().size == 1)
     }
 
-    private fun covers(dataset: DataFrame, x: DoubleArray, rules: List<Rule>): Boolean {
-        this.ruleFromExample(dataset.schema(), x).apply {
-            for (rule in rules)
-                if (this.subRule(rule))
-                    return true
-        }
-        return false
-    }
+    private fun covers(dataset: DataFrame, x: DoubleArray, rules: List<Rule>): Boolean =
+        ruleFromExample(dataset.schema(), x).let { rule -> rules.any { rule.isSubRuleOf(it) } }
 
     private fun ruleFromExample(schema: StructType, x: DoubleArray): Rule {
         val t = mutableListOf<String>()
@@ -133,41 +130,21 @@ internal class REAL(
     }
 
     private fun predict(x: Tuple, schema: StructType): Int =
-        flat(this.ruleSet)
-            .firstOrNull {
-                ruleFromExample(schema, tupleToArray(x))
-                    .subRule(it.second)
-            }?.first ?: -1
+        ruleSet.flatten()
+            .firstOrNull { ruleFromExample(schema, x.toDoubleArray(to = -2)).isSubRuleOf(it.second) }
+            ?.first
+            ?: -1
 
-    private fun tupleToArray(x: Tuple) =
-        sequence {
-            for (i in 0 until x.length() - 1)
-                yield(x.getDouble(i))
-        }.toList().toDoubleArray()
-
-    private fun flat(ruleSet: MapIntToRuleList) =
-        ruleSet.map { (key, rules) ->
-            rules.map { key to it }
-        }.flatten()
+    private fun Tuple.toDoubleArray(from: Int = 0, to: Int = -1): DoubleArray {
+        val lastIndex = when {
+            to < 0 -> length() + to
+            else -> to
+        }
+        if (from < 0) throw IndexOutOfBoundsException("Index $from is out of range")
+        if (from > lastIndex) throw IndexOutOfBoundsException("Index $to is out of range")
+        return DoubleArray(lastIndex - from + 1) { getDouble(from + it) }
+    }
 
     override fun predict(dataset: DataFrame) =
         dataset.stream().map { this.predict(it, dataset.schema()) }.toList().toTypedArray()
-
-    private fun optimise(ruleSet: MapIntToRuleList): MapIntToRuleList {
-        val uselessRules = mutableListOf<Pair<Int, Rule>>()
-        for ((key, rules) in ruleSet)
-            uselessRules.addAll(uselessRules(key, rules))
-        for ((key, rule) in uselessRules)
-            ruleSet.getValue(key).remove(rule)
-        return ruleSet
-    }
-
-    private fun uselessRules(key: Int, rules: List<Rule>): List<Pair<Int, Rule>> {
-        val uselessRules = mutableListOf<Pair<Int, Rule>>()
-        for (rule in rules)
-            for (otherRule in rules.minus(rule))
-                if (otherRule.subRule(rule))
-                    uselessRules.add(Pair(key, otherRule))
-        return uselessRules
-    }
 }

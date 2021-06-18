@@ -2,32 +2,18 @@ package it.unibo.skpf.re.classification.real
 
 import it.unibo.skpf.re.schema.DiscreteFeature
 
-internal class Rule(
-    val truePredicates: List<String>,
-    val falsePredicates: List<String>
-) {
-    fun subRule(rule: Rule): Boolean {
-        return (
-            this.truePredicates.containsAll(rule.truePredicates) &&
-                this.falsePredicates.containsAll((rule.falsePredicates))
-            )
+internal data class Rule(val truePredicates: List<String>, val falsePredicates: List<String>) {
+    fun isSubRuleOf(rule: Rule): Boolean =
+        truePredicates.containsAll(rule.truePredicates) && falsePredicates.containsAll((rule.falsePredicates))
+
+    fun reduce(features: Iterable<DiscreteFeature>): Rule {
+        val toBeRemoved = truePredicates.asSequence().flatMap { tp ->
+            features.asSequence().filter { tp in it.admissibleValues }.flatMap { it.admissibleValues.keys }
+        }.toSet()
+        return Rule(this.truePredicates, falsePredicates.filterNot { it in toBeRemoved })
     }
 
-    fun reduce(features: Collection<DiscreteFeature>): Rule {
-        val f = this.falsePredicates.toMutableList()
-        for (variable in this.truePredicates)
-            f.removeAll(
-                features.filter { featSet ->
-                    variable in featSet.admissibleValues.keys
-                }.map { it.admissibleValues.keys }.flatten()
-            )
-        return Rule(this.truePredicates, f)
-    }
+    fun toMutableLists(): List<MutableList<String>> = this.toLists().map { it.toMutableList() }
 
-    fun asMutable() = this.asList().map { it.toMutableList() }
-
-    fun asList() = listOf(
-        this.truePredicates,
-        this.falsePredicates
-    )
+    fun toLists(): List<List<String>> = listOf(this.truePredicates, this.falsePredicates)
 }
