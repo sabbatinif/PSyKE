@@ -6,7 +6,6 @@ import it.unibo.skpf.re.schema.Value.Constant
 import it.unibo.skpf.re.schema.Value.Interval.Between
 import it.unibo.skpf.re.schema.Value.Interval.GreaterThan
 import it.unibo.skpf.re.schema.Value.Interval.LessThan
-import it.unibo.skpf.re.utils.LogicUtils.priority
 import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.List
 import it.unibo.tuprolog.core.Numeric
@@ -20,13 +19,10 @@ import it.unibo.tuprolog.core.operators.Specifier
 import smile.data.DataFrame
 import smile.data.inputs
 
-internal object LogicUtils {
-    const val priority = 800
-}
-
 internal fun createTerm(v: Var?, constraint: Value, positive: Boolean = true): Struct {
-    if (v == null)
+    if (v == null) {
         throw IllegalArgumentException("Null variable")
+    }
     val functor = createFunctor(constraint, positive)
     return when (constraint) {
         is LessThan -> Struct.of(functor, v, Real.of(constraint.value.round(2)))
@@ -53,16 +49,17 @@ internal fun createVariableList(
     dataset: DataFrame? = null
 ): Map<String, Var> {
     val values =
-        if (feature.isNotEmpty())
+        if (feature.isNotEmpty()) {
             feature.map { it.name to Var.of(it.name) }
-        else
+        } else {
             dataset?.inputs()?.names()?.map { it to Var.of(it) }
                 ?: throw NullPointerException("dataset cannot be null if featureSet is empty")
+        }
     return mapOf(*values.toTypedArray())
 }
 
 internal fun createHead(functor: String, variables: Collection<Var>, outClass: String): Struct {
-    return Struct.of(functor, variables.plus(Atom.of(outClass)))
+    return Struct.of(functor, variables + Atom.of(outClass))
 }
 
 internal fun createHead(functor: String, variables: Collection<Var>, output: Number): Struct {
@@ -70,9 +67,11 @@ internal fun createHead(functor: String, variables: Collection<Var>, output: Num
     return Struct.of(functor, variables.plus(Numeric.of(value)))
 }
 
+private const val INCLUSION_OPERATORS_PRIORITY = 800
+
+private val RULES_OPERATORS = OperatorSet.DEFAULT +
+    Operator("in", Specifier.XFX, INCLUSION_OPERATORS_PRIORITY) +
+    Operator("not_in", Specifier.XFX, INCLUSION_OPERATORS_PRIORITY)
+
 internal fun prettyRulesFormatter() =
-    TermFormatter.prettyExpressions(
-        OperatorSet.DEFAULT +
-            Operator("in", Specifier.XFX, priority) +
-            Operator("not_in", Specifier.XFX, priority)
-    )
+    TermFormatter.prettyExpressions(RULES_OPERATORS)

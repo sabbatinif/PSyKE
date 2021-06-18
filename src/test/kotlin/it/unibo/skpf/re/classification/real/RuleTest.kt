@@ -13,22 +13,22 @@ class RuleTest {
         val predList1 = listOf("V1", "V2")
         val predList2 = listOf("V3", "V4")
         val rule1 = Rule(predList1, predList2)
-        assertTrue(rule1.subRule(rule1))
+        assertTrue(rule1.isSubRuleOf(rule1))
         val rule2 = Rule(predList2, predList1)
-        assertFalse(rule1.subRule(rule2))
-        assertFalse(rule2.subRule(rule1))
+        assertFalse(rule1.isSubRuleOf(rule2))
+        assertFalse(rule2.isSubRuleOf(rule1))
         val rule3 = Rule(listOf("V1"), listOf("V3"))
-        assertTrue(rule1.subRule(rule3))
-        assertFalse(rule3.subRule(rule1))
-        assertFalse(rule2.subRule(rule3))
-        assertFalse(rule3.subRule(rule2))
+        assertTrue(rule1.isSubRuleOf(rule3))
+        assertFalse(rule3.isSubRuleOf(rule1))
+        assertFalse(rule2.isSubRuleOf(rule3))
+        assertFalse(rule3.isSubRuleOf(rule2))
         val rule4 = Rule(listOf("V1"), listOf("V5"))
-        assertFalse(rule1.subRule(rule4))
-        assertFalse(rule4.subRule(rule1))
+        assertFalse(rule1.isSubRuleOf(rule4))
+        assertFalse(rule4.isSubRuleOf(rule1))
         val rule5 = Rule(listOf("V1", "V6"), listOf("V3", "V4"))
-        assertFalse(rule1.subRule(rule5))
-        assertFalse(rule5.subRule(rule1))
-        assertTrue(rule1.subRule(Rule(listOf(), listOf())))
+        assertFalse(rule1.isSubRuleOf(rule5))
+        assertFalse(rule5.isSubRuleOf(rule1))
+        assertTrue(rule1.isSubRuleOf(Rule(listOf(), listOf())))
     }
 
     @Test
@@ -60,7 +60,7 @@ class RuleTest {
                 mutableListOf("V1_1", "V2_2", "V3_0"),
                 mutableListOf("V4_1", "V4_2")
             ),
-            rule.asMutable()
+            rule.toMutableLists()
         )
     }
 
@@ -75,7 +75,7 @@ class RuleTest {
                 listOf("V1_1", "V2_2", "V3_0"),
                 listOf("V4_1", "V4_2")
             ),
-            rule.asList()
+            rule.toLists()
         )
     }
 }

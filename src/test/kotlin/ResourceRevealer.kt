@@ -1,6 +1,6 @@
 import it.unibo.skpf.re.utils.loadFromFile
 
-fun main(args: Array<String>) {
+fun main() {
     val files = listOf<String>(
         "artiRBF95.txt",
         "artiRBF95.txt",
