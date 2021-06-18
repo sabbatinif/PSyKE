@@ -56,24 +56,45 @@ internal class REAL(
     }
 
     // orrore
+    // qui abbiamo il solito data set, il nome di una feature
+    // e infine una regola, ovvero una lista di nomi di feature
+    // (in realtà è mezza regola, può essere sia la lista di atomi
+    // veri che la lista di atomi falsi)
     private fun removeAntecedents(
         samples: DataFrame,
         predicate: String,
         mutablePredicates: MutableList<String>
     ): DataFrame {
+
         val (dataframe, isSubset) = this.subset(samples, predicate)
+        // quando questo è true, vuol dire che il predicato (ovvero
+        // la feature) sia quando è 0 che quando è 1 non influisce
+        // sulla classificazione, quindi è inutile...
         if (isSubset) {
+            // e quindi va rimossa
             mutablePredicates.remove(predicate)
+            // questo è il nuovo dataframe che viene creato nella funzione
+            // issubset (vedi commenti in quella funzione)
             return dataframe
         }
+        // se invece la condizione è falsa non succede nulla
         return samples
     }
 
-    // abominevole. non capisco cosa fa
+    // qui prende in input una regola, un dataset e un singolo esempio
     private fun generalise(rule: Rule, dataset: DataFrame, sample: DoubleArray): Rule {
+        // prima di tutto ho nececssità di modificare la regola togliendo atomi se serve
         val mutableRule = rule.toMutableLists()
+        // poi ho bisogno di convertire il sample in un dataframe
         var samples = DataFrame.of(arrayOf(sample), *dataset.names())
+        // a questo punto, per ogni predicato controllo se lo posso togliere
+        // ma non posso iterare su una lista mentre la spupazzo, quindi
+        // itero sulla lista e tolgo dalla lista mutabile "appaiata"
         rule.toLists().zip(mutableRule) { predicates, mutablePredicates ->
+            // mano a mano che si cicla e vengono rimossi predicati/features,
+            // il dataframe cresce (per ogni predicato tolto raddoppia la dimensione
+            // perché viene copiato sia col predicato a 0 che a 1)
+            // se non viene tolto niente, è come samples = samples
             for (predicate in predicates) {
                 samples = removeAntecedents(samples, predicate, mutablePredicates)
             }
@@ -108,9 +129,17 @@ internal class REAL(
             }
         }.filterNotNull()
 
-    // non capisco cosa fa
+    // x è un data set, feature è il nome di una feature
+    // il nome subset l'ho preso dal paper di real, ma credo che di refactoring
+    // in refactoring, alla fine la funzione che fa il subset è finita altrove
+    // e io non me ne sono accorto xD
     private fun subset(x: DataFrame, feature: String): Pair<DataFrame, Boolean> {
+        // all è la concatenazione di due data set, il primo è x
+        // ma con la feature specificata in ingresso messa a 0, il secondo
+        // è x con la feature a 1
         val all = x.writeColumn(feature, 0.0).union(x.writeColumn(feature, 1.0))
+        // restituisce il data set concatenato e un booleanoc he indica se
+        // tutti i samples generati nella riga sopra hanno la stessa classe
         return all to (predictor.predict(all.toArray()).distinct().size == 1)
     }
 
