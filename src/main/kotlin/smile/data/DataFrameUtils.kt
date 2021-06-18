@@ -2,7 +2,6 @@ package smile.data
 
 import it.unibo.skpf.re.schema.DiscreteFeature
 import it.unibo.skpf.re.schema.Discretization
-import it.unibo.skpf.re.utils.TypeNotAllowedException
 import it.unibo.skpf.re.utils.createColumn
 import it.unibo.skpf.re.utils.createDescriptionPair
 import it.unibo.skpf.re.utils.createSet
@@ -11,9 +10,6 @@ import smile.data.type.DataTypes
 import smile.data.type.StructField
 import smile.data.type.StructType
 import smile.data.vector.BaseVector
-import smile.data.vector.DoubleVector
-import smile.data.vector.IntVector
-import smile.data.vector.StringVector
 import kotlin.random.Random
 import kotlin.streams.toList
 
@@ -83,7 +79,7 @@ fun DataFrame.classes(outputColumn: Int = lastColumnIndex): DataFrame {
     return DataFrame.of(
         this.select(outputColumn).stream().map {
             val klass = classes.indexOf(it[0])
-            if (klass < 0) throw IllegalStateException("Invalid class: ${it[0]}")
+            require(klass >= 0) { "Invalid class: ${it[0]}" }
             Tuple.of(arrayOf(klass), StructType(StructField("Class", DataTypes.IntegerType)))
         }
     )
@@ -141,14 +137,11 @@ fun DataFrame.name(outputColumn: Int = lastColumnIndex): String =
  * Creates a Map with a Description for each DataFrame column.
  * @return the Map associating column name and description.
  */
-fun DataFrame.describe(): Map<String, Description> =
-    mapOf(
-        *this.inputs().schema().fields()
-            .filter { it.isNumeric }
-            .map { field ->
-                field.name to createDescriptionPair(this.column(field.name).toDoubleArray())
-            }.toTypedArray()
-    )
+val DataFrame.description: Map<String, Description>
+    get() = this.inputs().schema()
+        .fields()
+        .filter { it.isNumeric }
+        .associate { it.name to createDescriptionPair(this.column(it.name).toDoubleArray()) }
 
 /**
  * Filter this DataFrame with respect to the output value.
@@ -157,30 +150,18 @@ fun DataFrame.describe(): Map<String, Description> =
  */
 fun DataFrame.filterByOutput(output: Any): DataFrame =
     DataFrame.of(
-        this.stream().filter {
-            it.get(this.lastColumnIndex) == output
-        }
+        stream().filter { it.get(this.lastColumnIndex) == output }
     )
 
-/**
- * Creates a DataFrame column with the supplied parameters.
- * @param value is the value of each element of the column.
- * @param n is the column dimension,
- * @param field is the column StructField.
- * @return the created column.
- */
-private fun createFakeColumn(
-    value: Any,
-    n: Int,
-    field:
-        StructField
-): BaseVector<*, *, *> =
-    when (value) {
-        is Double -> DoubleVector.of(field, DoubleArray(n) { value })
-        is Int -> IntVector.of(field, IntArray(n) { value })
-        is String -> StringVector.of(field, *Array(n) { value })
-        else -> throw TypeNotAllowedException(value.javaClass.toString())
-    }
+fun DataFrame.clone(): DataFrame = DataFrame.of(this.stream().map { it.clone() })
+
+fun Tuple.clone(): Tuple = Tuple.of(Array(length()) { get(it) }, schema())
+
+fun Tuple.setValue(feature: String, value: Any): Tuple {
+    val schema = schema()
+    val index = schema.fieldIndex(feature)
+    return Tuple.of(Array(length()) { if (it == index) value else get(it) }, schema)
+}
 
 /**
  * Writes the supplied value in all elements of the specified column.
@@ -189,18 +170,11 @@ private fun createFakeColumn(
  * @return the modified DataFrame.
  */
 fun DataFrame.writeColumn(feature: String, value: Any): DataFrame =
-    DataFrame.of(
-        *this.map {
-            if (it.name() == feature)
-                createFakeColumn(value, this.nrows(), this.schema().field(feature))
-            else
-                it
-        }.toTypedArray()
-    )
+    DataFrame.of(this.stream().map { it.setValue(feature, value) })
 
 private fun DataFrame.initRanges(name: String) =
     this.categories().map {
-        val desc = this.filterByOutput(it).describe()[name]
+        val desc = this.filterByOutput(it).description[name]
         Range(desc!!.mean, desc.stdDev)
     }.sortedWith(compareBy { it.mean })
 
@@ -212,7 +186,7 @@ private fun DataFrame.initRanges(name: String) =
 fun DataFrame.createRanges(name: String): List<Range> {
     val ranges = this.initRanges(name)
     expandRanges(ranges)
-    this.describe()[name].apply {
+    this.description[name].apply {
         ranges.first().leftInfinite()
         ranges.last().rightInfinite()
     }
@@ -225,10 +199,11 @@ fun DataFrame.createRanges(name: String): List<Range> {
  */
 fun DataFrame.splitFeatures(): Discretization {
     val features: MutableSet<DiscreteFeature> = mutableSetOf()
-    for (feature in this.inputs())
+    for (feature in this.inputs()) {
         features.add(
             DiscreteFeature(feature.name(), createSet(feature, this))
         )
+    }
     return Discretization.Unordered(features.toSet())
 }
 
@@ -240,12 +215,14 @@ fun DataFrame.splitFeatures(): Discretization {
 fun DataFrame.toBoolean(features: Discretization): DataFrame {
     val outputColumns: MutableList<BaseVector<*, *, *>> = mutableListOf()
     for (column in this.inputs()) {
-        val match = features.filter { it.name == column.name() }
-        if (match.isEmpty())
+        val match = features[column.name()]
+        if (match == null) {
             outputColumns.add(column)
-        else
-            for ((name, value) in match.first().admissibleValues)
+        } else {
+            for ((name, value) in match.admissibleValues) {
                 outputColumns.add(createColumn(name, value, column))
+            }
+        }
     }
     return DataFrame.of(*outputColumns.toTypedArray()).merge(this.outputs())
 }

@@ -15,7 +15,7 @@ import smile.data.Description
 import smile.data.categories
 import smile.data.classes
 import smile.data.createRanges
-import smile.data.describe
+import smile.data.description
 import smile.data.filterByOutput
 import smile.data.inputs
 import smile.data.nCategories
@@ -119,7 +119,7 @@ class DataFrameUtilsTest {
 
     @Test
     fun testDescribe() {
-        val description = dataset.describe()
+        val description = dataset.description
         assertEquals(
             dataset.inputs().schema().fields().count {
                 it.isNumeric
@@ -175,7 +175,7 @@ class DataFrameUtilsTest {
             .filter { it.type == DataTypes.DoubleType }
             .map { it.name }.forEach {
                 val ranges = dataset.createRanges(it)
-                val description = dataset.describe()[it]
+                val description = dataset.description[it]
                 ranges.zipWithNext { prev, foll ->
                     assertEquals(prev.upper, foll.lower)
                 }

@@ -17,7 +17,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import smile.data.DataFrame
 import smile.data.Tuple
-import smile.data.describe
+import smile.data.description
 import smile.data.inputs
 import smile.regression.RBFNetwork
 import java.util.stream.Stream
@@ -194,7 +194,7 @@ internal class HyperCubeTest {
     @Test
     fun testCreateSurroundingCube() {
         val surrounding = HyperCube.createSurroundingCube(dataset)
-        dataset.describe().apply {
+        dataset.description.apply {
             this.entries.forEach { (key, description) ->
                 assertEquals(Pair(floor(description.min), ceil(description.max)), surrounding.dimensions[key])
             }

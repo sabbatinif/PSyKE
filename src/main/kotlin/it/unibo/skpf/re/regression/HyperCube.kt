@@ -5,7 +5,7 @@ import it.unibo.skpf.re.regression.iter.MinUpdate
 import it.unibo.skpf.re.regression.iter.ZippedDimension
 import smile.data.DataFrame
 import smile.data.Tuple
-import smile.data.describe
+import smile.data.description
 import smile.data.type.StructType
 import smile.regression.Regression
 import kotlin.math.abs
@@ -161,7 +161,7 @@ internal class HyperCube(
         @JvmStatic
         fun createSurroundingCube(dataset: DataFrame) =
             HyperCube(
-                dataset.describe().map { (name, description) ->
+                dataset.description.map { (name, description) ->
                     name to Pair(floor(description.min), ceil(description.max))
                 }.toMap() as MutableMap<String, Pair<Double, Double>>,
                 0.0

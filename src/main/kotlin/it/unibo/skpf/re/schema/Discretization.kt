@@ -6,6 +6,9 @@ sealed class Discretization(
     protected open val features: Collection<DiscreteFeature>
 ) : Collection<DiscreteFeature> by features, Serializable {
 
+    operator fun get(name: String): DiscreteFeature? =
+        asSequence().firstOrNull { it.name == name }
+
     data class Ordered(
         override val features: List<DiscreteFeature> = emptyList()
     ) : Discretization(features), List<DiscreteFeature> by features {
