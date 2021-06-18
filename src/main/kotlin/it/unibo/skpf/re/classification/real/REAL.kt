@@ -1,6 +1,7 @@
 package it.unibo.skpf.re.classification.real
 
-import MapIntToRuleList
+import IndexedRuleSet
+import createIndexedRuleSet
 import flatten
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.schema.Discretization
@@ -8,7 +9,7 @@ import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
 import it.unibo.tuprolog.core.Clause
-import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.theory.MutableTheory
 import it.unibo.tuprolog.utils.Cache
@@ -29,22 +30,17 @@ internal class REAL(
     override val discretization: Discretization
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
-    private lateinit var ruleSet: MapIntToRuleList
-    private val ruleSetCache: Cache<DataFrame, MapIntToRuleList> = Cache.simpleLru()
+    private lateinit var ruleSet: IndexedRuleSet
 
-    private fun init(dataset: DataFrame): MapIntToRuleList {
-        return dataset.categories().mapIndexed { i, _ ->
-            i to mutableListOf<Rule>()
-        }.toMap()
-    }
+    private val ruleSetCache: Cache<DataFrame, IndexedRuleSet> = Cache.simpleLru()
 
     override fun extract(dataset: DataFrame): MutableTheory {
-        this.ruleSet = ruleSetCache.getOrSet(dataset) { this.createRuleSet(dataset) }
-        return this.createTheory(dataset)
+        ruleSet = ruleSetCache.getOrSet(dataset) { this.createRuleSet(dataset) }
+        return this.createTheory(dataset, ruleSet)
     }
 
-    private fun createRuleSet(dataset: DataFrame): MapIntToRuleList {
-        val ruleSet = this.init(dataset)
+    private fun createRuleSet(dataset: DataFrame): IndexedRuleSet {
+        val ruleSet = createIndexedRuleSet(dataset)
         for (sample in dataset.inputsArray())
             ruleSet.getValue(this.predictor.predict(sample)).apply {
                 if (!covers(dataset, sample, this)) {
@@ -59,19 +55,21 @@ internal class REAL(
         return generalise(rule, dataset, sample)
     }
 
+    // orrore
     private fun removeAntecedents(
         samples: DataFrame,
         predicate: String,
         mutablePredicates: MutableList<String>
     ): DataFrame {
-        val ret = this.subset(samples, predicate)
-        if (ret.second) {
+        val (dataframe, isSubset) = this.subset(samples, predicate)
+        if (isSubset) {
             mutablePredicates.remove(predicate)
-            return ret.first
+            return dataframe
         }
         return samples
     }
 
+    // abominevole. non capisco cosa fa
     private fun generalise(rule: Rule, dataset: DataFrame, sample: DoubleArray): Rule {
         val mutableRule = rule.toMutableLists()
         var samples = DataFrame.of(arrayOf(sample), *dataset.names())
@@ -83,7 +81,7 @@ internal class REAL(
         return Rule(mutableRule.first(), mutableRule.last())
     }
 
-    private fun createTheory(dataset: DataFrame): MutableTheory {
+    private fun createTheory(dataset: DataFrame, ruleSet: IndexedRuleSet): MutableTheory {
         val variables = createVariableList(this.discretization)
         val theory = MutableTheory.empty()
         for ((key, rule) in ruleSet.flatten()) {
@@ -94,39 +92,46 @@ internal class REAL(
 
     private fun createClause(dataset: DataFrame, variables: Map<String, Var>, key: Int, rule: Rule): Clause {
         val head = createHead(
-            dataset.name(), variables.values,
+            dataset.name(),
+            variables.values,
             dataset.categories().elementAt(key).toString()
         )
-        return Clause.of(head, *createBody(variables, rule))
+        return Clause.of(head, createBody(variables, rule))
     }
 
-    private fun createBody(variables: Map<String, Var>, rule: Rule): Array<Term> {
-        val body: MutableList<Term> = mutableListOf()
-        rule.toLists().zip(listOf(true, false)) { predicate, truthValue ->
-            for (variable in predicate) {
-                this.discretization.first { it.admissibleValues.containsKey(variable) }.apply {
-                    body.add(createTerm(variables[this.name], this.admissibleValues[variable]!!, truthValue))
+    private fun createBody(variables: Map<String, Var>, rule: Rule): Sequence<Struct> =
+        rule.toLists().asSequence().zip(sequenceOf(true, false)).flatMap { (predicates, truthValue) ->
+            predicates.asSequence().map { variable ->
+                discretization.firstOrNull { variable in it.admissibleValues }?.let {
+                    createTerm(variables[it.name], it.admissibleValues[variable]!!, truthValue)
                 }
             }
-        }
-        return body.toTypedArray()
-    }
+        }.filterNotNull()
 
+    // non capisco cosa fa
     private fun subset(x: DataFrame, feature: String): Pair<DataFrame, Boolean> {
         val all = x.writeColumn(feature, 0.0).union(x.writeColumn(feature, 1.0))
-        return Pair(all, this.predictor.predict(all.toArray()).distinct().size == 1)
+        return all to (predictor.predict(all.toArray()).distinct().size == 1)
     }
 
     private fun covers(dataset: DataFrame, x: DoubleArray, rules: List<Rule>): Boolean =
         ruleFromExample(dataset.schema(), x).let { rule -> rules.any { rule.isSubRuleOf(it) } }
 
     private fun ruleFromExample(schema: StructType, x: DoubleArray): Rule {
-        val t = mutableListOf<String>()
-        val f = mutableListOf<String>()
-        schema.fields().zip(x.toTypedArray()) { field, value ->
-            (if (value == 1.0) t else f).add(field.name)
+        val truePredicates = mutableListOf<String>()
+        val falsePredicates = mutableListOf<String>()
+        val fieldsIter = schema.fields().iterator()
+        val xIter = x.iterator()
+        while (fieldsIter.hasNext() && xIter.hasNext()) {
+            val field = fieldsIter.next()
+            val value = xIter.nextDouble()
+            if (value == 1.0) {
+                truePredicates.add(field.name)
+            } else {
+                falsePredicates.add(field.name)
+            }
         }
-        return Rule(t, f).reduce(this.discretization)
+        return Rule(truePredicates, falsePredicates).reduce(this.discretization)
     }
 
     private fun predict(x: Tuple, schema: StructType): Int =
