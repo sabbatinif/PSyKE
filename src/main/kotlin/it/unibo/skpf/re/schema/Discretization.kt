@@ -2,13 +2,13 @@ package it.unibo.skpf.re.schema
 
 import java.io.Serializable
 
-sealed class Schema(
+sealed class Discretization(
     protected open val features: Collection<DiscreteFeature>
 ) : Collection<DiscreteFeature> by features, Serializable {
 
     data class Ordered(
         override val features: List<DiscreteFeature> = emptyList()
-    ) : Schema(features), List<DiscreteFeature> by features {
+    ) : Discretization(features), List<DiscreteFeature> by features {
 
         constructor(vararg features: DiscreteFeature) : this(listOf(*features))
 
@@ -26,7 +26,7 @@ sealed class Schema(
 
     data class Unordered(
         override val features: Set<DiscreteFeature> = emptySet()
-    ) : Schema(features), Set<DiscreteFeature> by features {
+    ) : Discretization(features), Set<DiscreteFeature> by features {
 
         constructor(vararg features: DiscreteFeature) : this(setOf(*features))
 
@@ -42,7 +42,7 @@ sealed class Schema(
             get() = features.size
     }
 
-    object Empty : Schema(emptyList())
+    object Empty : Discretization(emptyList())
 
     companion object {
         const val serialVersionUID = 5329536256856403760L

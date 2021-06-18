@@ -1,13 +1,13 @@
 package it.unibo.skpf.re
 
 import it.unibo.skpf.re.schema.DiscreteFeature
-import it.unibo.skpf.re.schema.Schema
+import it.unibo.skpf.re.schema.Discretization
 import it.unibo.skpf.re.schema.Value.Interval.Between
 import it.unibo.skpf.re.schema.Value.Interval.GreaterThan
 import it.unibo.skpf.re.schema.Value.Interval.LessThan
 
 object Schemas {
-    val iris = Schema.Ordered(
+    val iris = Discretization.Ordered(
         DiscreteFeature(
             "SepalLength",
             "SepalLength_0" to LessThan(5.39),

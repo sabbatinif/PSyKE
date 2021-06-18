@@ -1,7 +1,7 @@
 package it.unibo.skpf.re.classification.trepan
 
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.schema.Schema
+import it.unibo.skpf.re.schema.Discretization
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.createTerm
 import it.unibo.skpf.re.utils.createVariableList
@@ -21,7 +21,7 @@ import kotlin.streams.toList
 
 internal class Trepan(
     override val predictor: Classifier<DoubleArray>,
-    override val schema: Schema,
+    override val discretization: Discretization,
     val minExamples: Int = 0
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
@@ -158,13 +158,13 @@ internal class Trepan(
 
     private fun createBody(variables: Map<String, Var>, node: Node) = sequence {
         for ((constraint, value) in node.constraints)
-            schema.first { it.admissibleValues.containsKey(constraint) }.apply {
+            discretization.first { it.admissibleValues.containsKey(constraint) }.apply {
                 yield(createTerm(variables[this.name], this.admissibleValues[constraint]!!, value == 1.0))
             }
     }.toList().toTypedArray()
 
     private fun createTheory(name: String): MutableTheory {
-        val variables = createVariableList(this.schema)
+        val variables = createVariableList(this.discretization)
         val theory = MutableTheory.empty()
         for (node in this.root.asSequence)
             theory.assertZ(

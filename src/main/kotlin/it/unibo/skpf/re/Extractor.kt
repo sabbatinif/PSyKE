@@ -5,7 +5,7 @@ import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.skpf.re.classification.real.REAL
 import it.unibo.skpf.re.classification.trepan.Trepan
 import it.unibo.skpf.re.regression.iter.ITER
-import it.unibo.skpf.re.schema.Schema
+import it.unibo.skpf.re.schema.Discretization
 import it.unibo.tuprolog.theory.Theory
 import smile.classification.Classifier
 import smile.data.DataFrame
@@ -29,7 +29,7 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
      * A collection of sets of discretised features. Each set corresponds
      * to a set of features derived from a single non-discrete feature.
      */
-    val schema: Schema
+    val discretization: Discretization
 
     /**
      * Extracts rules from the underlying predictor.
@@ -52,8 +52,8 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun ruleExtractionAsLearning(
             predictor: Classifier<DoubleArray>,
-            schema: Schema = Schema.Empty,
-        ): Extractor<DoubleArray, Classifier<DoubleArray>> = REAL(predictor, schema)
+            discretization: Discretization = Discretization.Empty,
+        ): Extractor<DoubleArray, Classifier<DoubleArray>> = REAL(predictor, discretization)
 
         /**
          * Creates a new Trepan extractor.
@@ -61,9 +61,9 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun trepan(
             predictor: Classifier<DoubleArray>,
-            schema: Schema = Schema.Empty,
+            discretization: Discretization = Discretization.Empty,
             minExamples: Int = 0
-        ): Extractor<DoubleArray, Classifier<DoubleArray>> = Trepan(predictor, schema, minExamples)
+        ): Extractor<DoubleArray, Classifier<DoubleArray>> = Trepan(predictor, discretization, minExamples)
 
         /**
          * Creates a new CART extractor.
@@ -71,8 +71,8 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         @JvmStatic
         fun cart(
             predictor: CartPredictor,
-            schema: Schema = Schema.Empty,
-        ): Extractor<Tuple, CartPredictor> = CartExtractor(predictor, schema)
+            discretization: Discretization = Discretization.Empty,
+        ): Extractor<Tuple, CartPredictor> = CartExtractor(predictor, discretization)
 
         /**
          * Creates a new ITER extractor.
@@ -87,6 +87,6 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
             threshold: Double = 0.1,
             fillGaps: Boolean = false
         ): Extractor<DoubleArray, Regression<DoubleArray>> =
-            ITER(predictor, Schema.Empty, minUpdate, nPoints, maxIterations, minExamples, threshold, fillGaps)
+            ITER(predictor, Discretization.Empty, minUpdate, nPoints, maxIterations, minExamples, threshold, fillGaps)
     }
 }

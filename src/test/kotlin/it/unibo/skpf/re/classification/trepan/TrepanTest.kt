@@ -2,7 +2,7 @@ package it.unibo.skpf.re.classification.trepan
 
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.Schemas
-import it.unibo.skpf.re.schema.Schema
+import it.unibo.skpf.re.schema.Discretization
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.loadFromFile
 import it.unibo.tuprolog.core.Clause
@@ -24,7 +24,7 @@ internal class TrepanTest {
     @Suppress("UNCHECKED_CAST")
     private val knn = loadFromFile("irisKNN9.txt") as KNN<DoubleArray>
     @Suppress("UNCHECKED_CAST")
-    private val featureSets: Schema = Schemas.iris
+    private val featureSets: Discretization = Schemas.iris
     private val trepan = Extractor.trepan(knn, featureSets)
     private val train = loadFromFile("irisTrain50.txt") as DataFrame
     private val theory = trepan.extract(train)

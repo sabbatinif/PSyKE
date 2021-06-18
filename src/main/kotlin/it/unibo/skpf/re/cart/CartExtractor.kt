@@ -1,7 +1,7 @@
 package it.unibo.skpf.re.cart
 
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.schema.Schema
+import it.unibo.skpf.re.schema.Discretization
 import it.unibo.skpf.re.schema.Value.Interval.GreaterThan
 import it.unibo.skpf.re.utils.TypeNotAllowedException
 import it.unibo.skpf.re.utils.createHead
@@ -22,7 +22,7 @@ import smile.data.name
 
 internal class CartExtractor(
     override val predictor: CartPredictor,
-    override val schema: Schema
+    override val discretization: Discretization
 ) : Extractor<Tuple, CartPredictor> {
 
     override fun extract(dataset: DataFrame): Theory {
@@ -31,7 +31,7 @@ internal class CartExtractor(
     }
 
     private fun createTheory(leaves: LeafSequence, dataset: DataFrame): Theory {
-        val variables = createVariableList(this.schema, dataset)
+        val variables = createVariableList(this.discretization, dataset)
         val theory = MutableTheory.empty()
         for ((name, value) in leaves)
             theory.assertZ(
@@ -49,7 +49,7 @@ internal class CartExtractor(
 
     private fun createBody(variables: Map<String, Var>, constraints: LeafConstraints) = sequence {
         for ((name, value) in constraints) {
-            val feature = schema.firstOrNull { it.admissibleValues.containsKey(name) }
+            val feature = discretization.firstOrNull { it.admissibleValues.containsKey(name) }
             if (feature == null)
                 yield(createTerm(variables[name], value))
             else

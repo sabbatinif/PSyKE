@@ -1,7 +1,7 @@
 package smile.data
 
 import it.unibo.skpf.re.schema.DiscreteFeature
-import it.unibo.skpf.re.schema.Schema
+import it.unibo.skpf.re.schema.Discretization
 import it.unibo.skpf.re.utils.TypeNotAllowedException
 import it.unibo.skpf.re.utils.createColumn
 import it.unibo.skpf.re.utils.createDescriptionPair
@@ -223,13 +223,13 @@ fun DataFrame.createRanges(name: String): List<Range> {
  * Creates a data structure for efficiently discretise this DataFrame.
  * @return the discretisation logic.
  */
-fun DataFrame.splitFeatures(): Schema {
+fun DataFrame.splitFeatures(): Discretization {
     val features: MutableSet<DiscreteFeature> = mutableSetOf()
     for (feature in this.inputs())
         features.add(
             DiscreteFeature(feature.name(), createSet(feature, this))
         )
-    return Schema.Unordered(features.toSet())
+    return Discretization.Unordered(features.toSet())
 }
 
 /**
@@ -237,7 +237,7 @@ fun DataFrame.splitFeatures(): Schema {
  * @param featureSets is the encoding strategy.
  * @return the one-hot encoded DataFrame.
  */
-fun DataFrame.toBoolean(features: Schema): DataFrame {
+fun DataFrame.toBoolean(features: Discretization): DataFrame {
     val outputColumns: MutableList<BaseVector<*, *, *>> = mutableListOf()
     for (column in this.inputs()) {
         val match = features.filter { it.name == column.name() }
