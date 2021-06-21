@@ -25,6 +25,8 @@ import kotlin.math.min
 import kotlin.streams.asStream
 import kotlin.streams.toList
 
+internal typealias DomainProperties = Pair<List<MinUpdate>, HyperCube>
+
 internal class ITER(
     override val predictor: Regression<DoubleArray>,
     override val discretization: Discretization = Discretization.Empty,
@@ -39,30 +41,38 @@ internal class ITER(
     private lateinit var fakeDataset: DataFrame
     private lateinit var hyperCubes: Collection<HyperCube>
 
-    private fun init(dataset: DataFrame): Triple<MutableList<HyperCube>, List<MinUpdate>, HyperCube> {
+    private fun init(dataset: DataFrame): Pair<MutableList<HyperCube>, DomainProperties> {
         this.fakeDataset = dataset.inputs()
         val surrounding = HyperCube.createSurroundingCube(dataset)
         val minUpdates = calculateMinUpdates(surrounding)
+        val hyperCubes = initHyperCubes(dataset, minUpdates, surrounding)
+        hyperCubes.forEach { it.updateMean(dataset.inputs(), predictor) }
+        return hyperCubes.toMutableList() to (minUpdates to surrounding)
+    }
+
+    private fun initHyperCubes(
+        dataset: DataFrame,
+        minUpdates: Collection<MinUpdate>,
+        surrounding: HyperCube
+    ): List<HyperCube> {
         var hyperCubes: List<HyperCube>
         do {
             hyperCubes = generateStartingPoints(dataset)
-            hyperCubes.forEach { hyperCube ->
+            for (hyperCube in hyperCubes)
                 hyperCube.expandAll(minUpdates, surrounding)
-            }
             nPoints--
-        } while (hyperCubes.any { HyperCube.checkOverlap(hyperCubes.toMutableList(), hyperCubes) })
-        hyperCubes.forEach { it.updateMean(dataset.inputs(), predictor) }
-        return Triple(hyperCubes.toMutableList(), minUpdates, surrounding)
+        } while (HyperCube.checkOverlap(hyperCubes.toMutableList(), hyperCubes))
+        return hyperCubes
     }
 
     override fun extract(dataset: DataFrame): Theory {
-        val (hyperCubes, minUpdates, surrounding) = init(dataset)
+        val (hyperCubes, domain) = init(dataset)
         val tempTrain = dataset.stream().toList().toMutableList()
         var iterations = 0
         while (tempTrain.isNotEmpty()) {
             if (iterations >= maxIterations) break
             iterations +=
-                iterate(dataset, hyperCubes, surrounding, minUpdates, maxIterations - iterations)
+                iterate(dataset, hyperCubes, domain, maxIterations - iterations)
             if (fillGaps)
                 throw NotImplementedError()
         }
@@ -73,8 +83,7 @@ internal class ITER(
     private fun iterate(
         dataset: DataFrame,
         hyperCubes: MutableList<HyperCube>,
-        surrounding: HyperCube,
-        minUpdates: Collection<MinUpdate>,
+        domain: DomainProperties,
         leftIterations: Int
     ): Int {
         var iterations = 1
@@ -82,7 +91,7 @@ internal class ITER(
                     acc, cube -> acc + cube.limitCount
         }) {
             if (iterations == leftIterations) break
-            cubesToUpdate(dataset, hyperCubes, surrounding, minUpdates)
+            cubesToUpdate(dataset, hyperCubes, domain)
                 .minByOrNull { it.second!!.distance }
                 ?.apply {
                     expandOrCreate(first, second!!, hyperCubes)
@@ -106,15 +115,14 @@ internal class ITER(
     private fun cubesToUpdate(
         dataset: DataFrame,
         hyperCubes: Collection<HyperCube>,
-        surrounding: HyperCube,
-        minUpdates: Collection<MinUpdate>,
+        domain: DomainProperties,
     ) = sequence {
         hyperCubes.forEach {
             yield(
                 it to bestCube(
                     dataset,
                     it,
-                    createTempCubes(dataset, it, surrounding, minUpdates, hyperCubes)
+                    createTempCubes(dataset, it, domain, hyperCubes)
                 )
             )
         }
@@ -153,28 +161,26 @@ internal class ITER(
     private fun createTempCubes(
         dataset: DataFrame,
         cube: HyperCube,
-        surrounding: HyperCube,
-        minUpdates: Collection<MinUpdate>,
+        domain: DomainProperties,
         hyperCubes: Collection<HyperCube>
     ) = sequence {
         for (feature in dataset.inputs().schema().fields()) {
             val limit = cube.checkLimits(feature.name)
             if (limit == '*') continue
             listOf('-', '+').minus(limit).forEach {
-                yieldAll(createTempCube(cube, surrounding, minUpdates, hyperCubes, feature.name, it!!))
+                yieldAll(createTempCube(cube, domain, hyperCubes, feature.name, it!!))
             }
         }
     }.toList()
 
     private fun createTempCube(
         cube: HyperCube,
-        surrounding: HyperCube,
-        minUpdates: Collection<MinUpdate>,
+        domain: DomainProperties,
         hyperCubes: Collection<HyperCube>,
         feature: String,
         direction: Char
     ) = sequence {
-        val (tempCube, values) = createRange(cube, surrounding, minUpdates, feature, direction)
+        val (tempCube, values) = createRange(cube, domain, feature, direction)
         tempCube.updateDimension(feature, values)
         var overlap = tempCube.overlap(hyperCubes)
         if (overlap != null)
@@ -205,11 +211,11 @@ internal class ITER(
 
     private fun createRange(
         cube: HyperCube,
-        surrounding: HyperCube,
-        minUpdates: Collection<MinUpdate>,
+        domain: DomainProperties,
         feature: String,
         direction: Char
     ): Pair<HyperCube, Pair<Double, Double>> {
+        val (minUpdates, surrounding) = domain
         val (a, b) = cube.get(feature)
         val size = minUpdates.first { it.name == feature }.value
         return cube.copy() to
