@@ -6,7 +6,7 @@ internal data class Expansion(
     val cube: HyperCube,
     val feature: String,
     val direction: Char,
-    val distance: Double
+    val distance: Double = Double.NaN
 ) {
     val values: Pair<Double, Double>
         get() = cube.get(feature)

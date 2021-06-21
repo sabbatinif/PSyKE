@@ -58,12 +58,11 @@ internal class ITER(
     override fun extract(dataset: DataFrame): Theory {
         val (hyperCubes, minUpdates, surrounding) = init(dataset)
         val tempTrain = dataset.stream().toList().toMutableList()
-        val limits = mutableSetOf<Limit>()
         var iterations = 0
         while (tempTrain.isNotEmpty()) {
             if (iterations >= maxIterations) break
             iterations +=
-                iterate(dataset, hyperCubes, surrounding, minUpdates, limits, maxIterations - iterations)
+                iterate(dataset, hyperCubes, surrounding, minUpdates, maxIterations - iterations)
             if (fillGaps)
                 throw NotImplementedError()
         }
@@ -76,13 +75,14 @@ internal class ITER(
         hyperCubes: MutableList<HyperCube>,
         surrounding: HyperCube,
         minUpdates: Collection<MinUpdate>,
-        limits: MutableSet<Limit>,
         leftIterations: Int
     ): Int {
         var iterations = 1
-        while (limits.size <= dataset.inputs().ncols() * 2 * hyperCubes.size) {
+        while (dataset.inputs().ncols() * 2 * hyperCubes.size >= hyperCubes.fold(0) {
+                    acc, cube -> acc + cube.limitCount
+        }) {
             if (iterations == leftIterations) break
-            cubesToUpdate(dataset, hyperCubes, surrounding, minUpdates, limits)
+            cubesToUpdate(dataset, hyperCubes, surrounding, minUpdates)
                 .minByOrNull { it.second!!.distance }
                 ?.apply {
                     expandOrCreate(first, second!!, hyperCubes)
@@ -108,14 +108,13 @@ internal class ITER(
         hyperCubes: Collection<HyperCube>,
         surrounding: HyperCube,
         minUpdates: Collection<MinUpdate>,
-        limits: MutableSet<Limit>
     ) = sequence {
         hyperCubes.forEach {
             yield(
                 it to bestCube(
                     dataset,
                     it,
-                    createTempCubes(dataset, limits, it, surrounding, minUpdates, hyperCubes)
+                    createTempCubes(dataset, it, surrounding, minUpdates, hyperCubes)
                 )
             )
         }
@@ -124,7 +123,7 @@ internal class ITER(
     private fun bestCube(
         dataset: DataFrame,
         cube: HyperCube,
-        cubes: List<Limit>
+        cubes: List<Expansion>
     ): Expansion? {
         return cubes
             .filter { it.cube.count(dataset) != null }
@@ -153,17 +152,16 @@ internal class ITER(
 
     private fun createTempCubes(
         dataset: DataFrame,
-        limits: MutableSet<Limit>,
         cube: HyperCube,
         surrounding: HyperCube,
         minUpdates: Collection<MinUpdate>,
         hyperCubes: Collection<HyperCube>
     ) = sequence {
         for (feature in dataset.inputs().schema().fields()) {
-            val limit = checkLimits(limits, cube, feature.name)
+            val limit = cube.checkLimits(feature.name)
             if (limit == '*') continue
             listOf('-', '+').minus(limit).forEach {
-                yieldAll(createTempCube(cube, surrounding, limits, minUpdates, hyperCubes, feature.name, it!!))
+                yieldAll(createTempCube(cube, surrounding, minUpdates, hyperCubes, feature.name, it!!))
             }
         }
     }.toList()
@@ -171,7 +169,6 @@ internal class ITER(
     private fun createTempCube(
         cube: HyperCube,
         surrounding: HyperCube,
-        limits: MutableSet<Limit>,
         minUpdates: Collection<MinUpdate>,
         hyperCubes: Collection<HyperCube>,
         feature: String,
@@ -183,9 +180,11 @@ internal class ITER(
         if (overlap != null)
             overlap = resolveOverlap(tempCube, overlap, hyperCubes, feature, direction)
         if ((tempCube.hasVolume()) && (overlap == null) && (!tempCube.equal(hyperCubes)))
-            yield(Limit(tempCube, feature, direction))
+            yield(Expansion(tempCube, feature, direction))
+            //yield(Limit(tempCube, feature, direction))
         else
-            limits.add(Limit(cube, feature, direction))
+            cube.addLimit(feature, direction)
+            //limits.add(Limit(cube, feature, direction))
     }.toList()
 
     private fun resolveOverlap(
@@ -214,23 +213,10 @@ internal class ITER(
         val (a, b) = cube.get(feature)
         val size = minUpdates.first { it.name == feature }.value
         return cube.copy() to
-            if (direction == '-')
-                max(a - size, surrounding.getFirst(feature)) to a
-            else
-                b to min(b + size, surrounding.getSecond(feature))
-    }
-
-    private fun checkLimits(limits: MutableSet<Limit>, cube: HyperCube, feature: String): Char? {
-        var res: Char? = null
-        for (limit in limits) {
-            if ((limit.cube == cube) && (limit.feature == feature)) {
-                if (res == null)
-                    res = limit.direction
+                if (direction == '-')
+                    max(a - size, surrounding.getFirst(feature)) to a
                 else
-                    return '*'
-            }
-        }
-        return res
+                    b to min(b + size, surrounding.getSecond(feature))
     }
 
     private fun calculateMinUpdates(surrounding: HyperCube) =

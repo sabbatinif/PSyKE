@@ -48,8 +48,8 @@ object RegressionUtils {
     const val endLearningRate = 0.001
 
     // iter params
-    const val minUpdate = 1.0 / 8
-    const val threshold = 0.18
+    const val minUpdate = 1.0 / 20
+    const val threshold = 0.19
 
     // cart params
     const val maxDepth = 3
@@ -80,7 +80,7 @@ fun printMetrics(
 fun regression(name: String, testSplit: Double) {
     println("*** $name ***")
     val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
-    val (train, test) = dataset.randomSplit(testSplit)
+    val (train, test) = dataset.randomSplit(testSplit, 56L)
     val x = train.inputsArray()
     val y = train.outputsArray()
 //    val mlp = MLPRegressor(

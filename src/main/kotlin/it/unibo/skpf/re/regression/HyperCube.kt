@@ -1,6 +1,7 @@
 package it.unibo.skpf.re.regression
 
 import it.unibo.skpf.re.regression.iter.Expansion
+import it.unibo.skpf.re.regression.iter.Limit
 import it.unibo.skpf.re.regression.iter.MinUpdate
 import it.unibo.skpf.re.regression.iter.ZippedDimension
 import smile.data.DataFrame
@@ -8,6 +9,7 @@ import smile.data.Tuple
 import smile.data.description
 import smile.data.type.StructType
 import smile.regression.Regression
+import java.lang.IllegalStateException
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -18,11 +20,15 @@ import kotlin.streams.toList
 
 internal class HyperCube(
     private val dimension: MutableMap<String, Pair<Double, Double>> = mutableMapOf(),
-    private var output: Double
+    private val limits: MutableList<Limit> = mutableListOf(),
+    private var output: Double = 0.0
 ) {
 
     val dimensions: Map<String, Pair<Double, Double>>
         get() = dimension
+
+    val limitCount: Int
+        get() = limits.size
 
     val mean: Double
         get() = output
@@ -37,7 +43,7 @@ internal class HyperCube(
         this.get(feature).second
 
     fun copy(): HyperCube {
-        return HyperCube(dimensions.toMutableMap(), mean)
+        return HyperCube(dimensions.toMutableMap(), limits.toMutableList(), mean)
     }
 
     fun expand(
@@ -143,6 +149,24 @@ internal class HyperCube(
         )
     }
 
+    fun addLimit(feature: String, direction: Char) {
+        addLimit(Limit(feature, direction))
+    }
+
+    fun addLimit(limit: Limit) {
+        limits.add(limit)
+    }
+
+    fun checkLimits(feature: String): Char? {
+        val filtered = limits.filter { (name, _) -> name == feature }
+        return when (filtered.size) {
+            0 -> null
+            1 -> filtered.first().direction
+            2 -> '*'
+            else -> throw IllegalStateException()
+        }
+    }
+
     fun updateMean(dataset: DataFrame, predictor: Regression<DoubleArray>) {
         val filtered = filterDataFrame(dataset)
         this.output = predictor.predict(filtered?.toArray()).average()
@@ -163,8 +187,7 @@ internal class HyperCube(
             HyperCube(
                 dataset.description.map { (name, description) ->
                     name to Pair(floor(description.min), ceil(description.max))
-                }.toMap() as MutableMap<String, Pair<Double, Double>>,
-                0.0
+                }.toMap() as MutableMap<String, Pair<Double, Double>>
             )
 
         @JvmStatic
@@ -174,7 +197,7 @@ internal class HyperCube(
                     (0 until schema.length() - 1).associate {
                         schema.fields()[it].name to Pair(point.getDouble(it), point.getDouble(it))
                     } as MutableMap<String, Pair<Double, Double>>,
-                    point.getDouble(schema.fieldName(schema.length() - 1))
+                    output = point.getDouble(schema.fieldName(schema.length() - 1))
                 )
             }
 
