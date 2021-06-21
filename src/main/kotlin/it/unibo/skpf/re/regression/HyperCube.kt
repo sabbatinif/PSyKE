@@ -17,18 +17,18 @@ import kotlin.random.Random
 import kotlin.streams.toList
 
 internal class HyperCube(
-    private val limits: MutableMap<String, Pair<Double, Double>> = mutableMapOf(),
+    private val dimension: MutableMap<String, Pair<Double, Double>> = mutableMapOf(),
     private var output: Double
 ) {
 
     val dimensions: Map<String, Pair<Double, Double>>
-        get() = limits
+        get() = dimension
 
     val mean: Double
         get() = output
 
     fun get(feature: String): Pair<Double, Double> =
-        limits[feature] ?: throw FeatureNotFoundException(feature)
+        dimension[feature] ?: throw FeatureNotFoundException(feature)
 
     fun getFirst(feature: String): Double =
         this.get(feature).first
@@ -37,7 +37,7 @@ internal class HyperCube(
         this.get(feature).second
 
     fun copy(): HyperCube {
-        return HyperCube(dimensions.toMutableMap(), this.output)
+        return HyperCube(dimensions.toMutableMap(), mean)
     }
 
     fun expand(
@@ -46,10 +46,10 @@ internal class HyperCube(
     ) {
         expansion.apply {
             val (a, b) = get(feature)
-            limits[feature] = if (direction == '-') Pair(values.first, b) else Pair(a, values.second)
+            dimension[feature] = if (direction == '-') Pair(values.first, b) else Pair(a, values.second)
             overlap(hypercubes).apply {
                 if (this != null) {
-                    this@HyperCube.limits[feature] =
+                    this@HyperCube.dimension[feature] =
                         if (direction == '-') Pair(getSecond(feature), b) else Pair(a, getFirst(feature))
                 }
             }
@@ -67,13 +67,13 @@ internal class HyperCube(
         update: MinUpdate,
         surrounding: HyperCube
     ) {
-        this.limits[update.name] =
+        this.dimension[update.name] =
             max(getFirst(update.name) - update.value, surrounding.getFirst(update.name)) to
                 min(getSecond(update.name) + update.value, surrounding.getSecond(update.name))
     }
 
     private fun zipDimensions(cube: HyperCube) = sequence {
-        limits.keys.forEach {
+        dimension.keys.forEach {
             yield(ZippedDimension(it, get(it), cube.get(it)))
         }
     }
@@ -103,7 +103,7 @@ internal class HyperCube(
         }
 
     fun hasVolume(): Boolean =
-        this.limits.all { (_, values) ->
+        this.dimension.all { (_, values) ->
             values.second - values.first > epsilon
         }
 
@@ -123,7 +123,7 @@ internal class HyperCube(
 
     private fun filterDataFrame(dataset: DataFrame): DataFrame? {
         val data = dataset.stream().filter { tuple ->
-            this.dimensions.all { (name, values) ->
+            dimension.all { (name, values) ->
                 (values.first <= tuple.getDouble(name)) &&
                     (tuple.getDouble(name) < values.second)
             }
@@ -136,7 +136,7 @@ internal class HyperCube(
 
     fun createTuple(schema: StructType): Tuple {
         return Tuple.of(
-            limits.map { (_, values) ->
+            dimension.map { (_, values) ->
                 Random.nextDouble(values.first, values.second)
             }.toDoubleArray(),
             schema
@@ -149,7 +149,7 @@ internal class HyperCube(
     }
 
     fun updateDimension(feature: String, values: Pair<Double, Double>) {
-        this.limits[feature] = values
+        this.dimension[feature] = values
     }
 
     fun updateDimension(feature: String, lower: Double, upper: Double) =
