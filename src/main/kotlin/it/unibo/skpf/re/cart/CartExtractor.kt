@@ -31,9 +31,9 @@ internal class CartExtractor(
     }
 
     private fun createTheory(leaves: LeafSequence, dataset: DataFrame): Theory {
-        val variables = createVariableList(this.discretization, dataset)
         val theory = MutableTheory.empty()
-        for ((name, value) in leaves)
+        for ((name, value) in leaves) {
+            val variables = createVariableList(this.discretization, dataset)
             theory.assertZ(
                 Clause.of(
                     when (value) {
@@ -44,6 +44,7 @@ internal class CartExtractor(
                     *createBody(variables, name)
                 )
             )
+        }
         return theory
     }
 

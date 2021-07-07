@@ -2,20 +2,15 @@ package it.unibo.skpf.re.utils
 
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.cart.CartPredictor
-import it.unibo.skpf.re.utils.RegressionUtils.C
-import it.unibo.skpf.re.utils.RegressionUtils.decaySteps
-import it.unibo.skpf.re.utils.RegressionUtils.endLearningRate
-import it.unibo.skpf.re.utils.RegressionUtils.epsilon
-import it.unibo.skpf.re.utils.RegressionUtils.initLearningRate
-import it.unibo.skpf.re.utils.RegressionUtils.maxDepth
-import it.unibo.skpf.re.utils.RegressionUtils.maxNodes
-import it.unibo.skpf.re.utils.RegressionUtils.minUpdate
-import it.unibo.skpf.re.utils.RegressionUtils.nodeSize
-import it.unibo.skpf.re.utils.RegressionUtils.sigma
-import it.unibo.skpf.re.utils.RegressionUtils.threshold
+import it.unibo.skpf.re.utils.RegressionUtils.createCART
+import it.unibo.skpf.re.utils.RegressionUtils.createITER
+import it.unibo.skpf.re.utils.RegressionUtils.createSVR
 import it.unibo.tuprolog.core.format
+import it.unibo.tuprolog.theory.Theory
 import org.apache.commons.csv.CSVFormat
+import smile.base.mlp.Layer
 import smile.base.mlp.LayerBuilder
+import smile.base.mlp.OutputFunction
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.formula.Formula
@@ -31,30 +26,90 @@ import smile.math.kernel.GaussianKernel
 import smile.regression.MLP
 import smile.regression.Regression
 import smile.regression.cart
+import smile.regression.rbfnet
 import smile.regression.svr
 import smile.validation.metric.MAD
 import smile.validation.metric.MSE
 import smile.validation.metric.R2
 
-object RegressionUtils {
-    // svm params
-    const val sigma = 0.06
-    const val epsilon = 0.005
-    const val C = 1.0
-
+internal object MLPRegressorUtils {
     // mlp params
-    const val initLearningRate = 0.01
-    const val decaySteps = 10000.0
-    const val endLearningRate = 0.001
+    private const val initLearningRate = 0.01
+    private const val decaySteps = 10000.0
+    private const val endLearningRate = 0.001
+    private const val epochs = 200
+    private const val layer1neurons = 35
+    private const val layer2neurons = 15
+
+    fun createMLP(x: Array<DoubleArray>, y: DoubleArray) =
+        mlpRegressor(
+            x, y,
+            arrayOf(
+                Layer.tanh(layer1neurons),
+                Layer.tanh(layer2neurons),
+                Layer.mse(1, OutputFunction.LINEAR)
+            ),
+            epochs,
+            TimeFunction.linear(initLearningRate, decaySteps, endLearningRate)
+        )
+
+    private fun mlpRegressor(
+        x: Array<DoubleArray>,
+        y: DoubleArray,
+        builders: Array<LayerBuilder>,
+        epochs: Int,
+        learningRate: TimeFunction,
+        momentum: TimeFunction = TimeFunction.constant(0.0),
+        weightDecay: Double = 0.0,
+        rho: Double = 0.0,
+        epsilon: Double = 1E-7
+    ): MLP {
+        val net = MLP(x[0].size, *builders)
+        net.setLearningRate(learningRate)
+        net.setMomentum(momentum)
+        net.weightDecay = weightDecay
+        net.setRMSProp(rho, epsilon)
+        (1..epochs).forEach { _ -> net.update(x, y) }
+        return net
+    }
+}
+
+internal object RegressionUtils {
+    // svr params
+    private const val sigma = 0.06
+    private const val epsilon = 0.005
+    private const val C = 1.0
+
+    fun createSVR(train: DataFrame) =
+        svr(train.inputsArray(), train.outputsArray(), GaussianKernel(sigma), epsilon, C)
+
+    // rbf params
+    const val k = 95
+    const val normalized = true
+
+    fun createRBF(x: Array<DoubleArray>, y: DoubleArray) =
+        rbfnet(x, y, k, normalized)
 
     // iter params
     const val minUpdate = 1.0 / 20
     const val threshold = 0.19
 
+    fun createITER(model: Regression<DoubleArray>) =
+        Extractor.iter(model, minUpdate = minUpdate, threshold = threshold)
+
     // cart params
     const val maxDepth = 3
     const val maxNodes = 0
     const val nodeSize = 5
+
+    fun createCART(train: DataFrame) =
+        CartPredictor(
+            cart(
+                Formula.lhs(train.name()),
+                train.inputs().merge(train.outputs()),
+                maxDepth, maxNodes, nodeSize
+            )
+        )
 }
 
 fun printMetrics(
@@ -80,35 +135,45 @@ fun printMetrics(
 fun regression(name: String, testSplit: Double) {
     println("*** $name ***")
     val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
-    val (train, test) = dataset.randomSplit(testSplit, 56L)
-    val x = train.inputsArray()
-    val y = train.outputsArray()
-//    val mlp = MLPRegressor(
-//        x, y,
-//        arrayOf(Layer.tanh(35), Layer.tanh(15), Layer.mse(1, OutputFunction.LINEAR)),
-//        200,
-//        TimeFunction.linear(0.1, 10000.0, 0.05)
-//    )
+    val (train, test) = dataset.randomSplit(testSplit)
+//    val x = train.inputsArray()
+//    val y = train.outputsArray()
 
-//    val rbf = rbfnet(x, y, 95, true)
-
-    val svr = svr(train.inputsArray(), train.outputsArray(), GaussianKernel(sigma), epsilon, C)
+    val svr = createSVR(train)
 //    saveToFile("artiRBF95.txt", rbf)
 //    saveToFile("artiTest50.txt", test)
 //    saveToFile("artiTrain50.txt", train)
 
     printMetrics(svr.predict(test.inputsArray()), test.outputsArray())
-    val iter = Extractor.iter(svr, minUpdate = minUpdate, threshold = threshold)
+    val iter = createITER(svr)
     testRegressionExtractor("ITER", train, test, iter, svr, true, true)
-    val cart = CartPredictor(
-        cart(
-            Formula.lhs(train.name()),
-            train.inputs().merge(train.outputs()),
-            maxDepth, maxNodes, nodeSize
-        )
-    )
+    val cart = createCART(train)
     val cartEx = Extractor.cart(cart)
     testRegressionExtractor("CART", train, test, cartEx, true, true)
+}
+
+private fun test(
+    name: String,
+    test: DataFrame,
+    printMetrics: Boolean,
+    theory: Theory,
+    predictions: Array<*>
+) {
+    println("\n################################")
+    println("# $name extractor")
+    println("################################\n")
+    if (printMetrics) {
+        val metrics = printMetrics(
+            test.outputsArray(),
+            predictions.map { it.toString().toDouble() }.toDoubleArray(),
+            false, false, false
+        )
+        println(
+            theory.size.toString() +
+                " rules with R2 = " + metrics.first +
+                " and MSE = " + metrics.second + " w.r.t. the data"
+        ).also { println() }
+    }
 }
 
 fun testRegressionExtractor(
@@ -119,22 +184,8 @@ fun testRegressionExtractor(
     printMetrics: Boolean = true,
     printRules: Boolean = false
 ) {
-    println("\n################################")
-    println("# $name extractor")
-    println("################################\n")
     val theory = extractor.extract(train)
-    if (printMetrics) {
-        val metrics = printMetrics(
-            test.outputsArray(),
-            extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
-            false, false, false
-        )
-        println(
-            theory.size.toString() +
-                " rules with R2 = " + metrics.first +
-                " and MSE = " + metrics.second + " w.r.t. the data"
-        ).also { println() }
-    }
+    test(name, test, printMetrics, theory, extractor.predict(test))
     if (printRules)
         theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }
 }
@@ -148,21 +199,9 @@ fun testRegressionExtractor(
     printMetrics: Boolean = true,
     printRules: Boolean = false
 ) {
-    println("\n################################")
-    println("# $name extractor")
-    println("################################\n")
     val theory = extractor.extract(train)
+    test(name, test, printMetrics, theory, extractor.predict(test))
     if (printMetrics) {
-        val metrics = printMetrics(
-            test.outputsArray(),
-            extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
-            false, false, false
-        )
-        println(
-            theory.size.toString() +
-                " rules with R2 = " + metrics.first +
-                " and MSE = " + metrics.second + " w.r.t. the data"
-        )
         val metricsFid = printMetrics(
             predictor.predict(test.inputsArray()),
             extractor.predict(test).map { it.toString().toDouble() }.toDoubleArray(),
@@ -173,24 +212,4 @@ fun testRegressionExtractor(
     }
     if (printRules)
         theory.clauses.forEach { println(it.format(prettyRulesFormatter())) }.also { println() }
-}
-
-fun mlpRegressor(
-    x: Array<DoubleArray>,
-    y: DoubleArray,
-    builders: Array<LayerBuilder>,
-    epochs: Int = 10,
-    learningRate: TimeFunction = TimeFunction.linear(initLearningRate, decaySteps, endLearningRate),
-    momentum: TimeFunction = TimeFunction.constant(0.0),
-    weightDecay: Double = 0.0,
-    rho: Double = 0.0,
-    epsilon: Double = 1E-7
-): MLP {
-    val net = MLP(x[0].size, *builders)
-    net.setLearningRate(learningRate)
-    net.setMomentum(momentum)
-    net.weightDecay = weightDecay
-    net.setRMSProp(rho, epsilon)
-    (1..epochs).forEach { _ -> net.update(x, y) }
-    return net
 }

@@ -20,7 +20,7 @@ import kotlin.streams.toList
 
 internal class HyperCube(
     private val dimension: MutableMap<String, Pair<Double, Double>> = mutableMapOf(),
-    private val limits: MutableList<Limit> = mutableListOf(),
+    private val limits: MutableSet<Limit> = mutableSetOf(),
     private var output: Double = 0.0
 ) {
 
@@ -43,7 +43,7 @@ internal class HyperCube(
         this.get(feature).second
 
     fun copy(): HyperCube {
-        return HyperCube(dimensions.toMutableMap(), limits.toMutableList(), mean)
+        return HyperCube(dimensions.toMutableMap(), limits.toMutableSet(), mean)
     }
 
     fun expand(
@@ -163,7 +163,7 @@ internal class HyperCube(
             0 -> null
             1 -> filtered.first().direction
             2 -> '*'
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Not allowed direction")
         }
     }
 

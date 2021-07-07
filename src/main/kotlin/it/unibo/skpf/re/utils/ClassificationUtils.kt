@@ -24,7 +24,7 @@ import smile.data.inputsArray
 import smile.data.nCategories
 import smile.data.randomSplit
 import smile.data.splitFeatures
-import smile.data.toBoolean
+import smile.data.toOneHot
 import smile.io.Read
 import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
@@ -198,10 +198,11 @@ fun classify(name: String, testSplit: Double) {
     println("*** $name ***")
     val dataset = Read.csv("datasets/$name", CSVFormat.DEFAULT.withHeader())
     val featureSets = dataset.splitFeatures()
-    val (train, test) = dataset.toBoolean(featureSets).randomSplit(testSplit)
+    val (train, test) = dataset.toOneHot(featureSets).randomSplit(testSplit)
     val x = train.inputsArray()
     val y = train.classesArray()
     val knn = knn(x, y, k)
+
 //    saveToFile("irisKNN9.txt", knn)
 //    saveToFile("irisTest50.txt", test)
 //    saveToFile("irisTrain50.txt", train)

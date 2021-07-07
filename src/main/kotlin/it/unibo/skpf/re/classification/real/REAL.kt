@@ -103,9 +103,9 @@ internal class REAL(
     }
 
     private fun createTheory(dataset: DataFrame, ruleSet: IndexedRuleSet): MutableTheory {
-        val variables = createVariableList(this.discretization)
         val theory = MutableTheory.empty()
         for ((key, rule) in ruleSet.flatten()) {
+            val variables = createVariableList(this.discretization)
             theory.assertZ(createClause(dataset, variables, key, rule))
         }
         return theory

@@ -22,7 +22,9 @@ import kotlin.streams.toList
 internal class Trepan(
     override val predictor: Classifier<DoubleArray>,
     override val discretization: Discretization,
-    val minExamples: Int = 0
+    val minExamples: Int = 0,
+    val maxDepth: Int = 0,
+    val splitLogic: SplitLogic = SplitLogic.DEFAULT
 ) : Extractor<DoubleArray, Classifier<DoubleArray>> {
 
     private lateinit var root: Node
@@ -44,11 +46,16 @@ internal class Trepan(
         while (queue.isNotEmpty()) {
             val node = queue.first()
             queue.remove(node)
-            val best = this.bestSplit(node, dataset.inputs().names()) ?: continue
+            val best = when (splitLogic) {
+                SplitLogic.DEFAULT -> this.bestSplit(node, dataset.inputs().names()) ?: continue
+                // else -> throw IllegalStateException("Illegal SplitLogic")
+            }
             queue.addAll(best.toList())
             node.children.addAll(best.toList())
         }
         this.optimize()
+        if (maxDepth > 0)
+            throw NotImplementedError()
         return this.createTheory(dataset.name())
     }
 
@@ -164,15 +171,16 @@ internal class Trepan(
     }.toList().toTypedArray()
 
     private fun createTheory(name: String): MutableTheory {
-        val variables = createVariableList(this.discretization)
         val theory = MutableTheory.empty()
-        for (node in this.root.asSequence)
+        for (node in this.root.asSequence) {
+            val variables = createVariableList(this.discretization)
             theory.assertZ(
                 Clause.of(
                     createHead(name, variables.values, node.dominant.toString()),
                     *createBody(variables, node)
                 )
             )
+        }
         return theory
     }
 }

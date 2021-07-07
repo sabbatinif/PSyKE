@@ -3,6 +3,7 @@ package it.unibo.skpf.re
 import it.unibo.skpf.re.cart.CartExtractor
 import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.skpf.re.classification.real.REAL
+import it.unibo.skpf.re.classification.trepan.SplitLogic
 import it.unibo.skpf.re.classification.trepan.Trepan
 import it.unibo.skpf.re.regression.iter.ITER
 import it.unibo.skpf.re.schema.Discretization
@@ -62,8 +63,11 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
         fun trepan(
             predictor: Classifier<DoubleArray>,
             discretization: Discretization = Discretization.Empty,
-            minExamples: Int = 0
-        ): Extractor<DoubleArray, Classifier<DoubleArray>> = Trepan(predictor, discretization, minExamples)
+            minExamples: Int = 0,
+            maxDepth: Int = 0,
+            splitLogic: SplitLogic = SplitLogic.DEFAULT
+        ): Extractor<DoubleArray, Classifier<DoubleArray>> =
+            Trepan(predictor, discretization, minExamples, maxDepth, splitLogic)
 
         /**
          * Creates a new CART extractor.
@@ -87,6 +91,15 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
             threshold: Double = 0.1,
             fillGaps: Boolean = false
         ): Extractor<DoubleArray, Regression<DoubleArray>> =
-            ITER(predictor, Discretization.Empty, minUpdate, nPoints, maxIterations, minExamples, threshold, fillGaps)
+            ITER(
+                predictor,
+                Discretization.Empty,
+                minUpdate,
+                nPoints,
+                maxIterations,
+                minExamples,
+                threshold,
+                fillGaps
+            )
     }
 }

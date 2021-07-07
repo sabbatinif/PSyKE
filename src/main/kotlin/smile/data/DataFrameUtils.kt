@@ -19,7 +19,7 @@ import kotlin.streams.toList
  * @param seed (optional) is the random seed.
  * @return a Pair with the training and test partitions.
  */
-fun DataFrame.randomSplit(percent: Double, seed: Long = 10L): Pair<DataFrame, DataFrame> {
+fun DataFrame.randomSplit(percent: Double, seed: Long = 56L): Pair<DataFrame, DataFrame> {
     val r1 = Random(seed)
     val r2 = Random(seed)
     var train: DataFrame
@@ -212,7 +212,7 @@ fun DataFrame.splitFeatures(): Discretization {
  * @param featureSets is the encoding strategy.
  * @return the one-hot encoded DataFrame.
  */
-fun DataFrame.toBoolean(features: Discretization): DataFrame {
+fun DataFrame.toOneHot(features: Discretization): DataFrame {
     val outputColumns: MutableList<BaseVector<*, *, *>> = mutableListOf()
     for (column in this.inputs()) {
         val match = features[column.name()]

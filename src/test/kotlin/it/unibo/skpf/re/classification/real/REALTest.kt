@@ -30,7 +30,7 @@ internal class REALTest {
 
     @Test
     fun testExtract() {
-        val variables = listOf("V1", "V2", "V3", "V4").map { Var.of(it) }
+        val variables = listOf("SepalLength", "SepalWidth", "PetalLength", "PetalWidth").map { Var.of(it) }
         val cond1 = Struct.of("in", variables[0], List.of(Real.of(5.39), Real.of(6.26)))
         val cond2 = Struct.of("in", variables[2], List.of(Real.of(2.28), Real.of(4.87)))
         val cond3 = Struct.of("in", variables[3], List.of(Real.of(0.65), Real.of(1.64)))
@@ -63,9 +63,7 @@ internal class REALTest {
             )
         )
         assertEquals(expectedTheory.size, theory.size)
-        expectedTheory.zip(theory) { expected, actual ->
-            assertTrue(expected.structurallyEquals(actual))
-        }
+        assertTrue(expectedTheory.equals(theory, false))
     }
 
     @Test

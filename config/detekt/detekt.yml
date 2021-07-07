@@ -17,7 +17,7 @@ complexity:
   NestedBlockDepth:
     threshold: 5
   TooManyFunctions:
-    thresholdInClasses: 18
+    thresholdInClasses: 20
     thresholdInFiles: 25
     ignoreDeprecated: true
     ignorePrivate: true

@@ -24,7 +24,7 @@ import smile.data.outputClasses
 import smile.data.outputs
 import smile.data.randomSplit
 import smile.data.splitFeatures
-import smile.data.toBoolean
+import smile.data.toOneHot
 import smile.data.toStringList
 import smile.data.toStringSet
 import smile.data.type.DataTypes
@@ -204,7 +204,7 @@ class DataFrameUtilsTest {
     @ArgumentsSource(Companion::class)
     fun testToBoolean(context: TestContext) = context.onTest {
         val featureSet = dataset.splitFeatures()
-        val boolDataset = dataset.toBoolean(featureSet)
+        val boolDataset = dataset.toOneHot(featureSet)
         assertEquals(dataset.nrows(), boolDataset.nrows())
         assertEquals(dataset.outputs().toStringList(), boolDataset.outputs().toStringList())
         assertEquals(

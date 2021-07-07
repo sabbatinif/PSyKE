@@ -15,9 +15,10 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:_"
     implementation "com.github.haifengl:smile-kotlin:_"
+    implementation 'org.jetbrains.lets-plot:lets-plot-kotlin:_'
     implementation 'org.slf4j:slf4j-simple:_'
     implementation 'it.unibo.tuprolog:theory-jvm:_'
-//    implementation group: 'org.bytedeco', name: 'openblas-platform', version: '_'
+    implementation 'org.bytedeco:openblas-platform:_'
     testImplementation 'it.unibo.tuprolog:dsl-theory-jvm:_'
     testImplementation(platform("org.junit:junit-bom:_"))
     testImplementation("org.junit.jupiter:junit-jupiter")

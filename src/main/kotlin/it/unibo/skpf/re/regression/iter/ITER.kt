@@ -88,8 +88,10 @@ internal class ITER(
     ): Int {
         var iterations = 1
         while (dataset.inputs().ncols() * 2 * hyperCubes.size >= hyperCubes.fold(0) {
-                    acc, cube -> acc + cube.limitCount
-        }) {
+            acc, cube ->
+            acc + cube.limitCount
+        }
+        ) {
             if (iterations == leftIterations) break
             cubesToUpdate(dataset, hyperCubes, domain)
                 .minByOrNull { it.second!!.distance }
@@ -187,10 +189,8 @@ internal class ITER(
             overlap = resolveOverlap(tempCube, overlap, hyperCubes, feature, direction)
         if ((tempCube.hasVolume()) && (overlap == null) && (!tempCube.equal(hyperCubes)))
             yield(Expansion(tempCube, feature, direction))
-            //yield(Limit(tempCube, feature, direction))
         else
             cube.addLimit(feature, direction)
-            //limits.add(Limit(cube, feature, direction))
     }.toList()
 
     private fun resolveOverlap(
@@ -219,10 +219,10 @@ internal class ITER(
         val (a, b) = cube.get(feature)
         val size = minUpdates.first { it.name == feature }.value
         return cube.copy() to
-                if (direction == '-')
-                    max(a - size, surrounding.getFirst(feature)) to a
-                else
-                    b to min(b + size, surrounding.getSecond(feature))
+            if (direction == '-')
+                max(a - size, surrounding.getFirst(feature)) to a
+            else
+                b to min(b + size, surrounding.getSecond(feature))
     }
 
     private fun calculateMinUpdates(surrounding: HyperCube) =
@@ -250,15 +250,16 @@ internal class ITER(
     }
 
     private fun createTheory(dataset: DataFrame): Theory {
-        val variables = createVariableList(emptySet(), dataset)
         val theory = MutableTheory.empty()
-        for (cube in hyperCubes)
+        for (cube in hyperCubes) {
+            val variables = createVariableList(emptySet(), dataset)
             theory.assertZ(
                 Clause.of(
                     createHead(dataset.name(), variables.values, cube.mean),
                     *createBody(variables, cube.dimensions)
                 )
             )
+        }
         return theory
     }
 

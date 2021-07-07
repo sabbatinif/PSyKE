@@ -1,6 +1,7 @@
 package it.unibo.skpf.re.regression
 
 import it.unibo.skpf.re.regression.iter.Expansion
+import it.unibo.skpf.re.regression.iter.Limit
 import it.unibo.skpf.re.regression.iter.MinUpdate
 import it.unibo.skpf.re.utils.loadFromFile
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -32,7 +33,7 @@ internal class HyperCubeTest {
                 "X" to x,
                 "Y" to y
             ).toMutableMap(),
-            output
+            output = output
         )
 
     private val dataset = loadFromFile("artiTrain50.txt") as DataFrame
@@ -41,7 +42,7 @@ internal class HyperCubeTest {
         "Y" to Pair(0.7, 0.9)
     )
     private val output = 0.5
-    private val cube = HyperCube(dimensions.toMutableMap(), output)
+    private val cube = HyperCube(dimensions.toMutableMap(), output = output)
     private val filteredDataset = DataFrame.of(
         dataset.stream().filter { tuple ->
             (0.2 <= tuple.getDouble("X")) &&
@@ -60,6 +61,17 @@ internal class HyperCubeTest {
     @Test
     fun testGetDimensions() {
         assertEquals(dimensions, cube.dimensions)
+    }
+
+    @Test
+    fun testGetLimitCount() {
+        assertEquals(0, cube.limitCount)
+        cube.addLimit("X", '+')
+        assertEquals(1, cube.limitCount)
+        cube.addLimit("Y", '-')
+        assertEquals(2, cube.limitCount)
+        cube.addLimit("X", '+')
+        assertEquals(2, cube.limitCount)
     }
 
     @Test
@@ -166,6 +178,33 @@ internal class HyperCubeTest {
             assertTrue(values.first <= tuple.getDouble(name))
             assertTrue(tuple.getDouble(name) < values.second)
         }
+    }
+
+    @Test
+    fun testAddLimit() {
+        assertEquals(0, cube.limitCount)
+        cube.addLimit("X", '-')
+        assertEquals(1, cube.limitCount)
+        cube.addLimit(Limit("X", '-'))
+        assertEquals(1, cube.limitCount)
+        cube.addLimit(Limit("X", '+'))
+        assertEquals(2, cube.limitCount)
+        cube.addLimit("X", '+')
+        assertEquals(2, cube.limitCount)
+    }
+
+    @Test
+    fun testCheckLimits() {
+        assertNull(cube.checkLimits("X"))
+        cube.addLimit("X", '-')
+        assertEquals('-', cube.checkLimits("X"))
+        cube.addLimit("X", '+')
+        assertEquals('*', cube.checkLimits("X"))
+        assertNull(cube.checkLimits("Y"))
+        cube.addLimit("Y", '+')
+        assertEquals('+', cube.checkLimits("Y"))
+        cube.addLimit("Y", '-')
+        assertEquals('*', cube.checkLimits("Y"))
     }
 
     @Test
