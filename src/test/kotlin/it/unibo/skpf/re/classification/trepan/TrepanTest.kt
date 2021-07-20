@@ -3,6 +3,7 @@ package it.unibo.skpf.re.classification.trepan
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.Schemas
 import it.unibo.skpf.re.schema.Discretization
+import it.unibo.skpf.re.utils.check
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.loadFromFile
 import it.unibo.tuprolog.core.Clause
@@ -55,9 +56,6 @@ internal class TrepanTest {
 
     @Test
     fun testPredict() {
-        fun Tuple.check(field: String): Boolean =
-            this[field].toString().toDouble() == 1.0
-
         val test = loadFromFile("irisTest50.txt") as DataFrame
         val predictions = trepan.predict(test)
         val expected = sequence {

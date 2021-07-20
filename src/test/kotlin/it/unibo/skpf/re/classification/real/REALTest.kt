@@ -2,6 +2,8 @@ package it.unibo.skpf.re.classification.real
 
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.Schemas
+import it.unibo.skpf.re.utils.check
+import it.unibo.skpf.re.utils.checkAll
 import it.unibo.skpf.re.utils.createHead
 import it.unibo.skpf.re.utils.loadFromFile
 import it.unibo.tuprolog.core.Clause
@@ -68,12 +70,6 @@ internal class REALTest {
 
     @Test
     fun testPredict() {
-        fun Tuple.check(field: String): Boolean =
-            this[field].toString().toDouble() == 1.0
-
-        fun Tuple.checkAll(vararg fields: String): Boolean =
-            fields.all { this.check(it) }
-
         val test = loadFromFile("irisTest50.txt") as DataFrame
         val predictions = real.predict(test)
         val expected = sequence {

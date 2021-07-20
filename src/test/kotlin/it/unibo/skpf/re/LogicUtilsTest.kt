@@ -121,27 +121,27 @@ class LogicUtilsTest {
                     Constant("test"), true, "=", Atom.of("test")
                 ),
                 Arguments.of(
-                    Interval.Between(2.6, 8.9), true, "in",
+                    Between(2.6, 8.9), true, "in",
                     List.of(Real.of(2.6), Real.of(8.9))
                 ),
                 Arguments.of(
-                    Interval.LessThan(6.3), true, "=<", Real.of(6.3)
+                    LessThan(6.3), true, "=<", Real.of(6.3)
                 ),
                 Arguments.of(
-                    Interval.GreaterThan(3.2), true, ">", Real.of(3.2)
+                    GreaterThan(3.2), true, ">", Real.of(3.2)
                 ),
                 Arguments.of(
                     Constant(2.65), false, "\\=", Atom.of("2.65")
                 ),
                 Arguments.of(
-                    Interval.Between(14.3, 25.2), false, "not_in",
+                    Between(14.3, 25.2), false, "not_in",
                     List.of(Real.of(14.3), Real.of(25.2))
                 ),
                 Arguments.of(
-                    Interval.LessThan(12.6), false, ">", Real.of(12.6)
+                    LessThan(12.6), false, ">", Real.of(12.6)
                 ),
                 Arguments.of(
-                    Interval.GreaterThan(5.3), false, "=<", Real.of(5.3)
+                    GreaterThan(5.3), false, "=<", Real.of(5.3)
                 )
             )
         }
