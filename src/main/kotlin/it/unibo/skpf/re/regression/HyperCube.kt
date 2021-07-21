@@ -140,10 +140,10 @@ internal class HyperCube(
     fun count(dataset: DataFrame) =
         this.filterDataFrame(dataset)?.nrows()
 
-    fun createTuple(schema: StructType): Tuple {
+    fun createTuple(schema: StructType, random: Random = Random(1L)): Tuple {
         return Tuple.of(
             dimension.map { (_, values) ->
-                Random.nextDouble(values.first, values.second)
+                random.nextDouble(values.first, values.second)
             }.toDoubleArray(),
             schema
         )

@@ -5,8 +5,14 @@ import smile.data.Tuple
 fun Tuple.lessOrEqualThan(field: String, value: Double): Boolean =
     this[field].toString().toDouble() <= value
 
+fun Tuple.greaterOrEqualThan(field: String, value: Double): Boolean =
+    this[field].toString().toDouble() >= value
+
 fun Tuple.greaterThan(field: String, value: Double): Boolean =
     this[field].toString().toDouble() > value
+
+fun Tuple.lessThan(field: String, value: Double): Boolean =
+    this[field].toString().toDouble() < value
 
 fun Tuple.check(field: String): Boolean =
     this[field].toString().toDouble() == 1.0

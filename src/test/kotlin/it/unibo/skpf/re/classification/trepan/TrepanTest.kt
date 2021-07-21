@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import smile.classification.KNN
 import smile.data.DataFrame
-import smile.data.Tuple
 import kotlin.streams.toList
 
 internal class TrepanTest {

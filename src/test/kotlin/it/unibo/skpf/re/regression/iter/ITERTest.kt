@@ -1,12 +1,13 @@
 package it.unibo.skpf.re.regression.iter
 
 import it.unibo.skpf.re.Extractor
-import it.unibo.skpf.re.utils.greaterThan
-import it.unibo.skpf.re.utils.lessOrEqualThan
+import it.unibo.skpf.re.utils.greaterOrEqualThan
+import it.unibo.skpf.re.utils.lessThan
 import it.unibo.skpf.re.utils.loadFromFile
 import it.unibo.tuprolog.dsl.theory.prolog
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import smile.data.DataFrame
 import smile.regression.RBFNetwork
 import kotlin.streams.toList
@@ -22,14 +23,22 @@ internal class ITERTest {
     fun extract() {
         val expected = prolog {
             theoryOf(
-                rule { "z"(X, Y, 0.3)
-                    `if` (structOf("in", X, listOf(0.5, 1.0)) and structOf("in", Y, listOf(0.0, 0.49))) },
-                rule { "z"(X, Y, 0.09)
-                    `if` (structOf("in", X, listOf(0.5, 1.0)) and structOf("in", Y, listOf(0.49, 1.0))) },
-                rule { "z"(X, Y, 0.34)
-                    `if` (structOf("in", X, listOf(0.0, 0.5)) and structOf("in", Y, listOf(0.49, 1.0))) },
-                rule { "z"(X, Y, 0.63)
-                    `if` (structOf("in", X, listOf(0.0, 0.5)) and structOf("in", Y, listOf(0.0, 0.49))) }
+                rule {
+                    "z"(X, Y, 0.3) `if`
+                        (structOf("in", X, listOf(0.5, 1.0)) and structOf("in", Y, listOf(0.0, 0.49)))
+                },
+                rule {
+                    "z"(X, Y, 0.09) `if`
+                        (structOf("in", X, listOf(0.5, 1.0)) and structOf("in", Y, listOf(0.49, 1.0)))
+                },
+                rule {
+                    "z"(X, Y, 0.34) `if`
+                        (structOf("in", X, listOf(0.0, 0.5)) and structOf("in", Y, listOf(0.49, 1.0)))
+                },
+                rule {
+                    "z"(X, Y, 0.64) `if`
+                        (structOf("in", X, listOf(0.0, 0.5)) and structOf("in", Y, listOf(0.0, 0.49)))
+                }
             )
         }
         assertEquals(expected.size, theory.size)
@@ -38,22 +47,26 @@ internal class ITERTest {
 
     @Test
     fun predict() {
-        val test = loadFromFile("artiTest50.txt") as DataFrame
+        val test = (loadFromFile("artiTest50.txt") as DataFrame)
         val predictions = iter.predict(test).toList()
         val expected = sequence {
             for (sample in test.stream().toList()) {
-                if (sample.greaterThan("X", 0.5) &&
-                    sample.lessOrEqualThan("Y", 0.49))
-                        yield(0.3)
-                else if (sample.lessOrEqualThan("X", 0.5) &&
-                    sample.greaterThan("Y", 0.49))
-                    yield(0.34)
-                else if (sample.greaterThan("X", 0.5) &&
-                    sample.greaterThan("Y", 0.49))
-                    yield(0.1)
-                else if (sample.lessOrEqualThan("X", 0.5) &&
-                    sample.lessOrEqualThan("Y", 0.49))
-                    yield(0.63)
+                if (sample.greaterOrEqualThan("X", 0.495) &&
+                    sample.lessThan("Y", 0.49)
+                )
+                    yield(0.2990948845503994)
+                else if (sample.lessThan("X", 0.495) &&
+                    sample.greaterOrEqualThan("Y", 0.49)
+                )
+                    yield(0.3412396997200023)
+                else if (sample.greaterOrEqualThan("X", 0.495) &&
+                    sample.greaterOrEqualThan("Y", 0.49)
+                )
+                    yield(0.09333036044583674)
+                else if (sample.lessThan("X", 0.495) &&
+                    sample.lessThan("Y", 0.49)
+                )
+                    yield(0.6354766542797601)
             }
         }.toList()
         assertEquals(expected, predictions)

@@ -22,6 +22,7 @@ import javax.management.InvalidAttributeValueException
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.random.Random
 import kotlin.streams.asStream
 import kotlin.streams.toList
 
@@ -35,11 +36,13 @@ internal class ITER(
     private var maxIterations: Int,
     private var minExamples: Int,
     private var threshold: Double,
-    private var fillGaps: Boolean
+    private var fillGaps: Boolean,
+    private var seed: Long = 123L
 ) : Extractor<DoubleArray, Regression<DoubleArray>> {
 
     private lateinit var fakeDataset: DataFrame
     private lateinit var hyperCubes: Collection<HyperCube>
+    private val random = Random(seed)
 
     private fun init(dataset: DataFrame): Pair<MutableList<HyperCube>, DomainProperties> {
         this.fakeDataset = dataset.inputs()
@@ -154,7 +157,7 @@ internal class ITER(
     ): DataFrame? {
         val dataset = sequence {
             (n..minExamples).forEach { _ ->
-                yield(cube.createTuple(schema))
+                yield(cube.createTuple(schema, random))
             }
         }
         return if (dataset.none()) null else DataFrame.of(dataset.asStream())

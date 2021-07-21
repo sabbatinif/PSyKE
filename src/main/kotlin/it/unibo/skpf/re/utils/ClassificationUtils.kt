@@ -10,13 +10,10 @@ import it.unibo.skpf.re.utils.ClassificationUtils.nodeSize
 import it.unibo.tuprolog.core.format
 import org.apache.commons.csv.CSVFormat
 import smile.base.cart.SplitRule
-import smile.base.mlp.Layer
-import smile.base.mlp.OutputFunction
 import smile.classification.Classifier
 import smile.classification.DecisionTree
 import smile.classification.cart
 import smile.classification.knn
-import smile.classification.mlp
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.classes
@@ -29,7 +26,6 @@ import smile.data.randomSplit
 import smile.data.splitFeatures
 import smile.data.toOneHot
 import smile.io.Read
-import smile.math.TimeFunction
 import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
 
