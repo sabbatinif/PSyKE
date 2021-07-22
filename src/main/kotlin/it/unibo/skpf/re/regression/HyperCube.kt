@@ -4,6 +4,7 @@ import it.unibo.skpf.re.regression.iter.Expansion
 import it.unibo.skpf.re.regression.iter.Limit
 import it.unibo.skpf.re.regression.iter.MinUpdate
 import it.unibo.skpf.re.regression.iter.ZippedDimension
+import it.unibo.skpf.re.utils.std
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.description
@@ -16,6 +17,7 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
+import kotlin.streams.asStream
 import kotlin.streams.toList
 
 internal class HyperCube(
@@ -23,6 +25,8 @@ internal class HyperCube(
     private val limits: MutableSet<Limit> = mutableSetOf(),
     private var output: Double = 0.0
 ) {
+
+    private var stDev: Double = 9999.9
 
     val dimensions: Map<String, Pair<Double, Double>>
         get() = dimension
@@ -32,6 +36,9 @@ internal class HyperCube(
 
     val mean: Double
         get() = output
+
+    val std: Double
+        get() = stDev
 
     fun get(feature: String): Pair<Double, Double> =
         dimension[feature] ?: throw FeatureNotFoundException(feature)
@@ -149,6 +156,20 @@ internal class HyperCube(
         )
     }
 
+    fun createFakeSamples(
+        schema: StructType,
+        n: Int,
+        minExamples: Int,
+        random: Random
+    ): DataFrame? {
+        val dataset = sequence {
+            (n..minExamples).forEach { _ ->
+                yield(createTuple(schema, random))
+            }
+        }
+        return if (dataset.none()) null else DataFrame.of(dataset.asStream())
+    }
+
     fun addLimit(feature: String, direction: Char) {
         addLimit(Limit(feature, direction))
     }
@@ -170,6 +191,16 @@ internal class HyperCube(
     fun updateMean(dataset: DataFrame, predictor: Regression<DoubleArray>) {
         val filtered = filterDataFrame(dataset)
         this.output = predictor.predict(filtered?.toArray()).average()
+    }
+
+    fun updateStd(dataset: DataFrame, predictor: Regression<DoubleArray>) {
+        val filtered = filterDataFrame(dataset)
+        this.stDev = predictor.predict(filtered?.toArray()).std()
+    }
+
+    fun updateMeanAndStd(dataset: DataFrame, predictor: Regression<DoubleArray>) {
+        this.updateMean(dataset, predictor)
+        this.updateStd(dataset, predictor)
     }
 
     fun updateDimension(feature: String, values: Pair<Double, Double>) {

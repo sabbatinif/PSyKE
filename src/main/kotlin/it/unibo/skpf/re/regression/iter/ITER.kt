@@ -142,25 +142,14 @@ internal class ITER(
             .filter { it.cube.count(dataset) != null }
             .map { limit ->
                 val fake = limit.cube.count(dataset)
-                    ?.let { createFakeSamples(limit.cube, dataset.inputs().schema(), it) }
+                    ?.let { limit.cube.createFakeSamples(
+                        dataset.inputs().schema(), it, minExamples, random
+                    ) }
                 if (fake != null)
                     fakeDataset = fakeDataset.union(fake)
                 limit.cube.updateMean(fakeDataset, predictor)
                 Expansion(limit.cube, limit.feature, limit.direction, abs(cube.mean - limit.cube.mean))
             }.minByOrNull { it.distance }
-    }
-
-    private fun createFakeSamples(
-        cube: HyperCube,
-        schema: StructType,
-        n: Int
-    ): DataFrame? {
-        val dataset = sequence {
-            (n..minExamples).forEach { _ ->
-                yield(cube.createTuple(schema, random))
-            }
-        }
-        return if (dataset.none()) null else DataFrame.of(dataset.asStream())
     }
 
     private fun createTempCubes(
@@ -282,6 +271,6 @@ internal class ITER(
         }
     }
 
-    override fun predict(dataset: DataFrame): Array<*> =
+    override fun predict(dataset: DataFrame): Array<Double> =
         dataset.inputs().stream().map { this.predict(it) }.toList().toTypedArray()
 }

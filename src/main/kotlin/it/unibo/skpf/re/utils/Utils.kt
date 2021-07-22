@@ -51,11 +51,11 @@ internal inline fun <reified C, R> C.getFieldValue(name: String): R {
     return valueField.get(this) as R
 }
 
-internal fun std(col: DoubleArray): Double {
-    val mean = col.average()
+internal fun DoubleArray.std(): Double {
+    val mean = this.average()
     var std = 0.0
-    col.forEach { std += (it - mean).pow(2.0) }
-    return sqrt(std / col.size)
+    this.forEach { std += (it - mean).pow(2.0) }
+    return sqrt(std / this.size)
 }
 
 internal fun createOriginalValue(originalValue: Any): Value {
@@ -120,7 +120,7 @@ internal fun createColumn(name: String, value: Value, column: BaseVector<*, *, *
 internal fun createDescriptionPair(column: DoubleArray): Description {
     return Description(
         column.average(),
-        std(column),
+        column.std(),
         column.minByOrNull { it } ?: 0.0,
         column.maxByOrNull { it } ?: 1.0
     )
