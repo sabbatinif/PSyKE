@@ -38,15 +38,14 @@ internal class GridEx(
 
     override fun extract(dataset: DataFrame): Theory {
         this.fakeDataset = dataset.inputs()
-        val adaptive = adaptiveSplits()
+        val adaptive = null // adaptiveSplits()
         val surrounding = HyperCube.createSurroundingCube(dataset)
         var hypercubes = listOf(surrounding)
-        for (step in steps)
-        {
+        for (step in steps) {
             hypercubes = expand(hypercubes, dataset, step, adaptive)
             hypercubes = update(hypercubes, dataset)
             this.hyperCubes = hypercubes
-            //merge
+            // merge
         }
         return createTheory(dataset, hypercubes)
     }
@@ -152,9 +151,9 @@ internal class GridEx(
         }.toList()
     }
 
-    private fun adaptiveSplits(): Any? {
-        return null
-    }
+//    private fun adaptiveSplits(): Any? {
+//        throw NotImplementedError()
+//    }
 
     private fun predict(tuple: Tuple): Double {
         this.hyperCubes.firstOrNull {
@@ -164,6 +163,6 @@ internal class GridEx(
         }
     }
 
-    override fun predict(dataset: DataFrame): Array<Double> =
+    override fun predict(dataset: DataFrame): Array<*> =
         dataset.inputs().stream().map { this.predict(it) }.toList().toTypedArray()
 }

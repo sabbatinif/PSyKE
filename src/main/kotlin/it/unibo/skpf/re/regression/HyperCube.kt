@@ -26,7 +26,7 @@ internal class HyperCube(
     private var output: Double = 0.0
 ) {
 
-    private var stDev: Double = 9999.9
+    private var stDev: Double = Double.POSITIVE_INFINITY
 
     val dimensions: Map<String, Pair<Double, Double>>
         get() = dimension
