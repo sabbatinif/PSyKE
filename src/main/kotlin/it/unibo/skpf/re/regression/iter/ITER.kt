@@ -16,14 +16,12 @@ import smile.data.Tuple
 import smile.data.inputs
 import smile.data.name
 import smile.data.outputsArray
-import smile.data.type.StructType
 import smile.regression.Regression
 import javax.management.InvalidAttributeValueException
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
-import kotlin.streams.asStream
 import kotlin.streams.toList
 
 internal typealias DomainProperties = Pair<List<MinUpdate>, HyperCube>
@@ -142,25 +140,16 @@ internal class ITER(
             .filter { it.cube.count(dataset) != null }
             .map { limit ->
                 val fake = limit.cube.count(dataset)
-                    ?.let { createFakeSamples(limit.cube, dataset.inputs().schema(), it) }
+                    ?.let {
+                        limit.cube.createFakeSamples(
+                            dataset.inputs().schema(), it, minExamples, random
+                        )
+                    }
                 if (fake != null)
                     fakeDataset = fakeDataset.union(fake)
                 limit.cube.updateMean(fakeDataset, predictor)
                 Expansion(limit.cube, limit.feature, limit.direction, abs(cube.mean - limit.cube.mean))
             }.minByOrNull { it.distance }
-    }
-
-    private fun createFakeSamples(
-        cube: HyperCube,
-        schema: StructType,
-        n: Int
-    ): DataFrame? {
-        val dataset = sequence {
-            (n..minExamples).forEach { _ ->
-                yield(cube.createTuple(schema, random))
-            }
-        }
-        return if (dataset.none()) null else DataFrame.of(dataset.asStream())
     }
 
     private fun createTempCubes(

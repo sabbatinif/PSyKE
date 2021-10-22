@@ -5,6 +5,7 @@ import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.skpf.re.classification.real.REAL
 import it.unibo.skpf.re.classification.trepan.SplitLogic
 import it.unibo.skpf.re.classification.trepan.Trepan
+import it.unibo.skpf.re.regression.gridex.GridEx
 import it.unibo.skpf.re.regression.iter.ITER
 import it.unibo.skpf.re.schema.Discretization
 import it.unibo.tuprolog.theory.Theory
@@ -100,6 +101,24 @@ interface Extractor<T, F : ToDoubleFunction<T>> {
                 minExamples,
                 threshold,
                 fillGaps
+            )
+
+        /**
+         * Creates a new GridEx extractor.
+         */
+        @JvmStatic
+        fun gridex(
+            predictor: Regression<DoubleArray>,
+            steps: Collection<Int>,
+            threshold: Double,
+            minExamples: Int
+        ): Extractor<DoubleArray, Regression<DoubleArray>> =
+            GridEx(
+                predictor,
+                Discretization.Empty,
+                steps,
+                threshold,
+                minExamples
             )
     }
 }

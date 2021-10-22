@@ -3,6 +3,7 @@ package it.unibo.skpf.re.utils
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.cart.CartPredictor
 import it.unibo.skpf.re.utils.RegressionUtils.createCART
+import it.unibo.skpf.re.utils.RegressionUtils.createGridEx
 import it.unibo.skpf.re.utils.RegressionUtils.createITER
 import it.unibo.skpf.re.utils.RegressionUtils.createSVR
 import it.unibo.tuprolog.core.format
@@ -97,6 +98,14 @@ internal object RegressionUtils {
     fun createITER(model: Regression<DoubleArray>) =
         Extractor.iter(model, minUpdate = minUpdate, threshold = threshold)
 
+    const val gridExThreshold = 0.05
+    const val steps = 2
+
+    fun createGridEx(model: Regression<DoubleArray>) =
+        Extractor.gridex(
+            model, steps = listOf(steps, steps), threshold = gridExThreshold, minExamples = 15
+        )
+
     // cart params
     const val maxDepth = 3
     const val maxNodes = 0
@@ -147,6 +156,8 @@ fun regression(name: String, testSplit: Double) {
     printMetrics(svr.predict(test.inputsArray()), test.outputsArray())
     val iter = createITER(svr)
     testRegressionExtractor("ITER", train, test, iter, svr, true, true)
+    val gridex = createGridEx(svr)
+    testRegressionExtractor("GridEx", train, test, gridex, svr, true, true)
     val cart = createCART(train)
     val cartEx = Extractor.cart(cart)
     testRegressionExtractor("CART", train, test, cartEx, true, true)
