@@ -98,7 +98,7 @@ internal object RegressionUtils {
     fun createITER(model: Regression<DoubleArray>) =
         Extractor.iter(model, minUpdate = minUpdate, threshold = threshold)
 
-    const val gridExThreshold = 0.005
+    const val gridExThreshold = 0.05
     const val steps = 2
 
     fun createGridEx(model: Regression<DoubleArray>) =
