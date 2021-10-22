@@ -1,4 +1,4 @@
-package it.unibo.skpf.re.regression.iter
+package it.unibo.skpf.re.regression.gridex
 
 import it.unibo.skpf.re.Extractor
 import it.unibo.skpf.re.utils.greaterOrEqualThan
