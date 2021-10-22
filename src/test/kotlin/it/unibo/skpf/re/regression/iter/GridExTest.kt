@@ -26,7 +26,7 @@ internal class GridExTest {
             theoryOf(
                 rule {
                     "z"(X, Y, 0.69) `if`
-                            (structOf("in", X, listOf(0.0, 0.5)) and structOf("in", Y, listOf(0.0, 0.5)))
+                        (structOf("in", X, listOf(0.0, 0.5)) and structOf("in", Y, listOf(0.0, 0.5)))
                 },
                 rule {
                     "z"(X, Y, 0.3) `if`
@@ -34,7 +34,7 @@ internal class GridExTest {
                 },
                 rule {
                     "z"(X, Y, 0.4) `if`
-                            (structOf("in", X, listOf(0.0, 0.5)) and structOf("in", Y, listOf(0.5, 1.0)))
+                        (structOf("in", X, listOf(0.0, 0.5)) and structOf("in", Y, listOf(0.5, 1.0)))
                 },
                 rule {
                     "z"(X, Y, 0.01) `if`
